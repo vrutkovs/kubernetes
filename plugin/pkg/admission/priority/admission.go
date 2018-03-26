@@ -19,6 +19,7 @@ package priority
 import (
 	"fmt"
 	"io"
+	"strings"
 
 	schedulingv1beta1 "k8s.io/api/scheduling/v1beta1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -148,7 +149,11 @@ func priorityClassPermittedInNamespace(priorityClassName string, namespace strin
 	// components.
 	for _, spc := range scheduling.SystemPriorityClasses() {
 		if spc.Name == priorityClassName && namespace != metav1.NamespaceSystem {
-			return false
+			// <carry>: critical pods may exist in openshift- namespaces
+			// pending priority and preemption support.
+			if !strings.HasPrefix(namespace, "openshift-") {
+				return false
+			}
 		}
 	}
 	return true
