@@ -874,6 +874,55 @@
       "consumes": [
        "*/*"
       ]
+     },
+     {
+      "type": "v1beta2.ControllerRevision",
+      "method": "POST",
+      "summary": "create a ControllerRevision",
+      "nickname": "createControllerRevisionForAllNamespaces",
+      "parameters": [
+       {
+        "type": "string",
+        "paramType": "query",
+        "name": "pretty",
+        "description": "If 'true', then the output is pretty printed.",
+        "required": false,
+        "allowMultiple": false
+       },
+       {
+        "type": "v1beta2.ControllerRevision",
+        "paramType": "body",
+        "name": "body",
+        "description": "",
+        "required": true,
+        "allowMultiple": false
+       }
+      ],
+      "responseMessages": [
+       {
+        "code": 200,
+        "message": "OK",
+        "responseModel": "v1beta2.ControllerRevision"
+       },
+       {
+        "code": 201,
+        "message": "Created",
+        "responseModel": "v1beta2.ControllerRevision"
+       },
+       {
+        "code": 202,
+        "message": "Accepted",
+        "responseModel": "v1beta2.ControllerRevision"
+       }
+      ],
+      "produces": [
+       "application/json",
+       "application/yaml",
+       "application/vnd.kubernetes.protobuf"
+      ],
+      "consumes": [
+       "*/*"
+      ]
      }
     ]
    },
@@ -1842,6 +1891,55 @@
        "application/vnd.kubernetes.protobuf",
        "application/json;stream=watch",
        "application/vnd.kubernetes.protobuf;stream=watch"
+      ],
+      "consumes": [
+       "*/*"
+      ]
+     },
+     {
+      "type": "v1beta2.DaemonSet",
+      "method": "POST",
+      "summary": "create a DaemonSet",
+      "nickname": "createDaemonSetForAllNamespaces",
+      "parameters": [
+       {
+        "type": "string",
+        "paramType": "query",
+        "name": "pretty",
+        "description": "If 'true', then the output is pretty printed.",
+        "required": false,
+        "allowMultiple": false
+       },
+       {
+        "type": "v1beta2.DaemonSet",
+        "paramType": "body",
+        "name": "body",
+        "description": "",
+        "required": true,
+        "allowMultiple": false
+       }
+      ],
+      "responseMessages": [
+       {
+        "code": 200,
+        "message": "OK",
+        "responseModel": "v1beta2.DaemonSet"
+       },
+       {
+        "code": 201,
+        "message": "Created",
+        "responseModel": "v1beta2.DaemonSet"
+       },
+       {
+        "code": 202,
+        "message": "Accepted",
+        "responseModel": "v1beta2.DaemonSet"
+       }
+      ],
+      "produces": [
+       "application/json",
+       "application/yaml",
+       "application/vnd.kubernetes.protobuf"
       ],
       "consumes": [
        "*/*"
@@ -2984,6 +3082,55 @@
        "application/vnd.kubernetes.protobuf",
        "application/json;stream=watch",
        "application/vnd.kubernetes.protobuf;stream=watch"
+      ],
+      "consumes": [
+       "*/*"
+      ]
+     },
+     {
+      "type": "v1beta2.Deployment",
+      "method": "POST",
+      "summary": "create a Deployment",
+      "nickname": "createDeploymentForAllNamespaces",
+      "parameters": [
+       {
+        "type": "string",
+        "paramType": "query",
+        "name": "pretty",
+        "description": "If 'true', then the output is pretty printed.",
+        "required": false,
+        "allowMultiple": false
+       },
+       {
+        "type": "v1beta2.Deployment",
+        "paramType": "body",
+        "name": "body",
+        "description": "",
+        "required": true,
+        "allowMultiple": false
+       }
+      ],
+      "responseMessages": [
+       {
+        "code": 200,
+        "message": "OK",
+        "responseModel": "v1beta2.Deployment"
+       },
+       {
+        "code": 201,
+        "message": "Created",
+        "responseModel": "v1beta2.Deployment"
+       },
+       {
+        "code": 202,
+        "message": "Accepted",
+        "responseModel": "v1beta2.Deployment"
+       }
+      ],
+      "produces": [
+       "application/json",
+       "application/yaml",
+       "application/vnd.kubernetes.protobuf"
       ],
       "consumes": [
        "*/*"
@@ -4300,6 +4447,55 @@
       "consumes": [
        "*/*"
       ]
+     },
+     {
+      "type": "v1beta2.ReplicaSet",
+      "method": "POST",
+      "summary": "create a ReplicaSet",
+      "nickname": "createReplicaSetForAllNamespaces",
+      "parameters": [
+       {
+        "type": "string",
+        "paramType": "query",
+        "name": "pretty",
+        "description": "If 'true', then the output is pretty printed.",
+        "required": false,
+        "allowMultiple": false
+       },
+       {
+        "type": "v1beta2.ReplicaSet",
+        "paramType": "body",
+        "name": "body",
+        "description": "",
+        "required": true,
+        "allowMultiple": false
+       }
+      ],
+      "responseMessages": [
+       {
+        "code": 200,
+        "message": "OK",
+        "responseModel": "v1beta2.ReplicaSet"
+       },
+       {
+        "code": 201,
+        "message": "Created",
+        "responseModel": "v1beta2.ReplicaSet"
+       },
+       {
+        "code": 202,
+        "message": "Accepted",
+        "responseModel": "v1beta2.ReplicaSet"
+       }
+      ],
+      "produces": [
+       "application/json",
+       "application/yaml",
+       "application/vnd.kubernetes.protobuf"
+      ],
+      "consumes": [
+       "*/*"
+      ]
      }
     ]
    },
@@ -5608,6 +5804,55 @@
        "application/vnd.kubernetes.protobuf",
        "application/json;stream=watch",
        "application/vnd.kubernetes.protobuf;stream=watch"
+      ],
+      "consumes": [
+       "*/*"
+      ]
+     },
+     {
+      "type": "v1beta2.StatefulSet",
+      "method": "POST",
+      "summary": "create a StatefulSet",
+      "nickname": "createStatefulSetForAllNamespaces",
+      "parameters": [
+       {
+        "type": "string",
+        "paramType": "query",
+        "name": "pretty",
+        "description": "If 'true', then the output is pretty printed.",
+        "required": false,
+        "allowMultiple": false
+       },
+       {
+        "type": "v1beta2.StatefulSet",
+        "paramType": "body",
+        "name": "body",
+        "description": "",
+        "required": true,
+        "allowMultiple": false
+       }
+      ],
+      "responseMessages": [
+       {
+        "code": 200,
+        "message": "OK",
+        "responseModel": "v1beta2.StatefulSet"
+       },
+       {
+        "code": 201,
+        "message": "Created",
+        "responseModel": "v1beta2.StatefulSet"
+       },
+       {
+        "code": 202,
+        "message": "Accepted",
+        "responseModel": "v1beta2.StatefulSet"
+       }
+      ],
+      "produces": [
+       "application/json",
+       "application/yaml",
+       "application/vnd.kubernetes.protobuf"
       ],
       "consumes": [
        "*/*"

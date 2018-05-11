@@ -874,6 +874,55 @@
       "consumes": [
        "*/*"
       ]
+     },
+     {
+      "type": "v1beta1.DaemonSet",
+      "method": "POST",
+      "summary": "create a DaemonSet",
+      "nickname": "createDaemonSetForAllNamespaces",
+      "parameters": [
+       {
+        "type": "string",
+        "paramType": "query",
+        "name": "pretty",
+        "description": "If 'true', then the output is pretty printed.",
+        "required": false,
+        "allowMultiple": false
+       },
+       {
+        "type": "v1beta1.DaemonSet",
+        "paramType": "body",
+        "name": "body",
+        "description": "",
+        "required": true,
+        "allowMultiple": false
+       }
+      ],
+      "responseMessages": [
+       {
+        "code": 200,
+        "message": "OK",
+        "responseModel": "v1beta1.DaemonSet"
+       },
+       {
+        "code": 201,
+        "message": "Created",
+        "responseModel": "v1beta1.DaemonSet"
+       },
+       {
+        "code": 202,
+        "message": "Accepted",
+        "responseModel": "v1beta1.DaemonSet"
+       }
+      ],
+      "produces": [
+       "application/json",
+       "application/yaml",
+       "application/vnd.kubernetes.protobuf"
+      ],
+      "consumes": [
+       "*/*"
+      ]
      }
     ]
    },
@@ -2012,6 +2061,55 @@
        "application/vnd.kubernetes.protobuf",
        "application/json;stream=watch",
        "application/vnd.kubernetes.protobuf;stream=watch"
+      ],
+      "consumes": [
+       "*/*"
+      ]
+     },
+     {
+      "type": "v1beta1.Deployment",
+      "method": "POST",
+      "summary": "create a Deployment",
+      "nickname": "createDeploymentForAllNamespaces",
+      "parameters": [
+       {
+        "type": "string",
+        "paramType": "query",
+        "name": "pretty",
+        "description": "If 'true', then the output is pretty printed.",
+        "required": false,
+        "allowMultiple": false
+       },
+       {
+        "type": "v1beta1.Deployment",
+        "paramType": "body",
+        "name": "body",
+        "description": "",
+        "required": true,
+        "allowMultiple": false
+       }
+      ],
+      "responseMessages": [
+       {
+        "code": 200,
+        "message": "OK",
+        "responseModel": "v1beta1.Deployment"
+       },
+       {
+        "code": 201,
+        "message": "Created",
+        "responseModel": "v1beta1.Deployment"
+       },
+       {
+        "code": 202,
+        "message": "Accepted",
+        "responseModel": "v1beta1.Deployment"
+       }
+      ],
+      "produces": [
+       "application/json",
+       "application/yaml",
+       "application/vnd.kubernetes.protobuf"
       ],
       "consumes": [
        "*/*"
@@ -3399,6 +3497,55 @@
       "consumes": [
        "*/*"
       ]
+     },
+     {
+      "type": "v1beta1.Ingress",
+      "method": "POST",
+      "summary": "create an Ingress",
+      "nickname": "createIngressForAllNamespaces",
+      "parameters": [
+       {
+        "type": "string",
+        "paramType": "query",
+        "name": "pretty",
+        "description": "If 'true', then the output is pretty printed.",
+        "required": false,
+        "allowMultiple": false
+       },
+       {
+        "type": "v1beta1.Ingress",
+        "paramType": "body",
+        "name": "body",
+        "description": "",
+        "required": true,
+        "allowMultiple": false
+       }
+      ],
+      "responseMessages": [
+       {
+        "code": 200,
+        "message": "OK",
+        "responseModel": "v1beta1.Ingress"
+       },
+       {
+        "code": 201,
+        "message": "Created",
+        "responseModel": "v1beta1.Ingress"
+       },
+       {
+        "code": 202,
+        "message": "Accepted",
+        "responseModel": "v1beta1.Ingress"
+       }
+      ],
+      "produces": [
+       "application/json",
+       "application/yaml",
+       "application/vnd.kubernetes.protobuf"
+      ],
+      "consumes": [
+       "*/*"
+      ]
      }
     ]
    },
@@ -4537,6 +4684,55 @@
        "application/vnd.kubernetes.protobuf",
        "application/json;stream=watch",
        "application/vnd.kubernetes.protobuf;stream=watch"
+      ],
+      "consumes": [
+       "*/*"
+      ]
+     },
+     {
+      "type": "v1beta1.NetworkPolicy",
+      "method": "POST",
+      "summary": "create a NetworkPolicy",
+      "nickname": "createNetworkPolicyForAllNamespaces",
+      "parameters": [
+       {
+        "type": "string",
+        "paramType": "query",
+        "name": "pretty",
+        "description": "If 'true', then the output is pretty printed.",
+        "required": false,
+        "allowMultiple": false
+       },
+       {
+        "type": "v1beta1.NetworkPolicy",
+        "paramType": "body",
+        "name": "body",
+        "description": "",
+        "required": true,
+        "allowMultiple": false
+       }
+      ],
+      "responseMessages": [
+       {
+        "code": 200,
+        "message": "OK",
+        "responseModel": "v1beta1.NetworkPolicy"
+       },
+       {
+        "code": 201,
+        "message": "Created",
+        "responseModel": "v1beta1.NetworkPolicy"
+       },
+       {
+        "code": 202,
+        "message": "Accepted",
+        "responseModel": "v1beta1.NetworkPolicy"
+       }
+      ],
+      "produces": [
+       "application/json",
+       "application/yaml",
+       "application/vnd.kubernetes.protobuf"
       ],
       "consumes": [
        "*/*"
@@ -6203,6 +6399,55 @@
        "application/vnd.kubernetes.protobuf",
        "application/json;stream=watch",
        "application/vnd.kubernetes.protobuf;stream=watch"
+      ],
+      "consumes": [
+       "*/*"
+      ]
+     },
+     {
+      "type": "v1beta1.ReplicaSet",
+      "method": "POST",
+      "summary": "create a ReplicaSet",
+      "nickname": "createReplicaSetForAllNamespaces",
+      "parameters": [
+       {
+        "type": "string",
+        "paramType": "query",
+        "name": "pretty",
+        "description": "If 'true', then the output is pretty printed.",
+        "required": false,
+        "allowMultiple": false
+       },
+       {
+        "type": "v1beta1.ReplicaSet",
+        "paramType": "body",
+        "name": "body",
+        "description": "",
+        "required": true,
+        "allowMultiple": false
+       }
+      ],
+      "responseMessages": [
+       {
+        "code": 200,
+        "message": "OK",
+        "responseModel": "v1beta1.ReplicaSet"
+       },
+       {
+        "code": 201,
+        "message": "Created",
+        "responseModel": "v1beta1.ReplicaSet"
+       },
+       {
+        "code": 202,
+        "message": "Accepted",
+        "responseModel": "v1beta1.ReplicaSet"
+       }
+      ],
+      "produces": [
+       "application/json",
+       "application/yaml",
+       "application/vnd.kubernetes.protobuf"
       ],
       "consumes": [
        "*/*"

@@ -874,6 +874,55 @@
       "consumes": [
        "*/*"
       ]
+     },
+     {
+      "type": "v2alpha1.CronJob",
+      "method": "POST",
+      "summary": "create a CronJob",
+      "nickname": "createCronJobForAllNamespaces",
+      "parameters": [
+       {
+        "type": "string",
+        "paramType": "query",
+        "name": "pretty",
+        "description": "If 'true', then the output is pretty printed.",
+        "required": false,
+        "allowMultiple": false
+       },
+       {
+        "type": "v2alpha1.CronJob",
+        "paramType": "body",
+        "name": "body",
+        "description": "",
+        "required": true,
+        "allowMultiple": false
+       }
+      ],
+      "responseMessages": [
+       {
+        "code": 200,
+        "message": "OK",
+        "responseModel": "v2alpha1.CronJob"
+       },
+       {
+        "code": 201,
+        "message": "Created",
+        "responseModel": "v2alpha1.CronJob"
+       },
+       {
+        "code": 202,
+        "message": "Accepted",
+        "responseModel": "v2alpha1.CronJob"
+       }
+      ],
+      "produces": [
+       "application/json",
+       "application/yaml",
+       "application/vnd.kubernetes.protobuf"
+      ],
+      "consumes": [
+       "*/*"
+      ]
      }
     ]
    },
