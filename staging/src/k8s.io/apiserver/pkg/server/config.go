@@ -255,7 +255,7 @@ func NewConfig(codecs serializer.CodecFactory) *Config {
 		HandlerChainWaitGroup:        new(utilwaitgroup.SafeWaitGroup),
 		LegacyAPIGroupPrefixes:       sets.NewString(DefaultLegacyAPIPrefix),
 		DisabledPostStartHooks:       sets.NewString(),
-		HealthzChecks:                []healthz.HealthzChecker{healthz.PingHealthz},
+		HealthzChecks:                []healthz.HealthzChecker{healthz.PingHealthz, healthz.LogHealthz},
 		EnableIndex:                  true,
 		EnableDiscovery:              true,
 		EnableProfiling:              true,
@@ -477,8 +477,9 @@ func (c completedConfig) New(name string, delegationTarget DelegationTarget) (*G
 
 		listedPathProvider: apiServerHandler,
 
-		swaggerConfig: c.SwaggerConfig,
-		openAPIConfig: c.OpenAPIConfig,
+		swaggerConfig:           c.SwaggerConfig,
+		openAPIConfig:           c.OpenAPIConfig,
+		openAPIDelegationTarget: delegationTarget,
 
 		postStartHooks:         map[string]postStartHookEntry{},
 		preShutdownHooks:       map[string]preShutdownHookEntry{},
@@ -594,8 +595,9 @@ func installAPI(s *GenericAPIServer, c *Config) {
 		}
 	}
 
-	routes.Version{Version: c.Version}.Install(s.Handler.GoRestfulContainer)
-
+	if c.Version != nil {
+		routes.Version{Version: c.Version}.Install(s.Handler.NonGoRestfulMux)
+	}
 	if c.EnableDiscovery {
 		s.Handler.GoRestfulContainer.Add(s.DiscoveryGroupManager.WebService())
 	}

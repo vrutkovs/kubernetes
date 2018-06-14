@@ -27,6 +27,8 @@ import (
 
 // Config is the main context object for the controller manager.
 type Config struct {
+	OpenShiftContext OpenShiftContext
+
 	ComponentConfig componentconfig.KubeControllerManagerConfiguration
 
 	SecureServing *apiserver.SecureServingInfo
