@@ -20,7 +20,6 @@ import (
 	"fmt"
 	"reflect"
 
-	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
@@ -31,9 +30,9 @@ type mapper struct {
 	// localFn indicates the call can't make server requests
 	localFn func() bool
 
-	restMapper meta.RESTMapper
-	clientFn   func(version schema.GroupVersion) (RESTClient, error)
-	decoder    runtime.Decoder
+	restMapperFn RESTMapperFunc
+	clientFn     func(version schema.GroupVersion) (RESTClient, error)
+	decoder      runtime.Decoder
 }
 
 // InfoForData creates an Info object for the given data. An error is returned
@@ -44,6 +43,7 @@ func (m *mapper) infoForData(data []byte, source string) (*Info, error) {
 	if err != nil {
 		return nil, fmt.Errorf("unable to decode %q: %v", source, err)
 	}
+	fixOAPIGroupKind(obj, gvk)
 
 	name, _ := metadataAccessor.Name(obj)
 	namespace, _ := metadataAccessor.Namespace(obj)
@@ -59,7 +59,11 @@ func (m *mapper) infoForData(data []byte, source string) (*Info, error) {
 	}
 
 	if m.localFn == nil || !m.localFn() {
-		mapping, err := m.restMapper.RESTMapping(gvk.GroupKind(), gvk.Version)
+		restMapper, err := m.restMapperFn()
+		if err != nil {
+			return nil, err
+		}
+		mapping, err := restMapper.RESTMapping(gvk.GroupKind(), gvk.Version)
 		if err != nil {
 			return nil, fmt.Errorf("unable to recognize %q: %v", source, err)
 		}
@@ -88,6 +92,7 @@ func (m *mapper) infoForObject(obj runtime.Object, typer runtime.ObjectTyper, pr
 	if len(groupVersionKinds) > 1 && len(preferredGVKs) > 0 {
 		gvk = preferredObjectKind(groupVersionKinds, preferredGVKs)
 	}
+	fixOAPIGroupKind(obj, &gvk)
 
 	name, _ := metadataAccessor.Name(obj)
 	namespace, _ := metadataAccessor.Namespace(obj)
@@ -101,7 +106,11 @@ func (m *mapper) infoForObject(obj runtime.Object, typer runtime.ObjectTyper, pr
 	}
 
 	if m.localFn == nil || !m.localFn() {
-		mapping, err := m.restMapper.RESTMapping(gvk.GroupKind(), gvk.Version)
+		restMapper, err := m.restMapperFn()
+		if err != nil {
+			return nil, err
+		}
+		mapping, err := restMapper.RESTMapping(gvk.GroupKind(), gvk.Version)
 		if err != nil {
 			return nil, fmt.Errorf("unable to recognize %v", err)
 		}
