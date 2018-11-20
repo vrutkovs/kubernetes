@@ -22,7 +22,8 @@ import (
 	"net/url"
 	"time"
 
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/equality"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -150,7 +151,7 @@ func NewAvailableConditionController(
 }
 
 func (c *AvailableConditionController) sync(key string) error {
-	inAPIService, err := c.apiServiceLister.Get(key)
+	originalAPIService, err := c.apiServiceLister.Get(key)
 	if apierrors.IsNotFound(err) {
 		return nil
 	}
@@ -158,7 +159,7 @@ func (c *AvailableConditionController) sync(key string) error {
 		return err
 	}
 
-	apiService := inAPIService.DeepCopy()
+	apiService := originalAPIService.DeepCopy()
 
 	availableCondition := apiregistration.APIServiceCondition{
 		Type:               apiregistration.Available,
@@ -169,7 +170,7 @@ func (c *AvailableConditionController) sync(key string) error {
 	// local API services are always considered available
 	if apiService.Spec.Service == nil {
 		apiregistration.SetAPIServiceCondition(apiService, apiregistration.NewLocalAvailableAPIServiceCondition())
-		_, err := c.apiServiceClient.APIServices().UpdateStatus(apiService)
+		_, err := updateAPIServiceStatus(c.apiServiceClient, originalAPIService, apiService)
 		return err
 	}
 
@@ -179,14 +180,14 @@ func (c *AvailableConditionController) sync(key string) error {
 		availableCondition.Reason = "ServiceNotFound"
 		availableCondition.Message = fmt.Sprintf("service/%s in %q is not present", apiService.Spec.Service.Name, apiService.Spec.Service.Namespace)
 		apiregistration.SetAPIServiceCondition(apiService, availableCondition)
-		_, err := c.apiServiceClient.APIServices().UpdateStatus(apiService)
+		_, err := updateAPIServiceStatus(c.apiServiceClient, originalAPIService, apiService)
 		return err
 	} else if err != nil {
 		availableCondition.Status = apiregistration.ConditionUnknown
 		availableCondition.Reason = "ServiceAccessError"
 		availableCondition.Message = fmt.Sprintf("service/%s in %q cannot be checked due to: %v", apiService.Spec.Service.Name, apiService.Spec.Service.Namespace, err)
 		apiregistration.SetAPIServiceCondition(apiService, availableCondition)
-		_, err := c.apiServiceClient.APIServices().UpdateStatus(apiService)
+		_, err := updateAPIServiceStatus(c.apiServiceClient, originalAPIService, apiService)
 		return err
 	}
 
@@ -203,7 +204,7 @@ func (c *AvailableConditionController) sync(key string) error {
 			availableCondition.Reason = "ServicePortError"
 			availableCondition.Message = fmt.Sprintf("service/%s in %q is not listening on port 443", apiService.Spec.Service.Name, apiService.Spec.Service.Namespace)
 			apiregistration.SetAPIServiceCondition(apiService, availableCondition)
-			_, err := c.apiServiceClient.APIServices().UpdateStatus(apiService)
+			_, err := updateAPIServiceStatus(c.apiServiceClient, originalAPIService, apiService)
 			return err
 		}
 
@@ -213,14 +214,14 @@ func (c *AvailableConditionController) sync(key string) error {
 			availableCondition.Reason = "EndpointsNotFound"
 			availableCondition.Message = fmt.Sprintf("cannot find endpoints for service/%s in %q", apiService.Spec.Service.Name, apiService.Spec.Service.Namespace)
 			apiregistration.SetAPIServiceCondition(apiService, availableCondition)
-			_, err := c.apiServiceClient.APIServices().UpdateStatus(apiService)
+			_, err := updateAPIServiceStatus(c.apiServiceClient, originalAPIService, apiService)
 			return err
 		} else if err != nil {
 			availableCondition.Status = apiregistration.ConditionUnknown
 			availableCondition.Reason = "EndpointsAccessError"
 			availableCondition.Message = fmt.Sprintf("service/%s in %q cannot be checked due to: %v", apiService.Spec.Service.Name, apiService.Spec.Service.Namespace, err)
 			apiregistration.SetAPIServiceCondition(apiService, availableCondition)
-			_, err := c.apiServiceClient.APIServices().UpdateStatus(apiService)
+			_, err := updateAPIServiceStatus(c.apiServiceClient, originalAPIService, apiService)
 			return err
 		}
 		hasActiveEndpoints := false
@@ -235,7 +236,7 @@ func (c *AvailableConditionController) sync(key string) error {
 			availableCondition.Reason = "MissingEndpoints"
 			availableCondition.Message = fmt.Sprintf("endpoints for service/%s in %q have no addresses", apiService.Spec.Service.Name, apiService.Spec.Service.Namespace)
 			apiregistration.SetAPIServiceCondition(apiService, availableCondition)
-			_, err := c.apiServiceClient.APIServices().UpdateStatus(apiService)
+			_, err := updateAPIServiceStatus(c.apiServiceClient, originalAPIService, apiService)
 			return err
 		}
 	}
@@ -283,7 +284,7 @@ func (c *AvailableConditionController) sync(key string) error {
 			availableCondition.Reason = "FailedDiscoveryCheck"
 			availableCondition.Message = fmt.Sprintf("no response from %v: %v", discoveryURL, err)
 			apiregistration.SetAPIServiceCondition(apiService, availableCondition)
-			_, updateErr := c.apiServiceClient.APIServices().UpdateStatus(apiService)
+			_, updateErr := updateAPIServiceStatus(c.apiServiceClient, originalAPIService, apiService)
 			if updateErr != nil {
 				return updateErr
 			}
@@ -296,8 +297,17 @@ func (c *AvailableConditionController) sync(key string) error {
 	availableCondition.Reason = "Passed"
 	availableCondition.Message = "all checks passed"
 	apiregistration.SetAPIServiceCondition(apiService, availableCondition)
-	_, err = c.apiServiceClient.APIServices().UpdateStatus(apiService)
+	_, err = updateAPIServiceStatus(c.apiServiceClient, originalAPIService, apiService)
 	return err
+}
+
+// updateAPIServiceStatus only issues an update if a change is detected.  We have a tight resync loop to quickly detect dead
+// apiservices.  Doing that means we don't want to quickly issue no-op updates.
+func updateAPIServiceStatus(client apiregistrationclient.APIServicesGetter, originalAPIService, newAPIService *apiregistration.APIService) (*apiregistration.APIService, error) {
+	if equality.Semantic.DeepEqual(originalAPIService.Status, newAPIService.Status) {
+		return newAPIService, nil
+	}
+	return client.APIServices().UpdateStatus(newAPIService)
 }
 
 func (c *AvailableConditionController) Run(threadiness int, stopCh <-chan struct{}) {
