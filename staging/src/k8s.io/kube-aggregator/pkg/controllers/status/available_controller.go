@@ -245,47 +245,69 @@ func (c *AvailableConditionController) sync(key string) error {
 	}
 	// actually try to hit the discovery endpoint when it isn't local and when we're routing as a service.
 	if apiService.Spec.Service != nil && c.serviceResolver != nil {
-		discoveryURL, err := c.serviceResolver.ResolveEndpoint(apiService.Spec.Service.Namespace, apiService.Spec.Service.Name)
-		if err != nil {
-			return err
-		}
-
-		errCh := make(chan error)
-		go func() {
-			newReq, err := http.NewRequest("GET", discoveryURL.String(), nil)
-			if err != nil {
-				errCh <- err
-				return
-			}
-
-			// setting the system-masters identity ensures that we will always have access rights
-			transport.SetAuthProxyHeaders(newReq, "system:kube-aggregator", []string{"system:masters"}, nil)
-			resp, err := c.discoveryClient.Do(newReq)
-			if resp != nil {
-				resp.Body.Close()
-				// we should always been in the 200s or 300s
-				if resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusMultipleChoices {
-					errCh <- fmt.Errorf("bad status from %v: %v", discoveryURL, resp.StatusCode)
+		attempts := 5
+		results := make(chan error, attempts)
+		for i := 0; i < attempts; i++ {
+			go func() {
+				discoveryURL, err := c.serviceResolver.ResolveEndpoint(apiService.Spec.Service.Namespace, apiService.Spec.Service.Name)
+				if err != nil {
+					results <- err
 					return
 				}
-			}
 
-			errCh <- err
-		}()
+				errCh := make(chan error)
+				go func() {
+					newReq, err := http.NewRequest("GET", discoveryURL.String(), nil)
+					if err != nil {
+						errCh <- err
+						return
+					}
 
-		select {
-		case err = <-errCh:
+					// setting the system-masters identity ensures that we will always have access rights
+					transport.SetAuthProxyHeaders(newReq, "system:kube-aggregator", []string{"system:masters"}, nil)
+					resp, err := c.discoveryClient.Do(newReq)
+					if resp != nil {
+						resp.Body.Close()
+						// we should always been in the 200s or 300s
+						if resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusMultipleChoices {
+							errCh <- fmt.Errorf("bad status from %v: %v", discoveryURL, resp.StatusCode)
+							return
+						}
+					}
+					errCh <- err
+				}()
 
-		// we had trouble with slow dial and DNS responses causing us to wait too long.
-		// we added this as insurance
-		case <-time.After(6 * time.Second):
-			err = fmt.Errorf("timed out waiting for %v", discoveryURL)
+				select {
+				case err = <-errCh:
+					if err != nil {
+						results <- fmt.Errorf("no response from %v: %v", discoveryURL, err)
+						return
+					}
+
+					// we had trouble with slow dial and DNS responses causing us to wait too long.
+					// we added this as insurance
+				case <-time.After(6 * time.Second):
+					results <- fmt.Errorf("timed out waiting for %v", discoveryURL)
+					return
+				}
+
+				results <- nil
+			}()
 		}
 
-		if err != nil {
+		var lastError error
+		for i := 0; i < attempts; i++ {
+			lastError = <-results
+			// if we had at least one success, we are successful overall and we can return now
+			if lastError == nil {
+				break
+			}
+		}
+
+		if lastError != nil {
 			availableCondition.Status = apiregistration.ConditionFalse
 			availableCondition.Reason = "FailedDiscoveryCheck"
-			availableCondition.Message = fmt.Sprintf("no response from %v: %v", discoveryURL, err)
+			availableCondition.Message = lastError.Error()
 			apiregistration.SetAPIServiceCondition(apiService, availableCondition)
 			_, updateErr := updateAPIServiceStatus(c.apiServiceClient, originalAPIService, apiService)
 			if updateErr != nil {
@@ -293,7 +315,7 @@ func (c *AvailableConditionController) sync(key string) error {
 			}
 			// force a requeue to make it very obvious that this will be retried at some point in the future
 			// along with other requeues done via service change, endpoint change, and resync
-			return err
+			return lastError
 		}
 	}
 
