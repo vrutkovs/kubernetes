@@ -228,7 +228,10 @@ func isExecutable(fullPath string) (bool, error) {
 	}
 
 	if runtime.GOOS == "windows" {
-		if strings.HasSuffix(info.Name(), ".exe") {
+		fileExt := strings.ToLower(filepath.Ext(fullPath))
+
+		switch fileExt {
+		case ".bat", ".cmd", ".com", ".exe", ".ps1":
 			return true, nil
 		}
 		return false, nil
