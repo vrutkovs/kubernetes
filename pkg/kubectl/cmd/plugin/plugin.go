@@ -48,6 +48,8 @@ var (
 		- anywhere on the user's PATH
 		- begin with "kubectl-"
 `)
+
+	ValidPluginFilenamePrefixes = []string{"kubectl"}
 )
 
 func NewCmdPlugin(f cmdutil.Factory, streams genericclioptions.IOStreams) *cobra.Command {
@@ -121,12 +123,12 @@ func (o *PluginListOptions) Run() error {
 			if f.IsDir() {
 				continue
 			}
-			if !strings.HasPrefix(f.Name(), "kubectl-") {
+			if !hasValidPrefix(f.Name(), ValidPluginFilenamePrefixes) {
 				continue
 			}
 
 			if isFirstFile {
-				fmt.Fprintf(o.ErrOut, "The following kubectl-compatible plugins are available:\n\n")
+				fmt.Fprintf(o.ErrOut, "The following compatible plugins are available:\n\n")
 				pluginsFound = true
 				isFirstFile = false
 			}
@@ -237,4 +239,29 @@ func isExecutable(fullPath string) (bool, error) {
 	}
 
 	return false, nil
+}
+
+// uniquePathsList deduplicates a given slice of strings without
+// sorting or otherwise altering its order in any way.
+func uniquePathsList(paths []string) []string {
+	seen := map[string]bool{}
+	newPaths := []string{}
+	for _, p := range paths {
+		if seen[p] {
+			continue
+		}
+		seen[p] = true
+		newPaths = append(newPaths, p)
+	}
+	return newPaths
+}
+
+func hasValidPrefix(filepath string, validPrefixes []string) bool {
+	for _, prefix := range validPrefixes {
+		if !strings.HasPrefix(filepath, prefix+"-") {
+			continue
+		}
+		return true
+	}
+	return false
 }
