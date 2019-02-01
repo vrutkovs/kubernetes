@@ -205,11 +205,11 @@ func (s *specAggregator) buildOpenAPISpec() (specToReturn *spec.Swagger, err err
 	for _, specInfo := range specs {
 		// TODO: Make kube-openapi.MergeSpec(s) accept nil or empty spec as destination and just clone the spec in that case.
 		if specToReturn == nil {
-			specToReturn, err = aggregator.CloneSpec(specInfo.spec)
-			if err != nil {
-				return nil, err
-			}
-			continue
+			specToReturn = &spec.Swagger{}
+			*specToReturn = *specInfo.spec
+			// Paths and Definitions are set by MergeSpecsIgnorePathConflict
+			specToReturn.Paths = nil
+			specToReturn.Definitions = nil
 		}
 		if err := aggregator.MergeSpecsIgnorePathConflict(specToReturn, specInfo.spec); err != nil {
 			return nil, err
@@ -274,7 +274,7 @@ func (s *specAggregator) UpdateAPIServiceSpec(apiServiceName string, spec *spec.
 	// For APIServices (non-local) specs, only merge their /apis/ prefixed endpoint as it is the only paths
 	// proxy handler delegates.
 	if specInfo.apiService.Spec.Service != nil {
-		aggregator.FilterSpecByPaths(spec, []string{"/apis/"})
+		spec = aggregator.FilterSpecByPathsWithoutSideEffects(spec, []string{"/apis/"})
 	}
 
 	return s.tryUpdatingServiceSpecs(&openAPISpecInfo{
