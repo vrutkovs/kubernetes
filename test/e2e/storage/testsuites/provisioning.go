@@ -26,7 +26,7 @@ import (
 	apierrs "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	storage "k8s.io/api/storage/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	clientset "k8s.io/client-go/kubernetes"
@@ -38,18 +38,19 @@ import (
 
 // StorageClassTest represents parameters to be used by provisioning tests
 type StorageClassTest struct {
-	Name               string
-	CloudProviders     []string
-	Provisioner        string
-	StorageClassName   string
-	Parameters         map[string]string
-	DelayBinding       bool
-	ClaimSize          string
-	ExpectedSize       string
-	PvCheck            func(volume *v1.PersistentVolume) error
-	NodeName           string
-	SkipWriteReadCheck bool
-	VolumeMode         *v1.PersistentVolumeMode
+	Name                 string
+	CloudProviders       []string
+	Provisioner          string
+	StorageClassName     string
+	Parameters           map[string]string
+	DelayBinding         bool
+	ClaimSize            string
+	ExpectedSize         string
+	PvCheck              func(volume *v1.PersistentVolume) error
+	NodeName             string
+	SkipWriteReadCheck   bool
+	VolumeMode           *v1.PersistentVolumeMode
+	AllowVolumeExpansion bool
 }
 
 type provisioningTestSuite struct {
