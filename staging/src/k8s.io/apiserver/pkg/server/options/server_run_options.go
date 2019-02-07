@@ -50,8 +50,8 @@ type ServerRunOptions struct {
 	// We intentionally did not add a flag for this option. Users of the
 	// apiserver library can wire it to a flag.
 	MaxRequestBodyBytes     int64
-	MinimalShutdownDuration time.Duration
 	TargetRAMMB             int
+	MinimalShutdownDuration time.Duration
 }
 
 func NewServerRunOptions() *ServerRunOptions {
