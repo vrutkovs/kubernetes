@@ -25,9 +25,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/googleapis/gnostic/OpenAPIv2"
+	openapi_v2 "github.com/googleapis/gnostic/OpenAPIv2"
 
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -405,8 +405,14 @@ func (d *fakeDiscovery) ServerResourcesForGroupVersion(groupVersion string) (*me
 }
 
 // ServerResources returns the supported resources for all groups and versions.
+// Deprecated: use ServerGroupsAndResources instead.
 func (d *fakeDiscovery) ServerResources() ([]*metav1.APIResourceList, error) {
 	return nil, nil
+}
+
+// ServerGroupsAndResources returns the supported groups and resources for all groups and versions.
+func (d *fakeDiscovery) ServerGroupsAndResources() ([]*metav1.APIGroup, []*metav1.APIResourceList, error) {
+	return nil, nil, nil
 }
 
 // ServerPreferredResources returns the supported resources with the version preferred by the
