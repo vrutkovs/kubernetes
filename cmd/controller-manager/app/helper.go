@@ -22,17 +22,17 @@ import (
 	"time"
 
 	"k8s.io/apimachinery/pkg/util/wait"
-	clientset "k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 	"k8s.io/klog"
 )
 
 // WaitForAPIServer waits for the API Server's /healthz endpoint to report "ok" with timeout.
-func WaitForAPIServer(client clientset.Interface, timeout time.Duration) error {
+func WaitForAPIServer(client rest.Interface, timeout time.Duration) error {
 	var lastErr error
 
 	err := wait.PollImmediate(time.Second, timeout, func() (bool, error) {
 		healthStatus := 0
-		result := client.Discovery().RESTClient().Get().AbsPath("/healthz").Do().StatusCode(&healthStatus)
+		result := client.Get().AbsPath("/healthz").Do().StatusCode(&healthStatus)
 		if result.Error() != nil {
 			lastErr = fmt.Errorf("failed to get apiserver /healthz status: %v", result.Error())
 			return false, nil
