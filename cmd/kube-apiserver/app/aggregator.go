@@ -21,7 +21,6 @@ package app
 
 import (
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"strings"
 	"sync"
@@ -41,7 +40,7 @@ import (
 	utilfeature "k8s.io/apiserver/pkg/util/feature"
 	kubeexternalinformers "k8s.io/client-go/informers"
 	"k8s.io/client-go/tools/cache"
-	"k8s.io/kube-aggregator/pkg/apis/apiregistration/v1"
+	v1 "k8s.io/kube-aggregator/pkg/apis/apiregistration/v1"
 	v1helper "k8s.io/kube-aggregator/pkg/apis/apiregistration/v1/helper"
 	"k8s.io/kube-aggregator/pkg/apis/apiregistration/v1beta1"
 	aggregatorapiserver "k8s.io/kube-aggregator/pkg/apiserver"
@@ -91,26 +90,14 @@ func createAggregatorConfig(
 		return nil, err
 	}
 
-	var certBytes, keyBytes []byte
-	if len(commandOptions.ProxyClientCertFile) > 0 && len(commandOptions.ProxyClientKeyFile) > 0 {
-		certBytes, err = ioutil.ReadFile(commandOptions.ProxyClientCertFile)
-		if err != nil {
-			return nil, err
-		}
-		keyBytes, err = ioutil.ReadFile(commandOptions.ProxyClientKeyFile)
-		if err != nil {
-			return nil, err
-		}
-	}
-
 	aggregatorConfig := &aggregatorapiserver.Config{
 		GenericConfig: &genericapiserver.RecommendedConfig{
 			Config:                genericConfig,
 			SharedInformerFactory: externalInformers,
 		},
 		ExtraConfig: aggregatorapiserver.ExtraConfig{
-			ProxyClientCert: certBytes,
-			ProxyClientKey:  keyBytes,
+			ProxyClientCert: commandOptions.ProxyClientCertFile,
+			ProxyClientKey:  commandOptions.ProxyClientKeyFile,
 			ServiceResolver: serviceResolver,
 			ProxyTransport:  proxyTransport,
 		},
