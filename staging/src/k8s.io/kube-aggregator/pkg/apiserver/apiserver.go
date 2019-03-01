@@ -21,23 +21,22 @@ import (
 	"strings"
 	"time"
 
-	"github.com/golang/glog"
-
-	"k8s.io/apimachinery/pkg/labels"
-
-	"k8s.io/apimachinery/pkg/util/wait"
+	"k8s.io/klog"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apimachinery/pkg/util/sets"
+	"k8s.io/apimachinery/pkg/util/wait"
 	genericapiserver "k8s.io/apiserver/pkg/server"
+	"k8s.io/apiserver/pkg/server/certs"
 	serverstorage "k8s.io/apiserver/pkg/server/storage"
 	"k8s.io/client-go/pkg/version"
 
 	"k8s.io/kube-aggregator/pkg/apis/apiregistration"
 	apiregistrationapi "k8s.io/kube-aggregator/pkg/apis/apiregistration"
-	"k8s.io/kube-aggregator/pkg/apis/apiregistration/v1"
+	v1 "k8s.io/kube-aggregator/pkg/apis/apiregistration/v1"
 	"k8s.io/kube-aggregator/pkg/apis/apiregistration/v1beta1"
 	aggregatorscheme "k8s.io/kube-aggregator/pkg/apiserver/scheme"
 	"k8s.io/kube-aggregator/pkg/client/clientset_generated/internalclientset"
@@ -70,8 +69,8 @@ const legacyAPIServiceName = "v1."
 type ExtraConfig struct {
 	// ProxyClientCert/Key are the client cert used to identify this proxy. Backing APIServices use
 	// this to confirm the proxy's identity
-	ProxyClientCert []byte
-	ProxyClientKey  []byte
+	ProxyClientCert string
+	ProxyClientKey  string
 
 	// If present, the Dial method will be used for dialing out to delegate
 	// apiservers.
@@ -106,8 +105,8 @@ type APIAggregator struct {
 
 	// proxyClientCert/Key are the client cert used to identify this proxy. Backing APIServices use
 	// this to confirm the proxy's identity
-	proxyClientCert []byte
-	proxyClientKey  []byte
+	proxyClientCert certFunc
+	proxyClientKey  certFunc
 	proxyTransport  *http.Transport
 
 	// proxyHandlers are the proxy handlers that are currently registered, keyed by apiservice.name
@@ -168,8 +167,6 @@ func (c completedConfig) NewWithDelegate(delegationTarget genericapiserver.Deleg
 	s := &APIAggregator{
 		GenericAPIServer:         genericServer,
 		delegateHandler:          delegationTarget.UnprotectedHandler(),
-		proxyClientCert:          c.ExtraConfig.ProxyClientCert,
-		proxyClientKey:           c.ExtraConfig.ProxyClientKey,
 		proxyTransport:           c.ExtraConfig.ProxyTransport,
 		proxyHandlers:            map[string]*proxyHandler{},
 		handledGroups:            sets.String{},
@@ -191,20 +188,31 @@ func (c completedConfig) NewWithDelegate(delegationTarget genericapiserver.Deleg
 	s.GenericAPIServer.Handler.NonGoRestfulMux.UnlistedHandle("/apis/", apisHandler)
 
 	apiserviceRegistrationController := NewAPIServiceRegistrationController(informerFactory.Apiregistration().InternalVersion().APIServices(), s)
+	aggregatorProxyCerts := certs.NewDynamicCertKeyPairLoader(c.ExtraConfig.ProxyClientCert, c.ExtraConfig.ProxyClientKey, apiserviceRegistrationController.resyncAll)
+	if err := aggregatorProxyCerts.CheckCerts(); err != nil {
+		return nil, err
+	}
+	s.proxyClientCert = aggregatorProxyCerts.GetRawCert
+	s.proxyClientKey = aggregatorProxyCerts.GetRawKey
+
 	availableController, err := statuscontrollers.NewAvailableConditionController(
 		informerFactory.Apiregistration().InternalVersion().APIServices(),
 		c.GenericConfig.SharedInformerFactory.Core().V1().Services(),
 		c.GenericConfig.SharedInformerFactory.Core().V1().Endpoints(),
 		apiregistrationClient.Apiregistration(),
 		c.ExtraConfig.ProxyTransport,
-		c.ExtraConfig.ProxyClientCert,
-		c.ExtraConfig.ProxyClientKey,
+		aggregatorProxyCerts.GetRawCert,
+		aggregatorProxyCerts.GetRawKey,
 		s.serviceResolver,
 	)
 	if err != nil {
 		return nil, err
 	}
 
+	s.GenericAPIServer.AddPostStartHookOrDie("aggregator-reload-proxy-client-cert", func(context genericapiserver.PostStartHookContext) error {
+		go aggregatorProxyCerts.Run(context.StopCh)
+		return nil
+	})
 	s.GenericAPIServer.AddPostStartHookOrDie("start-kube-aggregator-informers", func(context genericapiserver.PostStartHookContext) error {
 		informerFactory.Start(context.StopCh)
 		c.GenericConfig.SharedInformerFactory.Start(context.StopCh)
@@ -240,7 +248,7 @@ func (c completedConfig) NewWithDelegate(delegationTarget genericapiserver.Deleg
 			if len(notYetHandledAPIServices) == 0 {
 				return true, nil
 			}
-			glog.Infof("still waiting on handling APIServices: %v", strings.Join(notYetHandledAPIServices.List(), ","))
+			klog.Infof("still waiting on handling APIServices: %v", strings.Join(notYetHandledAPIServices.List(), ","))
 
 			return false, nil
 		}, context.StopCh)

@@ -21,7 +21,7 @@ import (
 
 	"github.com/davecgh/go-spew/spew"
 
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	v1listers "k8s.io/client-go/listers/core/v1"
 	clienttesting "k8s.io/client-go/testing"
@@ -196,6 +196,8 @@ func TestSync(t *testing.T) {
 			apiServiceLister: listers.NewAPIServiceLister(apiServiceIndexer),
 			serviceLister:    v1listers.NewServiceLister(serviceIndexer),
 			endpointsLister:  v1listers.NewEndpointsLister(endpointsIndexer),
+			proxyClientCert:  emptyCert,
+			proxyClientKey:   emptyCert,
 		}
 		c.sync(tc.apiServiceName)
 
@@ -249,5 +251,8 @@ func TestUpdateAPIServiceStatus(t *testing.T) {
 	if e, a := 1, len(fakeClient.Actions()); e != a {
 		t.Error(spew.Sdump(fakeClient.Actions()))
 	}
+}
 
+func emptyCert() []byte {
+	return []byte{}
 }
