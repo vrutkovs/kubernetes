@@ -137,9 +137,9 @@ type GenericAPIServer struct {
 	preShutdownHooksCalled bool
 
 	// healthz checks
-	healthzLock    sync.Mutex
-	healthzChecks  []healthz.HealthzChecker
-	healthzCreated bool
+	healthzLock        sync.Mutex
+	healthzChecks      []healthz.HealthzChecker
+	healthChecksLocked bool
 
 	// auditing. The backend is started after the server starts listening.
 	AuditBackend audit.Backend
@@ -277,7 +277,9 @@ func (s preparedGenericAPIServer) Run(stopCh <-chan struct{}) error {
 		time.Sleep(s.MinimalShutdownDuration)
 	}()
 
-	// close socker after delayed stopCh
+	s.installReadyz(stopCh)
+
+	// close socket after delayed stopCh
 	err := s.NonBlockingRun(delayedStopCh)
 	if err != nil {
 		return err
