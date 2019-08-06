@@ -26,6 +26,7 @@ import (
 	"testing"
 	"time"
 
+	v1 "k8s.io/api/core/v1"
 	storage "k8s.io/api/storage/v1"
 	apierrs "k8s.io/apimachinery/pkg/api/errors"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -1489,4 +1490,10 @@ func newTestWatchPlugin(t *testing.T, fakeClient *fakeclient.Clientset) (*csiPlu
 	}
 
 	return csiPlug, fakeWatcher, tmpDir, fakeClient
+}
+
+func makeTestPVWithMountOptions(name string, sizeGig int, driverName, volID string, mountOptions []string) *v1.PersistentVolume {
+	pv := makeTestPV(name, sizeGig, driverName, volID)
+	pv.Spec.MountOptions = mountOptions
+	return pv
 }
