@@ -207,6 +207,15 @@ func clusterRoles() []rbacv1.ClusterRole {
 			},
 		},
 		{
+			// a role which provides unauthenticated access to /readyz.
+			ObjectMeta: metav1.ObjectMeta{Name: "system:openshift:public-info-viewer"},
+			Rules: []rbacv1.PolicyRule{
+				rbacv1helpers.NewRule("get").URLs(
+					"/.well-known", "/.well-known/*",
+				).RuleOrDie(),
+			},
+		},
+		{
 			// a role which provides minimal resource access to allow a "normal" user to learn information about themselves
 			ObjectMeta: metav1.ObjectMeta{Name: "system:basic-user"},
 			Rules: []rbacv1.PolicyRule{
