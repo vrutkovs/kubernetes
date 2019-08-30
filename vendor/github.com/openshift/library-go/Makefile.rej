@@ -1,0 +1,20 @@
+***************
+*** 31,33 ****
+  clean:
+  	$(RM) ./cluster-config-operator
+  .PHONY: clean
+--- 31,44 ----
+  clean:
+  	$(RM) ./cluster-config-operator
+  .PHONY: clean
++ 
++ update-codegen:
++ 	go run ./vendor/github.com/openshift/library-go/cmd/crd-schema-gen/main.go --apis-dir vendor/github.com/openshift/api
++ .PHONY: update-codegen
++ 
++ verify-codegen: update-codegen
++ 	go run ./vendor/github.com/openshift/library-go/cmd/crd-schema-gen/main.go --apis-dir vendor/github.com/openshift/api --verify-only
++ .PHONY: verify-codegen
++ 
++ verify: verify-codegen
++ .PHONY: verify
