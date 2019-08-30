@@ -153,8 +153,8 @@ func createAggregatorServer(aggregatorConfig *aggregatorapiserver.Config, delega
 		return nil, err
 	}
 
-	err = aggregatorServer.GenericAPIServer.AddHealthzChecks(
-		makeAPIServiceAvailableHealthzCheck(
+	err = aggregatorServer.GenericAPIServer.AddBootSequenceHealthChecks(
+		makeAPIServiceAvailableHealthCheck(
 			"autoregister-completion",
 			apiServices,
 			aggregatorServer.APIRegistrationInformers.Apiregistration().V1().APIServices(),
@@ -186,9 +186,9 @@ func makeAPIService(gv schema.GroupVersion) *v1.APIService {
 	}
 }
 
-// makeAPIServiceAvailableHealthzCheck returns a healthz check that returns healthy
+// makeAPIServiceAvailableHealthCheck returns a healthz check that returns healthy
 // once all of the specified services have been observed to be available at least once.
-func makeAPIServiceAvailableHealthzCheck(name string, apiServices []*v1.APIService, apiServiceInformer informers.APIServiceInformer) healthz.HealthzChecker {
+func makeAPIServiceAvailableHealthCheck(name string, apiServices []*v1.APIService, apiServiceInformer informers.APIServiceInformer) healthz.HealthChecker {
 	// Track the auto-registered API services that have not been observed to be available yet
 	pendingServiceNamesLock := &sync.RWMutex{}
 	pendingServiceNames := sets.NewString()
@@ -281,6 +281,7 @@ var apiVersionPriorities = map[schema.GroupVersion]priority{
 	{Group: "auditregistration.k8s.io", Version: "v1alpha1"}:    {group: 16400, version: 1},
 	{Group: "node.k8s.io", Version: "v1alpha1"}:                 {group: 16300, version: 1},
 	{Group: "node.k8s.io", Version: "v1beta1"}:                  {group: 16300, version: 9},
+	{Group: "discovery.k8s.io", Version: "v1alpha1"}:            {group: 16200, version: 9},
 	// Append a new group to the end of the list if unsure.
 	// You can use min(existing group)-100 as the initial value for a group.
 	// Version can be set to 9 (to have space around) for a new group.

@@ -45,6 +45,7 @@ const (
 	autoscalingGroup    = "autoscaling"
 	batchGroup          = "batch"
 	certificatesGroup   = "certificates.k8s.io"
+	discoveryGroup      = "discovery.k8s.io"
 	extensionsGroup     = "extensions"
 	policyGroup         = "policy"
 	rbacGroup           = "rbac.authorization.k8s.io"
@@ -197,7 +198,8 @@ func ClusterRoles() []rbacv1.ClusterRole {
 			ObjectMeta: metav1.ObjectMeta{Name: "system:discovery"},
 			Rules: []rbacv1.PolicyRule{
 				rbacv1helpers.NewRule("get").URLs(
-					"/readyz", "/healthz", "/version", "/version/",
+					"/livez", "/readyz", "/healthz",
+					"/version", "/version/",
 					"/openapi", "/openapi/*",
 					"/api", "/api/*",
 					"/apis", "/apis/*",
@@ -217,7 +219,7 @@ func ClusterRoles() []rbacv1.ClusterRole {
 			ObjectMeta: metav1.ObjectMeta{Name: "system:public-info-viewer"},
 			Rules: []rbacv1.PolicyRule{
 				rbacv1helpers.NewRule("get").URLs(
-					"/readyz", "/healthz", "/version", "/version/",
+					"/livez", "/readyz", "/healthz", "/version", "/version/",
 				).RuleOrDie(),
 			},
 		},
