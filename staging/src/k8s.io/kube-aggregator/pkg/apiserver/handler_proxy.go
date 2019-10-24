@@ -25,6 +25,7 @@ import (
 	"time"
 
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/httpstream"
 	"k8s.io/apimachinery/pkg/util/httpstream/spdy"
 	utilnet "k8s.io/apimachinery/pkg/util/net"
@@ -47,6 +48,8 @@ const (
 	aggregatedDiscoveryTimeout = 5 * time.Second
 )
 
+type certFunc func() []byte
+
 // proxyHandler provides a http.Handler which will proxy traffic to locations
 // specified by items implementing Redirector.
 type proxyHandler struct {
@@ -55,8 +58,8 @@ type proxyHandler struct {
 
 	// proxyClientCert/Key are the client cert used to identify this proxy. Backing APIServices use
 	// this to confirm the proxy's identity
-	proxyClientCert []byte
-	proxyClientKey  []byte
+	proxyClientCert certFunc
+	proxyClientKey  certFunc
 	proxyTransport  *http.Transport
 
 	// Endpoints based routing to map from cluster IP to routable IP
@@ -117,6 +120,14 @@ func (r *proxyHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		}
 		r.localDelegate.ServeHTTP(w, req)
 		return
+	}
+
+	// some groupResources should always be delegated
+	if requestInfo, ok := genericapirequest.RequestInfoFrom(req.Context()); ok {
+		if alwaysLocalDelegateGroupResource[schema.GroupResource{Group: requestInfo.APIGroup, Resource: requestInfo.Resource}] {
+			r.localDelegate.ServeHTTP(w, req)
+			return
+		}
 	}
 
 	if !handlingInfo.serviceAvailable {
@@ -251,8 +262,8 @@ func (r *proxyHandler) updateAPIService(apiService *apiregistrationv1api.APIServ
 			TLSClientConfig: restclient.TLSClientConfig{
 				Insecure:   apiService.Spec.InsecureSkipTLSVerify,
 				ServerName: apiService.Spec.Service.Name + "." + apiService.Spec.Service.Namespace + ".svc",
-				CertData:   r.proxyClientCert,
-				KeyData:    r.proxyClientKey,
+				CertData:   r.proxyClientCert(),
+				KeyData:    r.proxyClientKey(),
 				CAData:     apiService.Spec.CABundle,
 			},
 		},
