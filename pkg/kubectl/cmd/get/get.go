@@ -45,7 +45,6 @@ import (
 	watchtools "k8s.io/client-go/tools/watch"
 	"k8s.io/kubernetes/pkg/api/legacyscheme"
 	cmdutil "k8s.io/kubernetes/pkg/kubectl/cmd/util"
-	"k8s.io/kubernetes/pkg/kubectl/scheme"
 	"k8s.io/kubernetes/pkg/kubectl/util/i18n"
 	utilprinters "k8s.io/kubernetes/pkg/kubectl/util/printers"
 	"k8s.io/kubernetes/pkg/kubectl/util/templates"
@@ -254,7 +253,7 @@ func (o *GetOptions) Complete(f cmdutil.Factory, cmd *cobra.Command, args []stri
 		if err != nil {
 			return nil, err
 		}
-		printer, err = printers.NewTypeSetter(scheme.Scheme).WrapToPrinter(printer, nil)
+		printer, err = printers.NewTypeSetter(legacyscheme.Scheme).WrapToPrinter(printer, nil)
 		if err != nil {
 			return nil, err
 		}
