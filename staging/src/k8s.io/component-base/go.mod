@@ -20,13 +20,16 @@ require (
 	go.uber.org/atomic v1.4.0 // indirect
 	go.uber.org/multierr v1.1.0 // indirect
 	go.uber.org/zap v1.10.0
-	k8s.io/apimachinery v0.0.0
-	k8s.io/client-go v0.0.0
+	google.golang.org/appengine v1.6.5 // indirect
+	k8s.io/apimachinery v0.19.0-rc.1
+	k8s.io/client-go v0.19.0-rc.1
 	k8s.io/klog/v2 v2.2.0
 	k8s.io/utils v0.0.0-20200619165400-6e3d28b6ed19
 )
 
 replace (
+	golang.org/x/net => golang.org/x/net v0.0.0-20200324143707-d3edc9973b7e
+	gopkg.in/yaml.v2 => gopkg.in/yaml.v2 v2.2.8
 	k8s.io/api => ../api
 	k8s.io/apimachinery => ../apimachinery
 	k8s.io/client-go => ../client-go

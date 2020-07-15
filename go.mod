@@ -99,7 +99,7 @@ require (
 	github.com/vmware/govmomi v0.20.3
 	go.etcd.io/etcd v0.5.0-alpha.5.0.20200520232829-54ba9589114f
 	golang.org/x/crypto v0.0.0-20200220183623-bac4c82f6975
-	golang.org/x/net v0.0.0-20200324143707-d3edc9973b7e
+	golang.org/x/net v0.0.0-20200602114024-627f9648deb9
 	golang.org/x/oauth2 v0.0.0-20191202225959-858c2ad4c8b6
 	golang.org/x/sys v0.0.0-20200622214017-ed371f2e16b4
 	golang.org/x/time v0.0.0-20191024005414-555d28b269f0
@@ -110,16 +110,16 @@ require (
 	google.golang.org/grpc v1.27.0
 	gopkg.in/gcfg.v1 v1.2.0
 	gopkg.in/square/go-jose.v2 v2.2.2
-	gopkg.in/yaml.v2 v2.2.8
-	k8s.io/api v0.0.0
+	gopkg.in/yaml.v2 v2.3.0
+	k8s.io/api v0.19.0-rc.1
 	k8s.io/apiextensions-apiserver v0.0.0
-	k8s.io/apimachinery v0.0.0
+	k8s.io/apimachinery v0.19.0-rc.1
 	k8s.io/apiserver v0.0.0
 	k8s.io/cli-runtime v0.0.0
-	k8s.io/client-go v0.0.0
+	k8s.io/client-go v0.19.0-rc.1
 	k8s.io/cloud-provider v0.0.0
 	k8s.io/cluster-bootstrap v0.0.0
-	k8s.io/code-generator v0.0.0
+	k8s.io/code-generator v0.19.0-rc.1
 	k8s.io/component-base v0.0.0
 	k8s.io/cri-api v0.0.0
 	k8s.io/csi-translation-lib v0.0.0
@@ -366,6 +366,7 @@ replace (
 	github.com/opencontainers/runtime-spec => github.com/opencontainers/runtime-spec v1.0.3-0.20200520003142-237cc4f519e2
 	github.com/opencontainers/selinux => github.com/opencontainers/selinux v1.5.2
 	github.com/openshift/api => github.com/openshift/api v0.0.0-20200715151710-c8ebadbe7a0b
+	github.com/openshift/build-machinery-go => github.com/openshift/build-machinery-go v0.0.0-20200713135615-1f43d26dccc7
 	github.com/openshift/client-go => github.com/openshift/client-go v0.0.0-20200715161325-27814304d61b
 	github.com/pelletier/go-toml => github.com/pelletier/go-toml v1.2.0
 	github.com/peterbourgon/diskv => github.com/peterbourgon/diskv v2.0.1+incompatible
@@ -461,21 +462,22 @@ replace (
 	gotest.tools => gotest.tools v2.2.0+incompatible
 	gotest.tools/v3 => gotest.tools/v3 v3.0.2
 	honnef.co/go/tools => honnef.co/go/tools v0.0.1-2019.2.3
-	k8s.io/api => ./staging/src/k8s.io/api
+	k8s.io/api => k8s.io/api v0.19.0-rc.1
 	k8s.io/apiextensions-apiserver => ./staging/src/k8s.io/apiextensions-apiserver
-	k8s.io/apimachinery => ./staging/src/k8s.io/apimachinery
+	k8s.io/apimachinery => k8s.io/apimachinery v0.19.0-rc.1
 	k8s.io/apiserver => ./staging/src/k8s.io/apiserver
 	k8s.io/cli-runtime => ./staging/src/k8s.io/cli-runtime
-	k8s.io/client-go => ./staging/src/k8s.io/client-go
+	k8s.io/client-go => k8s.io/client-go v0.19.0-rc.1
 	k8s.io/cloud-provider => ./staging/src/k8s.io/cloud-provider
 	k8s.io/cluster-bootstrap => ./staging/src/k8s.io/cluster-bootstrap
-	k8s.io/code-generator => ./staging/src/k8s.io/code-generator
+	k8s.io/code-generator => k8s.io/code-generator v0.19.0-rc.1
 	k8s.io/component-base => ./staging/src/k8s.io/component-base
 	k8s.io/controller-manager => ./staging/src/k8s.io/controller-manager
 	k8s.io/cri-api => ./staging/src/k8s.io/cri-api
 	k8s.io/csi-translation-lib => ./staging/src/k8s.io/csi-translation-lib
 	k8s.io/gengo => k8s.io/gengo v0.0.0-20200428234225-8167cfdcfc14
 	k8s.io/heapster => k8s.io/heapster v1.2.0-beta.1
+	k8s.io/klog => k8s.io/klog v1.0.0
 	k8s.io/klog/v2 => k8s.io/klog/v2 v2.2.0
 	k8s.io/kube-aggregator => ./staging/src/k8s.io/kube-aggregator
 	k8s.io/kube-controller-manager => ./staging/src/k8s.io/kube-controller-manager

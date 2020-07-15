@@ -603,6 +603,14 @@ github.com/opencontainers/runtime-spec/specs-go
 github.com/opencontainers/selinux/go-selinux
 github.com/opencontainers/selinux/go-selinux/label
 github.com/opencontainers/selinux/pkg/pwalk
+# github.com/openshift/api v0.0.0-20200715151710-c8ebadbe7a0b => github.com/openshift/api v0.0.0-20200715151710-c8ebadbe7a0b
+github.com/openshift/api/image/docker10
+github.com/openshift/api/image/dockerpre012
+github.com/openshift/api/image/v1
+# github.com/openshift/client-go v0.0.0-20200715161325-27814304d61b => github.com/openshift/client-go v0.0.0-20200715161325-27814304d61b
+github.com/openshift/client-go/image/clientset/versioned
+github.com/openshift/client-go/image/clientset/versioned/scheme
+github.com/openshift/client-go/image/clientset/versioned/typed/image/v1
 # github.com/pelletier/go-toml v1.2.0 => github.com/pelletier/go-toml v1.2.0
 github.com/pelletier/go-toml
 # github.com/peterbourgon/diskv v2.0.1+incompatible => github.com/peterbourgon/diskv v2.0.1+incompatible
@@ -863,7 +871,7 @@ golang.org/x/crypto/salsa20/salsa
 golang.org/x/crypto/ssh
 golang.org/x/crypto/ssh/internal/bcrypt_pbkdf
 golang.org/x/crypto/ssh/terminal
-# golang.org/x/net v0.0.0-20200324143707-d3edc9973b7e => golang.org/x/net v0.0.0-20200324143707-d3edc9973b7e
+# golang.org/x/net v0.0.0-20200602114024-627f9648deb9 => golang.org/x/net v0.0.0-20200324143707-d3edc9973b7e
 golang.org/x/net/bpf
 golang.org/x/net/context
 golang.org/x/net/context/ctxhttp
@@ -1103,9 +1111,9 @@ gopkg.in/square/go-jose.v2/jwt
 gopkg.in/tomb.v1
 # gopkg.in/warnings.v0 v0.1.1 => gopkg.in/warnings.v0 v0.1.1
 gopkg.in/warnings.v0
-# gopkg.in/yaml.v2 v2.2.8 => gopkg.in/yaml.v2 v2.2.8
+# gopkg.in/yaml.v2 v2.3.0 => gopkg.in/yaml.v2 v2.2.8
 gopkg.in/yaml.v2
-# k8s.io/api v0.0.0 => ./staging/src/k8s.io/api
+# k8s.io/api v0.19.0-rc.1 => k8s.io/api v0.19.0-rc.1
 k8s.io/api/admission/v1
 k8s.io/api/admission/v1beta1
 k8s.io/api/admissionregistration/v1
@@ -1193,7 +1201,7 @@ k8s.io/apiextensions-apiserver/pkg/registry/customresource/tableconvertor
 k8s.io/apiextensions-apiserver/pkg/registry/customresourcedefinition
 k8s.io/apiextensions-apiserver/test/integration
 k8s.io/apiextensions-apiserver/test/integration/fixtures
-# k8s.io/apimachinery v0.0.0 => ./staging/src/k8s.io/apimachinery
+# k8s.io/apimachinery v0.19.0-rc.1 => k8s.io/apimachinery v0.19.0-rc.1
 k8s.io/apimachinery/pkg/api/apitesting
 k8s.io/apimachinery/pkg/api/apitesting/fuzzer
 k8s.io/apimachinery/pkg/api/apitesting/naming
@@ -1402,6 +1410,7 @@ k8s.io/apiserver/plugin/pkg/authenticator/token/webhook
 k8s.io/apiserver/plugin/pkg/authorizer/webhook
 # k8s.io/cli-runtime v0.0.0 => ./staging/src/k8s.io/cli-runtime
 k8s.io/cli-runtime/pkg/genericclioptions
+k8s.io/cli-runtime/pkg/genericclioptions/openshiftpatch
 k8s.io/cli-runtime/pkg/kustomize
 k8s.io/cli-runtime/pkg/kustomize/k8sdeps
 k8s.io/cli-runtime/pkg/kustomize/k8sdeps/configmapandsecret
@@ -1413,7 +1422,7 @@ k8s.io/cli-runtime/pkg/kustomize/k8sdeps/transformer/patch
 k8s.io/cli-runtime/pkg/kustomize/k8sdeps/validator
 k8s.io/cli-runtime/pkg/printers
 k8s.io/cli-runtime/pkg/resource
-# k8s.io/client-go v0.0.0 => ./staging/src/k8s.io/client-go
+# k8s.io/client-go v0.19.0-rc.1 => k8s.io/client-go v0.19.0-rc.1
 k8s.io/client-go/discovery
 k8s.io/client-go/discovery/cached
 k8s.io/client-go/discovery/cached/disk
@@ -1678,7 +1687,7 @@ k8s.io/cluster-bootstrap/token/jws
 k8s.io/cluster-bootstrap/token/util
 k8s.io/cluster-bootstrap/util/secrets
 k8s.io/cluster-bootstrap/util/tokens
-# k8s.io/code-generator v0.0.0 => ./staging/src/k8s.io/code-generator
+# k8s.io/code-generator v0.19.0-rc.1 => k8s.io/code-generator v0.19.0-rc.1
 k8s.io/code-generator/cmd/go-to-protobuf
 k8s.io/code-generator/cmd/go-to-protobuf/protobuf
 k8s.io/code-generator/cmd/go-to-protobuf/protoc-gen-gogo

@@ -5,7 +5,6 @@ module k8s.io/client-go
 go 1.13
 
 require (
-	cloud.google.com/go v0.51.0 // indirect
 	github.com/Azure/go-autorest/autorest v0.9.6
 	github.com/Azure/go-autorest/autorest/adal v0.8.2
 	github.com/davecgh/go-spew v1.1.1
@@ -23,18 +22,21 @@ require (
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.4.0
 	golang.org/x/crypto v0.0.0-20200220183623-bac4c82f6975
-	golang.org/x/net v0.0.0-20200324143707-d3edc9973b7e
+	golang.org/x/net v0.0.0-20200602114024-627f9648deb9
 	golang.org/x/oauth2 v0.0.0-20191202225959-858c2ad4c8b6
 	golang.org/x/time v0.0.0-20191024005414-555d28b269f0
-	k8s.io/api v0.0.0
-	k8s.io/apimachinery v0.0.0
+	k8s.io/api v0.19.0-rc.1
+	k8s.io/apimachinery v0.19.0-rc.1
 	k8s.io/klog/v2 v2.2.0
 	k8s.io/utils v0.0.0-20200619165400-6e3d28b6ed19
 	sigs.k8s.io/yaml v1.2.0
 )
 
 replace (
+	golang.org/x/net => golang.org/x/net v0.0.0-20200324143707-d3edc9973b7e
+	gopkg.in/yaml.v2 => gopkg.in/yaml.v2 v2.2.8
 	k8s.io/api => ../api
 	k8s.io/apimachinery => ../apimachinery
 	k8s.io/client-go => ../client-go
+	k8s.io/code-generator => ../code-generator
 )
