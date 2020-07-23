@@ -20,12 +20,12 @@ require (
 	github.com/stretchr/testify v1.4.0
 	go.etcd.io/etcd v0.5.0-alpha.5.0.20200520232829-54ba9589114f
 	google.golang.org/grpc v1.27.0
-	gopkg.in/yaml.v2 v2.2.8
-	k8s.io/api v0.0.0
-	k8s.io/apimachinery v0.0.0
+	gopkg.in/yaml.v2 v2.3.0
+	k8s.io/api v0.19.0-rc.1
+	k8s.io/apimachinery v0.19.0-rc.1
 	k8s.io/apiserver v0.0.0
-	k8s.io/client-go v0.0.0
-	k8s.io/code-generator v0.0.0
+	k8s.io/client-go v0.19.0-rc.1
+	k8s.io/code-generator v0.19.0-rc.1
 	k8s.io/component-base v0.0.0
 	k8s.io/klog/v2 v2.2.0
 	k8s.io/kube-openapi v0.0.0-20200427153329-656914f816f9
@@ -34,6 +34,8 @@ require (
 )
 
 replace (
+	golang.org/x/net => golang.org/x/net v0.0.0-20200324143707-d3edc9973b7e
+	gopkg.in/yaml.v2 => gopkg.in/yaml.v2 v2.2.8
 	k8s.io/api => ../api
 	k8s.io/apiextensions-apiserver => ../apiextensions-apiserver
 	k8s.io/apimachinery => ../apimachinery

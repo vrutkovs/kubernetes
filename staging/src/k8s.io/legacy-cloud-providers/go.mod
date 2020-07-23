@@ -28,10 +28,10 @@ require (
 	google.golang.org/api v0.15.1
 	gopkg.in/gcfg.v1 v1.2.0
 	gopkg.in/warnings.v0 v0.1.1 // indirect
-	k8s.io/api v0.0.0
-	k8s.io/apimachinery v0.0.0
+	k8s.io/api v0.19.0-rc.1
+	k8s.io/apimachinery v0.19.0-rc.1
 	k8s.io/apiserver v0.0.0
-	k8s.io/client-go v0.0.0
+	k8s.io/client-go v0.19.0-rc.1
 	k8s.io/cloud-provider v0.0.0
 	k8s.io/component-base v0.0.0
 	k8s.io/csi-translation-lib v0.0.0
@@ -41,6 +41,8 @@ require (
 )
 
 replace (
+	golang.org/x/net => golang.org/x/net v0.0.0-20200324143707-d3edc9973b7e
+	gopkg.in/yaml.v2 => gopkg.in/yaml.v2 v2.2.8
 	k8s.io/api => ../api
 	k8s.io/apimachinery => ../apimachinery
 	k8s.io/apiserver => ../apiserver

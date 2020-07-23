@@ -18,16 +18,19 @@ require (
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.4.0
 	golang.org/x/text v0.3.3
-	gopkg.in/yaml.v2 v2.2.8
-	k8s.io/api v0.0.0
-	k8s.io/apimachinery v0.0.0
-	k8s.io/client-go v0.0.0
+	google.golang.org/appengine v1.6.5 // indirect
+	gopkg.in/yaml.v2 v2.3.0
+	k8s.io/api v0.19.0-rc.1
+	k8s.io/apimachinery v0.19.0-rc.1
+	k8s.io/client-go v0.19.0-rc.1
 	k8s.io/kube-openapi v0.0.0-20200427153329-656914f816f9
 	sigs.k8s.io/kustomize v2.0.3+incompatible
 	sigs.k8s.io/yaml v1.2.0
 )
 
 replace (
+	golang.org/x/net => golang.org/x/net v0.0.0-20200324143707-d3edc9973b7e
+	gopkg.in/yaml.v2 => gopkg.in/yaml.v2 v2.2.8
 	k8s.io/api => ../api
 	k8s.io/apimachinery => ../apimachinery
 	k8s.io/cli-runtime => ../cli-runtime
