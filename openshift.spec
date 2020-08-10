@@ -1,5 +1,3 @@
-#debuginfo not supported with Go
-%global debug_package %{nil}
 # modifying the Go binaries breaks the DWARF debugging
 %global __os_install_post %{_rpmconfigdir}/brp-compress
 
