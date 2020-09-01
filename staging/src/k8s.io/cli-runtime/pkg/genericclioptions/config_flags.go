@@ -17,7 +17,6 @@ limitations under the License.
 package genericclioptions
 
 import (
-	"errors"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -28,6 +27,7 @@ import (
 	"github.com/spf13/pflag"
 
 	"k8s.io/apimachinery/pkg/api/meta"
+	"k8s.io/cli-runtime/pkg/genericclioptions/openshiftpatch"
 	"k8s.io/client-go/discovery"
 	diskcached "k8s.io/client-go/discovery/cached/disk"
 	"k8s.io/client-go/rest"
@@ -59,7 +59,8 @@ const (
 var (
 	defaultCacheDir = filepath.Join(homedir.HomeDir(), ".kube", "http-cache")
 
-	ErrEmptyConfig = errors.New(`Missing or incomplete configuration info.  Please point to an existing, complete config file:
+	ErrEmptyConfig = clientcmd.NewEmptyConfigError(`Missing or incomplete configuration info.  Please point to an existing, complete config file:
+
 
   1. Via the command-line flag --kubeconfig
   2. Via the KUBECONFIG environment variable
@@ -271,7 +272,13 @@ func (f *ConfigFlags) ToRESTMapper() (meta.RESTMapper, error) {
 // AddFlags binds client configuration flags to a given flagset
 func (f *ConfigFlags) AddFlags(flags *pflag.FlagSet) {
 	if f.KubeConfig != nil {
-		flags.StringVar(f.KubeConfig, "kubeconfig", *f.KubeConfig, "Path to the kubeconfig file to use for CLI requests.")
+		if !openshiftpatch.IsOC {
+			flags.StringVar(f.KubeConfig, "kubeconfig", *f.KubeConfig, "Path to the kubeconfig file to use for CLI requests.")
+		} else {
+			flags.StringVar(f.KubeConfig, "kubeconfig", *f.KubeConfig, "Path to the kubeconfig file to use for CLI requests.")
+			flags.StringVar(f.KubeConfig, OpenShiftKubeConfigFlagName, *f.KubeConfig, "Path to the kubeconfig file to use for CLI requests.")
+			flags.MarkDeprecated(OpenShiftKubeConfigFlagName, "use --kubeconfig instead")
+		}
 	}
 	if f.CacheDir != nil {
 		flags.StringVar(f.CacheDir, flagHTTPCacheDir, *f.CacheDir, "Default HTTP cache directory")
