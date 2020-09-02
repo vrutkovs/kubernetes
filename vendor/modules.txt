@@ -900,6 +900,17 @@ github.com/opencontainers/runtime-spec/specs-go
 github.com/opencontainers/selinux/go-selinux
 github.com/opencontainers/selinux/go-selinux/label
 github.com/opencontainers/selinux/pkg/pwalk
+# github.com/openshift/api v0.0.0-20200829102639-8a3a835f1acf => github.com/openshift/api v0.0.0-20200829102639-8a3a835f1acf
+# github.com/openshift/api => github.com/openshift/api v0.0.0-20200829102639-8a3a835f1acf
+github.com/openshift/api/image/docker10
+github.com/openshift/api/image/dockerpre012
+github.com/openshift/api/image/v1
+# github.com/openshift/build-machinery-go => github.com/openshift/build-machinery-go v0.0.0-20200819073603-48aa266c95f7
+# github.com/openshift/client-go v0.0.0-20200827190008-3062137373b5 => github.com/openshift/client-go v0.0.0-20200827190008-3062137373b5
+# github.com/openshift/client-go => github.com/openshift/client-go v0.0.0-20200827190008-3062137373b5
+github.com/openshift/client-go/image/clientset/versioned
+github.com/openshift/client-go/image/clientset/versioned/scheme
+github.com/openshift/client-go/image/clientset/versioned/typed/image/v1
 # github.com/pelletier/go-toml v1.2.0 => github.com/pelletier/go-toml v1.2.0
 github.com/pelletier/go-toml
 # github.com/pelletier/go-toml => github.com/pelletier/go-toml v1.2.0
@@ -1531,16 +1542,16 @@ gopkg.in/tomb.v1
 # gopkg.in/warnings.v0 v0.1.1 => gopkg.in/warnings.v0 v0.1.1
 gopkg.in/warnings.v0
 # gopkg.in/warnings.v0 => gopkg.in/warnings.v0 v0.1.1
-# gopkg.in/yaml.v2 v2.2.8 => gopkg.in/yaml.v2 v2.2.8
+# gopkg.in/yaml.v2 v2.3.0 => gopkg.in/yaml.v2 v2.2.8
 ## explicit
 gopkg.in/yaml.v2
 # gopkg.in/yaml.v2 => gopkg.in/yaml.v2 v2.2.8
 # gotest.tools => gotest.tools v2.2.0+incompatible
 # gotest.tools/v3 => gotest.tools/v3 v3.0.2
 # honnef.co/go/tools => honnef.co/go/tools v0.0.1-2019.2.3
-# k8s.io/api v0.0.0 => ./staging/src/k8s.io/api
+# k8s.io/api v0.19.0 => k8s.io/api v0.19.0
 ## explicit
-# k8s.io/api => ./staging/src/k8s.io/api
+# k8s.io/api => k8s.io/api v0.19.0
 k8s.io/api/admission/v1
 k8s.io/api/admission/v1beta1
 k8s.io/api/admissionregistration/v1
@@ -1630,9 +1641,9 @@ k8s.io/apiextensions-apiserver/pkg/registry/customresource/tableconvertor
 k8s.io/apiextensions-apiserver/pkg/registry/customresourcedefinition
 k8s.io/apiextensions-apiserver/test/integration
 k8s.io/apiextensions-apiserver/test/integration/fixtures
-# k8s.io/apimachinery v0.0.0 => ./staging/src/k8s.io/apimachinery
+# k8s.io/apimachinery v0.19.0 => k8s.io/apimachinery v0.19.0
 ## explicit
-# k8s.io/apimachinery => ./staging/src/k8s.io/apimachinery
+# k8s.io/apimachinery => k8s.io/apimachinery v0.19.0
 k8s.io/apimachinery/pkg/api/apitesting
 k8s.io/apimachinery/pkg/api/apitesting/fuzzer
 k8s.io/apimachinery/pkg/api/apitesting/naming
@@ -1844,6 +1855,7 @@ k8s.io/apiserver/plugin/pkg/authorizer/webhook
 ## explicit
 # k8s.io/cli-runtime => ./staging/src/k8s.io/cli-runtime
 k8s.io/cli-runtime/pkg/genericclioptions
+k8s.io/cli-runtime/pkg/genericclioptions/openshiftpatch
 k8s.io/cli-runtime/pkg/kustomize
 k8s.io/cli-runtime/pkg/kustomize/k8sdeps
 k8s.io/cli-runtime/pkg/kustomize/k8sdeps/configmapandsecret
@@ -1855,9 +1867,9 @@ k8s.io/cli-runtime/pkg/kustomize/k8sdeps/transformer/patch
 k8s.io/cli-runtime/pkg/kustomize/k8sdeps/validator
 k8s.io/cli-runtime/pkg/printers
 k8s.io/cli-runtime/pkg/resource
-# k8s.io/client-go v0.0.0 => ./staging/src/k8s.io/client-go
+# k8s.io/client-go v0.19.0 => k8s.io/client-go v0.19.0
 ## explicit
-# k8s.io/client-go => ./staging/src/k8s.io/client-go
+# k8s.io/client-go => k8s.io/client-go v0.19.0
 k8s.io/client-go/discovery
 k8s.io/client-go/discovery/cached
 k8s.io/client-go/discovery/cached/disk
@@ -2127,9 +2139,9 @@ k8s.io/cluster-bootstrap/token/jws
 k8s.io/cluster-bootstrap/token/util
 k8s.io/cluster-bootstrap/util/secrets
 k8s.io/cluster-bootstrap/util/tokens
-# k8s.io/code-generator v0.0.0 => ./staging/src/k8s.io/code-generator
+# k8s.io/code-generator v0.19.0 => k8s.io/code-generator v0.19.0
 ## explicit
-# k8s.io/code-generator => ./staging/src/k8s.io/code-generator
+# k8s.io/code-generator => k8s.io/code-generator v0.19.0
 k8s.io/code-generator/cmd/go-to-protobuf
 k8s.io/code-generator/cmd/go-to-protobuf/protobuf
 k8s.io/code-generator/cmd/go-to-protobuf/protoc-gen-gogo
@@ -2193,7 +2205,7 @@ k8s.io/gengo/types
 ## explicit
 # k8s.io/heapster => k8s.io/heapster v1.2.0-beta.1
 k8s.io/heapster/metrics/api/v1/types
-# k8s.io/klog/v2 v2.2.0 => k8s.io/klog/v2 v2.2.0
+# k8s.io/klog/v2 v2.3.0 => k8s.io/klog/v2 v2.2.0
 ## explicit
 k8s.io/klog/v2
 # k8s.io/klog/v2 => k8s.io/klog/v2 v2.2.0
