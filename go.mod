@@ -99,6 +99,7 @@ require (
 	gonum.org/v1/gonum v0.6.2
 	google.golang.org/api v0.20.0
 	google.golang.org/grpc v1.27.1
+	google.golang.org/protobuf v1.25.0
 	gopkg.in/gcfg.v1 v1.2.0
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
 	gopkg.in/square/go-jose.v2 v2.2.2
