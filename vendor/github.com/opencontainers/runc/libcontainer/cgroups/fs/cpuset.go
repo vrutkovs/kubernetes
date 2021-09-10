@@ -26,32 +26,14 @@ func (s *CpusetGroup) Apply(path string, d *cgroupData) error {
 	return s.ApplyDir(path, d.config.Resources, d.pid)
 }
 
-<<<<<<< HEAD
 func (s *CpusetGroup) Set(path string, r *configs.Resources) error {
 	if r.CpusetCpus != "" {
 		if err := cgroups.WriteFile(path, "cpuset.cpus", r.CpusetCpus); err != nil {
-||||||| 5e58841cce7
-func (s *CpusetGroup) Set(path string, cgroup *configs.Cgroup) error {
-	if cgroup.Resources.CpusetCpus != "" {
-		if err := fscommon.WriteFile(path, "cpuset.cpus", cgroup.Resources.CpusetCpus); err != nil {
-=======
-func (s *CpusetGroup) Set(path string, r *configs.Resources) error {
-	if r.CpusetCpus != "" {
-		if err := fscommon.WriteFile(path, "cpuset.cpus", r.CpusetCpus); err != nil {
->>>>>>> v1.21.4
 			return err
 		}
 	}
-<<<<<<< HEAD
 	if r.CpusetMems != "" {
 		if err := cgroups.WriteFile(path, "cpuset.mems", r.CpusetMems); err != nil {
-||||||| 5e58841cce7
-	if cgroup.Resources.CpusetMems != "" {
-		if err := fscommon.WriteFile(path, "cpuset.mems", cgroup.Resources.CpusetMems); err != nil {
-=======
-	if r.CpusetMems != "" {
-		if err := fscommon.WriteFile(path, "cpuset.mems", r.CpusetMems); err != nil {
->>>>>>> v1.21.4
 			return err
 		}
 	}

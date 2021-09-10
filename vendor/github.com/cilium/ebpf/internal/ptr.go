@@ -27,20 +27,5 @@ func NewStringPointer(str string) Pointer {
 		return Pointer{}
 	}
 
-<<<<<<< HEAD
 	return Pointer{ptr: unsafe.Pointer(p)}
-||||||| 5e58841cce7
-	// The kernel expects strings to be zero terminated
-	buf := make([]byte, len(str)+1)
-	copy(buf, str)
-
-	return Pointer{ptr: unsafe.Pointer(&buf[0])}
-=======
-	p, err := unix.BytePtrFromString(str)
-	if err != nil {
-		return Pointer{}
-	}
-
-	return Pointer{ptr: unsafe.Pointer(p)}
->>>>>>> v1.21.4
 }

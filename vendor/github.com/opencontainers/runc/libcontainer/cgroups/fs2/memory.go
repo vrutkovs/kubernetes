@@ -57,32 +57,16 @@ func setMemory(dirPath string, r *configs.Resources) error {
 		}
 	}
 
-<<<<<<< HEAD
 	if val := numToStr(r.Memory); val != "" {
 		if err := cgroups.WriteFile(dirPath, "memory.max", val); err != nil {
-||||||| 5e58841cce7
-	if val := numToStr(cgroup.Resources.Memory); val != "" {
-		if err := fscommon.WriteFile(dirPath, "memory.max", val); err != nil {
-=======
-	if val := numToStr(r.Memory); val != "" {
-		if err := fscommon.WriteFile(dirPath, "memory.max", val); err != nil {
->>>>>>> v1.21.4
 			return err
 		}
 	}
 
 	// cgroup.Resources.KernelMemory is ignored
 
-<<<<<<< HEAD
 	if val := numToStr(r.MemoryReservation); val != "" {
 		if err := cgroups.WriteFile(dirPath, "memory.low", val); err != nil {
-||||||| 5e58841cce7
-	if val := numToStr(cgroup.Resources.MemoryReservation); val != "" {
-		if err := fscommon.WriteFile(dirPath, "memory.low", val); err != nil {
-=======
-	if val := numToStr(r.MemoryReservation); val != "" {
-		if err := fscommon.WriteFile(dirPath, "memory.low", val); err != nil {
->>>>>>> v1.21.4
 			return err
 		}
 	}

@@ -10,16 +10,8 @@ import (
 	"github.com/opencontainers/runc/libcontainer/configs"
 )
 
-<<<<<<< HEAD
 func supportedControllers() (string, error) {
 	return cgroups.ReadFile(UnifiedMountpoint, "/cgroup.controllers")
-||||||| 5e58841cce7
-func supportedControllers(cgroup *configs.Cgroup) (string, error) {
-	return fscommon.ReadFile(UnifiedMountpoint, "/cgroup.controllers")
-=======
-func supportedControllers() (string, error) {
-	return fscommon.ReadFile(UnifiedMountpoint, "/cgroup.controllers")
->>>>>>> v1.21.4
 }
 
 // needAnyControllers returns whether we enable some supported controllers or not,

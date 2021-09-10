@@ -389,16 +389,8 @@ func (c Command) Run(s *specs.State) error {
 	case err := <-errC:
 		return err
 	case <-timerCh:
-<<<<<<< HEAD
 		_ = cmd.Process.Kill()
 		<-errC
-||||||| 5e58841cce7
-		cmd.Process.Kill()
-		cmd.Wait()
-=======
-		cmd.Process.Kill()
-		<-errC
->>>>>>> v1.21.4
 		return fmt.Errorf("hook ran past specified timeout of %.1fs", c.Timeout.Seconds())
 	}
 }

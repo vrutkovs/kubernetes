@@ -21,19 +21,9 @@ func (s *HugetlbGroup) Apply(path string, d *cgroupData) error {
 	return join(path, d.pid)
 }
 
-<<<<<<< HEAD
 func (s *HugetlbGroup) Set(path string, r *configs.Resources) error {
 	for _, hugetlb := range r.HugetlbLimit {
 		if err := cgroups.WriteFile(path, "hugetlb."+hugetlb.Pagesize+".limit_in_bytes", strconv.FormatUint(hugetlb.Limit, 10)); err != nil {
-||||||| 5e58841cce7
-func (s *HugetlbGroup) Set(path string, cgroup *configs.Cgroup) error {
-	for _, hugetlb := range cgroup.Resources.HugetlbLimit {
-		if err := fscommon.WriteFile(path, "hugetlb."+hugetlb.Pagesize+".limit_in_bytes", strconv.FormatUint(hugetlb.Limit, 10)); err != nil {
-=======
-func (s *HugetlbGroup) Set(path string, r *configs.Resources) error {
-	for _, hugetlb := range r.HugetlbLimit {
-		if err := fscommon.WriteFile(path, "hugetlb."+hugetlb.Pagesize+".limit_in_bytes", strconv.FormatUint(hugetlb.Limit, 10)); err != nil {
->>>>>>> v1.21.4
 			return err
 		}
 	}

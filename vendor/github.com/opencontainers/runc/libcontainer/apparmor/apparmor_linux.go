@@ -10,7 +10,6 @@ import (
 	"github.com/opencontainers/runc/libcontainer/utils"
 )
 
-<<<<<<< HEAD
 var (
 	appArmorEnabled bool
 	checkAppArmor   sync.Once
@@ -25,30 +24,6 @@ func isEnabled() bool {
 		}
 	})
 	return appArmorEnabled
-||||||| 5e58841cce7
-// IsEnabled returns true if apparmor is enabled for the host.
-func IsEnabled() bool {
-	if _, err := os.Stat("/sys/kernel/security/apparmor"); err == nil {
-		buf, err := ioutil.ReadFile("/sys/module/apparmor/parameters/enabled")
-		return err == nil && bytes.HasPrefix(buf, []byte("Y"))
-	}
-	return false
-=======
-var (
-	appArmorEnabled bool
-	checkAppArmor   sync.Once
-)
-
-// IsEnabled returns true if apparmor is enabled for the host.
-func IsEnabled() bool {
-	checkAppArmor.Do(func() {
-		if _, err := os.Stat("/sys/kernel/security/apparmor"); err == nil {
-			buf, err := ioutil.ReadFile("/sys/module/apparmor/parameters/enabled")
-			appArmorEnabled = err == nil && len(buf) > 1 && buf[0] == 'Y'
-		}
-	})
-	return appArmorEnabled
->>>>>>> v1.21.4
 }
 
 func setProcAttr(attr, value string) error {

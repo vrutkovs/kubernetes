@@ -2,13 +2,8 @@ package user
 
 import (
 	"bufio"
-<<<<<<< HEAD
 	"bytes"
 	"errors"
-||||||| 5e58841cce7
-=======
-	"errors"
->>>>>>> v1.21.4
 	"fmt"
 	"io"
 	"os"
@@ -22,25 +17,12 @@ const (
 )
 
 var (
-<<<<<<< HEAD
 	// ErrNoPasswdEntries is returned if no matching entries were found in /etc/group.
 	ErrNoPasswdEntries = errors.New("no matching entries in passwd file")
 	// ErrNoGroupEntries is returned if no matching entries were found in /etc/passwd.
 	ErrNoGroupEntries = errors.New("no matching entries in group file")
 	// ErrRange is returned if a UID or GID is outside of the valid range.
 	ErrRange = fmt.Errorf("uids and gids must be in range %d-%d", minID, maxID)
-||||||| 5e58841cce7
-	ErrRange = fmt.Errorf("uids and gids must be in range %d-%d", minId, maxId)
-=======
-	// The current operating system does not provide the required data for user lookups.
-	ErrUnsupported = errors.New("user lookup: operating system does not provide passwd-formatted data")
-
-	// No matching entries found in file.
-	ErrNoPasswdEntries = errors.New("no matching entries in passwd file")
-	ErrNoGroupEntries  = errors.New("no matching entries in group file")
-
-	ErrRange = fmt.Errorf("uids and gids must be in range %d-%d", minId, maxId)
->>>>>>> v1.21.4
 )
 
 type User struct {

@@ -108,36 +108,12 @@ func (c *Conn) StartUnit(name string, mode string, ch chan<- string) (int, error
 // should not be considered authoritative.
 //
 // If an error does occur, it will be returned to the user alongside a job ID of 0.
-<<<<<<< HEAD
 func (c *Conn) StartUnitContext(ctx context.Context, name string, mode string, ch chan<- string) (int, error) {
 	return c.startJob(ctx, ch, "org.freedesktop.systemd1.Manager.StartUnit", name, mode)
-||||||| 5e58841cce7
-func (c *Conn) StartUnit(name string, mode string, ch chan<- string) (int, error) {
-	return c.startJob(ch, "org.freedesktop.systemd1.Manager.StartUnit", name, mode)
-=======
-// Deprecated: use StartUnitContext instead
-func (c *Conn) StartUnit(name string, mode string, ch chan<- string) (int, error) {
-	return c.StartUnitContext(context.Background(), name, mode, ch)
 }
 
-// StartUnitContext same as StartUnit with context
-func (c *Conn) StartUnitContext(ctx context.Context, name string, mode string, ch chan<- string) (int, error) {
-	return c.startJob(ctx, ch, "org.freedesktop.systemd1.Manager.StartUnit", name, mode)
->>>>>>> v1.21.4
-}
-
-<<<<<<< HEAD
 // Deprecated: use StopUnitContext instead.
-||||||| 5e58841cce7
-// StopUnit is similar to StartUnit but stops the specified unit rather
-// than starting it.
-=======
-// StopUnit is similar to StartUnit but stops the specified unit rather
-// than starting it.
-// Deprecated: use StopUnitContext instead
->>>>>>> v1.21.4
 func (c *Conn) StopUnit(name string, mode string, ch chan<- string) (int, error) {
-<<<<<<< HEAD
 	return c.StopUnitContext(context.Background(), name, mode, ch)
 }
 
@@ -145,42 +121,13 @@ func (c *Conn) StopUnit(name string, mode string, ch chan<- string) (int, error)
 // rather than starting it.
 func (c *Conn) StopUnitContext(ctx context.Context, name string, mode string, ch chan<- string) (int, error) {
 	return c.startJob(ctx, ch, "org.freedesktop.systemd1.Manager.StopUnit", name, mode)
-||||||| 5e58841cce7
-	return c.startJob(ch, "org.freedesktop.systemd1.Manager.StopUnit", name, mode)
-=======
-	return c.StopUnitContext(context.Background(), name, mode, ch)
 }
 
-// StopUnitContext same as StopUnit with context
-func (c *Conn) StopUnitContext(ctx context.Context, name string, mode string, ch chan<- string) (int, error) {
-	return c.startJob(ctx, ch, "org.freedesktop.systemd1.Manager.StopUnit", name, mode)
->>>>>>> v1.21.4
-}
-
-<<<<<<< HEAD
 // Deprecated: use ReloadUnitContext instead.
-||||||| 5e58841cce7
-// ReloadUnit reloads a unit.  Reloading is done only if the unit is already running and fails otherwise.
-=======
-// ReloadUnit reloads a unit.  Reloading is done only if the unit is already running and fails otherwise.
-// Deprecated: use ReloadUnitContext instead
->>>>>>> v1.21.4
 func (c *Conn) ReloadUnit(name string, mode string, ch chan<- string) (int, error) {
-<<<<<<< HEAD
-	return c.ReloadUnitContext(context.Background(), name, mode, ch)
-||||||| 5e58841cce7
-	return c.startJob(ch, "org.freedesktop.systemd1.Manager.ReloadUnit", name, mode)
-=======
 	return c.ReloadUnitContext(context.Background(), name, mode, ch)
 }
 
-// ReloadUnitContext same as ReloadUnit with context
-func (c *Conn) ReloadUnitContext(ctx context.Context, name string, mode string, ch chan<- string) (int, error) {
-	return c.startJob(ctx, ch, "org.freedesktop.systemd1.Manager.ReloadUnit", name, mode)
->>>>>>> v1.21.4
-}
-
-<<<<<<< HEAD
 // ReloadUnitContext reloads a unit. Reloading is done only if the unit
 // is already running, and fails otherwise.
 func (c *Conn) ReloadUnitContext(ctx context.Context, name string, mode string, ch chan<- string) (int, error) {
@@ -188,30 +135,10 @@ func (c *Conn) ReloadUnitContext(ctx context.Context, name string, mode string, 
 }
 
 // Deprecated: use RestartUnitContext instead.
-||||||| 5e58841cce7
-// RestartUnit restarts a service.  If a service is restarted that isn't
-// running it will be started.
-=======
-// RestartUnit restarts a service.  If a service is restarted that isn't
-// running it will be started.
-// Deprecated: use RestartUnitContext instead
->>>>>>> v1.21.4
 func (c *Conn) RestartUnit(name string, mode string, ch chan<- string) (int, error) {
-<<<<<<< HEAD
-	return c.RestartUnitContext(context.Background(), name, mode, ch)
-||||||| 5e58841cce7
-	return c.startJob(ch, "org.freedesktop.systemd1.Manager.RestartUnit", name, mode)
-=======
 	return c.RestartUnitContext(context.Background(), name, mode, ch)
 }
 
-// RestartUnitContext same as RestartUnit with context
-func (c *Conn) RestartUnitContext(ctx context.Context, name string, mode string, ch chan<- string) (int, error) {
-	return c.startJob(ctx, ch, "org.freedesktop.systemd1.Manager.RestartUnit", name, mode)
->>>>>>> v1.21.4
-}
-
-<<<<<<< HEAD
 // RestartUnitContext restarts a service. If a service is restarted that isn't
 // running it will be started.
 func (c *Conn) RestartUnitContext(ctx context.Context, name string, mode string, ch chan<- string) (int, error) {
@@ -219,16 +146,7 @@ func (c *Conn) RestartUnitContext(ctx context.Context, name string, mode string,
 }
 
 // Deprecated: use TryRestartUnitContext instead.
-||||||| 5e58841cce7
-// TryRestartUnit is like RestartUnit, except that a service that isn't running
-// is not affected by the restart.
-=======
-// TryRestartUnit is like RestartUnit, except that a service that isn't running
-// is not affected by the restart.
-// Deprecated: use TryRestartUnitContext instead
->>>>>>> v1.21.4
 func (c *Conn) TryRestartUnit(name string, mode string, ch chan<- string) (int, error) {
-<<<<<<< HEAD
 	return c.TryRestartUnitContext(context.Background(), name, mode, ch)
 }
 
@@ -236,30 +154,10 @@ func (c *Conn) TryRestartUnit(name string, mode string, ch chan<- string) (int, 
 // isn't running is not affected by the restart.
 func (c *Conn) TryRestartUnitContext(ctx context.Context, name string, mode string, ch chan<- string) (int, error) {
 	return c.startJob(ctx, ch, "org.freedesktop.systemd1.Manager.TryRestartUnit", name, mode)
-||||||| 5e58841cce7
-	return c.startJob(ch, "org.freedesktop.systemd1.Manager.TryRestartUnit", name, mode)
-=======
-	return c.TryRestartUnitContext(context.Background(), name, mode, ch)
 }
 
-// TryRestartUnitContext same as TryRestartUnit with context
-func (c *Conn) TryRestartUnitContext(ctx context.Context, name string, mode string, ch chan<- string) (int, error) {
-	return c.startJob(ctx, ch, "org.freedesktop.systemd1.Manager.TryRestartUnit", name, mode)
->>>>>>> v1.21.4
-}
-
-<<<<<<< HEAD
 // Deprecated: use ReloadOrRestartUnitContext instead.
-||||||| 5e58841cce7
-// ReloadOrRestartUnit attempts a reload if the unit supports it and use a restart
-// otherwise.
-=======
-// ReloadOrRestartUnit attempts a reload if the unit supports it and use a restart
-// otherwise.
-// Deprecated: use ReloadOrRestartUnitContext instead
->>>>>>> v1.21.4
 func (c *Conn) ReloadOrRestartUnit(name string, mode string, ch chan<- string) (int, error) {
-<<<<<<< HEAD
 	return c.ReloadOrRestartUnitContext(context.Background(), name, mode, ch)
 }
 
@@ -267,30 +165,10 @@ func (c *Conn) ReloadOrRestartUnit(name string, mode string, ch chan<- string) (
 // a restart otherwise.
 func (c *Conn) ReloadOrRestartUnitContext(ctx context.Context, name string, mode string, ch chan<- string) (int, error) {
 	return c.startJob(ctx, ch, "org.freedesktop.systemd1.Manager.ReloadOrRestartUnit", name, mode)
-||||||| 5e58841cce7
-	return c.startJob(ch, "org.freedesktop.systemd1.Manager.ReloadOrRestartUnit", name, mode)
-=======
-	return c.ReloadOrRestartUnitContext(context.Background(), name, mode, ch)
 }
 
-// ReloadOrRestartUnitContext same as ReloadOrRestartUnit with context
-func (c *Conn) ReloadOrRestartUnitContext(ctx context.Context, name string, mode string, ch chan<- string) (int, error) {
-	return c.startJob(ctx, ch, "org.freedesktop.systemd1.Manager.ReloadOrRestartUnit", name, mode)
->>>>>>> v1.21.4
-}
-
-<<<<<<< HEAD
 // Deprecated: use ReloadOrTryRestartUnitContext instead.
-||||||| 5e58841cce7
-// ReloadOrTryRestartUnit attempts a reload if the unit supports it and use a "Try"
-// flavored restart otherwise.
-=======
-// ReloadOrTryRestartUnit attempts a reload if the unit supports it and use a "Try"
-// flavored restart otherwise.
-// Deprecated: use ReloadOrTryRestartUnitContext instead
->>>>>>> v1.21.4
 func (c *Conn) ReloadOrTryRestartUnit(name string, mode string, ch chan<- string) (int, error) {
-<<<<<<< HEAD
 	return c.ReloadOrTryRestartUnitContext(context.Background(), name, mode, ch)
 }
 
@@ -303,16 +181,6 @@ func (c *Conn) ReloadOrTryRestartUnitContext(ctx context.Context, name string, m
 // Deprecated: use StartTransientUnitContext instead.
 func (c *Conn) StartTransientUnit(name string, mode string, properties []Property, ch chan<- string) (int, error) {
 	return c.StartTransientUnitContext(context.Background(), name, mode, properties, ch)
-||||||| 5e58841cce7
-	return c.startJob(ch, "org.freedesktop.systemd1.Manager.ReloadOrTryRestartUnit", name, mode)
-=======
-	return c.ReloadOrTryRestartUnitContext(context.Background(), name, mode, ch)
-}
-
-// ReloadOrTryRestartUnitContext same as ReloadOrTryRestartUnit with context
-func (c *Conn) ReloadOrTryRestartUnitContext(ctx context.Context, name string, mode string, ch chan<- string) (int, error) {
-	return c.startJob(ctx, ch, "org.freedesktop.systemd1.Manager.ReloadOrTryRestartUnit", name, mode)
->>>>>>> v1.21.4
 }
 
 // StartTransientUnitContext may be used to create and start a transient unit, which
@@ -320,36 +188,12 @@ func (c *Conn) ReloadOrTryRestartUnitContext(ctx context.Context, name string, m
 // system is rebooted. name is the unit name including suffix, and must be
 // unique. mode is the same as in StartUnitContext, properties contains properties
 // of the unit.
-<<<<<<< HEAD
 func (c *Conn) StartTransientUnitContext(ctx context.Context, name string, mode string, properties []Property, ch chan<- string) (int, error) {
 	return c.startJob(ctx, ch, "org.freedesktop.systemd1.Manager.StartTransientUnit", name, mode, properties, make([]PropertyCollection, 0))
-||||||| 5e58841cce7
-func (c *Conn) StartTransientUnit(name string, mode string, properties []Property, ch chan<- string) (int, error) {
-	return c.startJob(ch, "org.freedesktop.systemd1.Manager.StartTransientUnit", name, mode, properties, make([]PropertyCollection, 0))
-=======
-// Deprecated: use StartTransientUnitContext instead
-func (c *Conn) StartTransientUnit(name string, mode string, properties []Property, ch chan<- string) (int, error) {
-	return c.StartTransientUnitContext(context.Background(), name, mode, properties, ch)
 }
 
-// StartTransientUnitContext same as StartTransientUnit with context
-func (c *Conn) StartTransientUnitContext(ctx context.Context, name string, mode string, properties []Property, ch chan<- string) (int, error) {
-	return c.startJob(ctx, ch, "org.freedesktop.systemd1.Manager.StartTransientUnit", name, mode, properties, make([]PropertyCollection, 0))
->>>>>>> v1.21.4
-}
-
-<<<<<<< HEAD
 // Deprecated: use KillUnitContext instead.
-||||||| 5e58841cce7
-// KillUnit takes the unit name and a UNIX signal number to send.  All of the unit's
-// processes are killed.
-=======
-// KillUnit takes the unit name and a UNIX signal number to send.  All of the unit's
-// processes are killed.
-// Deprecated: use KillUnitContext instead
->>>>>>> v1.21.4
 func (c *Conn) KillUnit(name string, signal int32) {
-<<<<<<< HEAD
 	c.KillUnitContext(context.Background(), name, signal)
 }
 
@@ -363,75 +207,26 @@ func (c *Conn) KillUnitContext(ctx context.Context, name string, signal int32) {
 // process in the unit to send the signal to.
 func (c *Conn) KillUnitWithTarget(ctx context.Context, name string, target Who, signal int32) error {
 	return c.sysobj.CallWithContext(ctx, "org.freedesktop.systemd1.Manager.KillUnit", 0, name, string(target), signal).Store()
-||||||| 5e58841cce7
-	c.sysobj.Call("org.freedesktop.systemd1.Manager.KillUnit", 0, name, "all", signal).Store()
-=======
-	c.KillUnitContext(context.Background(), name, signal)
 }
 
-// KillUnitContext same as KillUnit with context
-func (c *Conn) KillUnitContext(ctx context.Context, name string, signal int32) {
-	c.KillUnitWithTarget(ctx, name, All, signal)
-}
-
-// KillUnitWithTarget is like KillUnitContext, but allows you to specify which process in the unit to send the signal to
-func (c *Conn) KillUnitWithTarget(ctx context.Context, name string, target Who, signal int32) error {
-	return c.sysobj.CallWithContext(ctx, "org.freedesktop.systemd1.Manager.KillUnit", 0, name, string(target), signal).Store()
->>>>>>> v1.21.4
-}
-
-<<<<<<< HEAD
 // Deprecated: use ResetFailedUnitContext instead.
-||||||| 5e58841cce7
-// ResetFailedUnit resets the "failed" state of a specific unit.
-=======
-// ResetFailedUnit resets the "failed" state of a specific unit.
-// Deprecated: use ResetFailedUnitContext instead
->>>>>>> v1.21.4
 func (c *Conn) ResetFailedUnit(name string) error {
-<<<<<<< HEAD
 	return c.ResetFailedUnitContext(context.Background(), name)
 }
 
 // ResetFailedUnitContext resets the "failed" state of a specific unit.
 func (c *Conn) ResetFailedUnitContext(ctx context.Context, name string) error {
 	return c.sysobj.CallWithContext(ctx, "org.freedesktop.systemd1.Manager.ResetFailedUnit", 0, name).Store()
-||||||| 5e58841cce7
-	return c.sysobj.Call("org.freedesktop.systemd1.Manager.ResetFailedUnit", 0, name).Store()
-=======
-	return c.ResetFailedUnitContext(context.Background(), name)
 }
 
-// ResetFailedUnitContext same as ResetFailedUnit with context
-func (c *Conn) ResetFailedUnitContext(ctx context.Context, name string) error {
-	return c.sysobj.CallWithContext(ctx, "org.freedesktop.systemd1.Manager.ResetFailedUnit", 0, name).Store()
->>>>>>> v1.21.4
-}
-
-<<<<<<< HEAD
 // Deprecated: use SystemStateContext instead.
-||||||| 5e58841cce7
-// SystemState returns the systemd state. Equivalent to `systemctl is-system-running`.
-=======
-// SystemState returns the systemd state. Equivalent to `systemctl is-system-running`.
-// Deprecated: use SystemStateContext instead
->>>>>>> v1.21.4
 func (c *Conn) SystemState() (*Property, error) {
-<<<<<<< HEAD
 	return c.SystemStateContext(context.Background())
 }
 
 // SystemStateContext returns the systemd state. Equivalent to
 // systemctl is-system-running.
 func (c *Conn) SystemStateContext(ctx context.Context) (*Property, error) {
-||||||| 5e58841cce7
-=======
-	return c.SystemStateContext(context.Background())
-}
-
-// SystemStateContext same as SystemState with context
-func (c *Conn) SystemStateContext(ctx context.Context) (*Property, error) {
->>>>>>> v1.21.4
 	var err error
 	var prop dbus.Variant
 
@@ -444,16 +239,8 @@ func (c *Conn) SystemStateContext(ctx context.Context) (*Property, error) {
 	return &Property{Name: "SystemState", Value: prop}, nil
 }
 
-<<<<<<< HEAD
 // getProperties takes the unit path and returns all of its dbus object properties, for the given dbus interface.
 func (c *Conn) getProperties(ctx context.Context, path dbus.ObjectPath, dbusInterface string) (map[string]interface{}, error) {
-||||||| 5e58841cce7
-// getProperties takes the unit path and returns all of its dbus object properties, for the given dbus interface
-func (c *Conn) getProperties(path dbus.ObjectPath, dbusInterface string) (map[string]interface{}, error) {
-=======
-// getProperties takes the unit path and returns all of its dbus object properties, for the given dbus interface
-func (c *Conn) getProperties(ctx context.Context, path dbus.ObjectPath, dbusInterface string) (map[string]interface{}, error) {
->>>>>>> v1.21.4
 	var err error
 	var props map[string]dbus.Variant
 
@@ -475,44 +262,20 @@ func (c *Conn) getProperties(ctx context.Context, path dbus.ObjectPath, dbusInte
 	return out, nil
 }
 
-<<<<<<< HEAD
 // Deprecated: use GetUnitPropertiesContext instead.
-||||||| 5e58841cce7
-// GetUnitProperties takes the (unescaped) unit name and returns all of its dbus object properties.
-=======
-// GetUnitProperties takes the (unescaped) unit name and returns all of its dbus object properties.
-// Deprecated: use GetUnitPropertiesContext instead
->>>>>>> v1.21.4
 func (c *Conn) GetUnitProperties(unit string) (map[string]interface{}, error) {
-<<<<<<< HEAD
 	return c.GetUnitPropertiesContext(context.Background(), unit)
 }
 
 // GetUnitPropertiesContext takes the (unescaped) unit name and returns all of
 // its dbus object properties.
 func (c *Conn) GetUnitPropertiesContext(ctx context.Context, unit string) (map[string]interface{}, error) {
-||||||| 5e58841cce7
-=======
-	return c.GetUnitPropertiesContext(context.Background(), unit)
-}
-
-// GetUnitPropertiesContext same as GetUnitPropertiesContext with context
-func (c *Conn) GetUnitPropertiesContext(ctx context.Context, unit string) (map[string]interface{}, error) {
->>>>>>> v1.21.4
 	path := unitPath(unit)
 	return c.getProperties(ctx, path, "org.freedesktop.systemd1.Unit")
 }
 
-<<<<<<< HEAD
 // Deprecated: use GetUnitPathPropertiesContext instead.
-||||||| 5e58841cce7
-// GetUnitPathProperties takes the (escaped) unit path and returns all of its dbus object properties.
-=======
-// GetUnitPathProperties takes the (escaped) unit path and returns all of its dbus object properties.
-// Deprecated: use GetUnitPathPropertiesContext instead
->>>>>>> v1.21.4
 func (c *Conn) GetUnitPathProperties(path dbus.ObjectPath) (map[string]interface{}, error) {
-<<<<<<< HEAD
 	return c.GetUnitPathPropertiesContext(context.Background(), path)
 }
 
@@ -520,42 +283,16 @@ func (c *Conn) GetUnitPathProperties(path dbus.ObjectPath) (map[string]interface
 // of its dbus object properties.
 func (c *Conn) GetUnitPathPropertiesContext(ctx context.Context, path dbus.ObjectPath) (map[string]interface{}, error) {
 	return c.getProperties(ctx, path, "org.freedesktop.systemd1.Unit")
-||||||| 5e58841cce7
-	return c.getProperties(path, "org.freedesktop.systemd1.Unit")
-=======
-	return c.GetUnitPathPropertiesContext(context.Background(), path)
 }
 
-// GetUnitPathPropertiesContext same as GetUnitPathProperties with context
-func (c *Conn) GetUnitPathPropertiesContext(ctx context.Context, path dbus.ObjectPath) (map[string]interface{}, error) {
-	return c.getProperties(ctx, path, "org.freedesktop.systemd1.Unit")
->>>>>>> v1.21.4
-}
-
-<<<<<<< HEAD
 // Deprecated: use GetAllPropertiesContext instead.
-||||||| 5e58841cce7
-// GetAllProperties takes the (unescaped) unit name and returns all of its dbus object properties.
-=======
-// GetAllProperties takes the (unescaped) unit name and returns all of its dbus object properties.
-// Deprecated: use GetAllPropertiesContext instead
->>>>>>> v1.21.4
 func (c *Conn) GetAllProperties(unit string) (map[string]interface{}, error) {
-<<<<<<< HEAD
 	return c.GetAllPropertiesContext(context.Background(), unit)
 }
 
 // GetAllPropertiesContext takes the (unescaped) unit name and returns all of
 // its dbus object properties.
 func (c *Conn) GetAllPropertiesContext(ctx context.Context, unit string) (map[string]interface{}, error) {
-||||||| 5e58841cce7
-=======
-	return c.GetAllPropertiesContext(context.Background(), unit)
-}
-
-// GetAllPropertiesContext same as GetAllProperties with context
-func (c *Conn) GetAllPropertiesContext(ctx context.Context, unit string) (map[string]interface{}, error) {
->>>>>>> v1.21.4
 	path := unitPath(unit)
 	return c.getProperties(ctx, path, "")
 }
@@ -578,14 +315,8 @@ func (c *Conn) getProperty(ctx context.Context, unit string, dbusInterface strin
 	return &Property{Name: propertyName, Value: prop}, nil
 }
 
-<<<<<<< HEAD
 // Deprecated: use GetUnitPropertyContext instead.
-||||||| 5e58841cce7
-=======
-// Deprecated: use GetUnitPropertyContext instead
->>>>>>> v1.21.4
 func (c *Conn) GetUnitProperty(unit string, propertyName string) (*Property, error) {
-<<<<<<< HEAD
 	return c.GetUnitPropertyContext(context.Background(), unit, propertyName)
 }
 
@@ -593,60 +324,20 @@ func (c *Conn) GetUnitProperty(unit string, propertyName string) (*Property, err
 // and returns the property value.
 func (c *Conn) GetUnitPropertyContext(ctx context.Context, unit string, propertyName string) (*Property, error) {
 	return c.getProperty(ctx, unit, "org.freedesktop.systemd1.Unit", propertyName)
-||||||| 5e58841cce7
-	return c.getProperty(unit, "org.freedesktop.systemd1.Unit", propertyName)
-=======
-	return c.GetUnitPropertyContext(context.Background(), unit, propertyName)
 }
 
-// GetUnitPropertyContext same as GetUnitProperty with context
-func (c *Conn) GetUnitPropertyContext(ctx context.Context, unit string, propertyName string) (*Property, error) {
-	return c.getProperty(ctx, unit, "org.freedesktop.systemd1.Unit", propertyName)
->>>>>>> v1.21.4
-}
-
-<<<<<<< HEAD
 // Deprecated: use GetServicePropertyContext instead.
-||||||| 5e58841cce7
-// GetServiceProperty returns property for given service name and property name
-=======
-// GetServiceProperty returns property for given service name and property name
-// Deprecated: use GetServicePropertyContext instead
->>>>>>> v1.21.4
 func (c *Conn) GetServiceProperty(service string, propertyName string) (*Property, error) {
-<<<<<<< HEAD
 	return c.GetServicePropertyContext(context.Background(), service, propertyName)
 }
 
 // GetServiceProperty returns property for given service name and property name.
 func (c *Conn) GetServicePropertyContext(ctx context.Context, service string, propertyName string) (*Property, error) {
 	return c.getProperty(ctx, service, "org.freedesktop.systemd1.Service", propertyName)
-||||||| 5e58841cce7
-	return c.getProperty(service, "org.freedesktop.systemd1.Service", propertyName)
-=======
-	return c.GetServicePropertyContext(context.Background(), service, propertyName)
 }
 
-// GetServicePropertyContext same as GetServiceProperty with context
-func (c *Conn) GetServicePropertyContext(ctx context.Context, service string, propertyName string) (*Property, error) {
-	return c.getProperty(ctx, service, "org.freedesktop.systemd1.Service", propertyName)
->>>>>>> v1.21.4
-}
-
-<<<<<<< HEAD
 // Deprecated: use GetUnitTypePropertiesContext instead.
-||||||| 5e58841cce7
-// GetUnitTypeProperties returns the extra properties for a unit, specific to the unit type.
-// Valid values for unitType: Service, Socket, Target, Device, Mount, Automount, Snapshot, Timer, Swap, Path, Slice, Scope
-// return "dbus.Error: Unknown interface" if the unitType is not the correct type of the unit
-=======
-// GetUnitTypeProperties returns the extra properties for a unit, specific to the unit type.
-// Valid values for unitType: Service, Socket, Target, Device, Mount, Automount, Snapshot, Timer, Swap, Path, Slice, Scope
-// return "dbus.Error: Unknown interface" if the unitType is not the correct type of the unit
-// Deprecated: use GetUnitTypePropertiesContext instead
->>>>>>> v1.21.4
 func (c *Conn) GetUnitTypeProperties(unit string, unitType string) (map[string]interface{}, error) {
-<<<<<<< HEAD
 	return c.GetUnitTypePropertiesContext(context.Background(), unit, unitType)
 }
 
@@ -654,27 +345,13 @@ func (c *Conn) GetUnitTypeProperties(unit string, unitType string) (map[string]i
 // Valid values for unitType: Service, Socket, Target, Device, Mount, Automount, Snapshot, Timer, Swap, Path, Slice, Scope.
 // Returns "dbus.Error: Unknown interface" error if the unitType is not the correct type of the unit.
 func (c *Conn) GetUnitTypePropertiesContext(ctx context.Context, unit string, unitType string) (map[string]interface{}, error) {
-||||||| 5e58841cce7
-=======
-	return c.GetUnitTypePropertiesContext(context.Background(), unit, unitType)
-}
-
-// GetUnitTypePropertiesContext same as GetUnitTypeProperties with context
-func (c *Conn) GetUnitTypePropertiesContext(ctx context.Context, unit string, unitType string) (map[string]interface{}, error) {
->>>>>>> v1.21.4
 	path := unitPath(unit)
-<<<<<<< HEAD
 	return c.getProperties(ctx, path, "org.freedesktop.systemd1."+unitType)
 }
 
 // Deprecated: use SetUnitPropertiesContext instead.
 func (c *Conn) SetUnitProperties(name string, runtime bool, properties ...Property) error {
 	return c.SetUnitPropertiesContext(context.Background(), name, runtime, properties...)
-||||||| 5e58841cce7
-	return c.getProperties(path, "org.freedesktop.systemd1."+unitType)
-=======
-	return c.getProperties(ctx, path, "org.freedesktop.systemd1."+unitType)
->>>>>>> v1.21.4
 }
 
 // SetUnitPropertiesContext may be used to modify certain unit properties at runtime.
@@ -684,32 +361,12 @@ func (c *Conn) SetUnitProperties(name string, runtime bool, properties ...Proper
 // case the settings only apply until the next reboot. name is the name of the unit
 // to modify. properties are the settings to set, encoded as an array of property
 // name and value pairs.
-<<<<<<< HEAD
 func (c *Conn) SetUnitPropertiesContext(ctx context.Context, name string, runtime bool, properties ...Property) error {
 	return c.sysobj.CallWithContext(ctx, "org.freedesktop.systemd1.Manager.SetUnitProperties", 0, name, runtime, properties).Store()
-||||||| 5e58841cce7
-func (c *Conn) SetUnitProperties(name string, runtime bool, properties ...Property) error {
-	return c.sysobj.Call("org.freedesktop.systemd1.Manager.SetUnitProperties", 0, name, runtime, properties).Store()
-=======
-// Deprecated: use SetUnitPropertiesContext instead
-func (c *Conn) SetUnitProperties(name string, runtime bool, properties ...Property) error {
-	return c.SetUnitPropertiesContext(context.Background(), name, runtime, properties...)
->>>>>>> v1.21.4
 }
 
-<<<<<<< HEAD
 // Deprecated: use GetUnitTypePropertyContext instead.
-||||||| 5e58841cce7
-=======
-// SetUnitPropertiesContext same as SetUnitProperties with context
-func (c *Conn) SetUnitPropertiesContext(ctx context.Context, name string, runtime bool, properties ...Property) error {
-	return c.sysobj.CallWithContext(ctx, "org.freedesktop.systemd1.Manager.SetUnitProperties", 0, name, runtime, properties).Store()
-}
-
-// Deprecated: use GetUnitTypePropertyContext instead
->>>>>>> v1.21.4
 func (c *Conn) GetUnitTypeProperty(unit string, unitType string, propertyName string) (*Property, error) {
-<<<<<<< HEAD
 	return c.GetUnitTypePropertyContext(context.Background(), unit, unitType, propertyName)
 }
 
@@ -717,16 +374,6 @@ func (c *Conn) GetUnitTypeProperty(unit string, unitType string, propertyName st
 // and returns a property value. For valid values of unitType, see GetUnitTypePropertiesContext.
 func (c *Conn) GetUnitTypePropertyContext(ctx context.Context, unit string, unitType string, propertyName string) (*Property, error) {
 	return c.getProperty(ctx, unit, "org.freedesktop.systemd1."+unitType, propertyName)
-||||||| 5e58841cce7
-	return c.getProperty(unit, "org.freedesktop.systemd1."+unitType, propertyName)
-=======
-	return c.GetUnitTypePropertyContext(context.Background(), unit, unitType, propertyName)
-}
-
-// GetUnitTypePropertyContext same as GetUnitTypeProperty with context
-func (c *Conn) GetUnitTypePropertyContext(ctx context.Context, unit string, unitType string, propertyName string) (*Property, error) {
-	return c.getProperty(ctx, unit, "org.freedesktop.systemd1."+unitType, propertyName)
->>>>>>> v1.21.4
 }
 
 type UnitStatus struct {
@@ -780,47 +427,13 @@ func (c *Conn) ListUnits() ([]UnitStatus, error) {
 // be more unit names loaded than actual units behind them.
 // Also note that a unit is only loaded if it is active and/or enabled.
 // Units that are both disabled and inactive will thus not be returned.
-<<<<<<< HEAD
 func (c *Conn) ListUnitsContext(ctx context.Context) ([]UnitStatus, error) {
 	return c.listUnitsInternal(c.sysobj.CallWithContext(ctx, "org.freedesktop.systemd1.Manager.ListUnits", 0).Store)
-||||||| 5e58841cce7
-func (c *Conn) ListUnits() ([]UnitStatus, error) {
-	return c.listUnitsInternal(c.sysobj.Call("org.freedesktop.systemd1.Manager.ListUnits", 0).Store)
-=======
-// Deprecated: use ListUnitsContext instead
-func (c *Conn) ListUnits() ([]UnitStatus, error) {
-	return c.ListUnitsContext(context.Background())
 }
 
-// ListUnitsContext same as ListUnits with context
-func (c *Conn) ListUnitsContext(ctx context.Context) ([]UnitStatus, error) {
-	return c.listUnitsInternal(c.sysobj.CallWithContext(ctx, "org.freedesktop.systemd1.Manager.ListUnits", 0).Store)
->>>>>>> v1.21.4
-}
-
-<<<<<<< HEAD
 // Deprecated: use ListUnitsFilteredContext instead.
-||||||| 5e58841cce7
-// ListUnitsFiltered returns an array with units filtered by state.
-// It takes a list of units' statuses to filter.
-=======
-// ListUnitsFiltered returns an array with units filtered by state.
-// It takes a list of units' statuses to filter.
-// Deprecated: use ListUnitsFilteredContext instead
->>>>>>> v1.21.4
 func (c *Conn) ListUnitsFiltered(states []string) ([]UnitStatus, error) {
-<<<<<<< HEAD
 	return c.ListUnitsFilteredContext(context.Background(), states)
-||||||| 5e58841cce7
-	return c.listUnitsInternal(c.sysobj.Call("org.freedesktop.systemd1.Manager.ListUnitsFiltered", 0, states).Store)
-=======
-	return c.ListUnitsFilteredContext(context.Background(), states)
-}
-
-// ListUnitsFilteredContext same as ListUnitsFiltered with context
-func (c *Conn) ListUnitsFilteredContext(ctx context.Context, states []string) ([]UnitStatus, error) {
-	return c.listUnitsInternal(c.sysobj.CallWithContext(ctx, "org.freedesktop.systemd1.Manager.ListUnitsFiltered", 0, states).Store)
->>>>>>> v1.21.4
 }
 
 // ListUnitsFilteredContext returns an array with units filtered by state.
@@ -838,22 +451,8 @@ func (c *Conn) ListUnitsByPatterns(states []string, patterns []string) ([]UnitSt
 // It takes a list of units' statuses and names to filter.
 // Note that units may be known by multiple names at the same time,
 // and hence there might be more unit names loaded than actual units behind them.
-<<<<<<< HEAD
 func (c *Conn) ListUnitsByPatternsContext(ctx context.Context, states []string, patterns []string) ([]UnitStatus, error) {
 	return c.listUnitsInternal(c.sysobj.CallWithContext(ctx, "org.freedesktop.systemd1.Manager.ListUnitsByPatterns", 0, states, patterns).Store)
-||||||| 5e58841cce7
-func (c *Conn) ListUnitsByPatterns(states []string, patterns []string) ([]UnitStatus, error) {
-	return c.listUnitsInternal(c.sysobj.Call("org.freedesktop.systemd1.Manager.ListUnitsByPatterns", 0, states, patterns).Store)
-=======
-// Deprecated: use ListUnitsByPatternsContext instead
-func (c *Conn) ListUnitsByPatterns(states []string, patterns []string) ([]UnitStatus, error) {
-	return c.ListUnitsByPatternsContext(context.Background(), states, patterns)
-}
-
-// ListUnitsByPatternsContext same as ListUnitsByPatterns with context
-func (c *Conn) ListUnitsByPatternsContext(ctx context.Context, states []string, patterns []string) ([]UnitStatus, error) {
-	return c.listUnitsInternal(c.sysobj.CallWithContext(ctx, "org.freedesktop.systemd1.Manager.ListUnitsByPatterns", 0, states, patterns).Store)
->>>>>>> v1.21.4
 }
 
 // Deprecated: use ListUnitsByNamesContext instead.
@@ -865,26 +464,10 @@ func (c *Conn) ListUnitsByNames(units []string) ([]UnitStatus, error) {
 // names and returns an UnitStatus array. Comparing to ListUnitsByPatternsContext
 // method, this method returns statuses even for inactive or non-existing
 // units. Input array should contain exact unit names, but not patterns.
-<<<<<<< HEAD
 //
 // Requires systemd v230 or higher.
 func (c *Conn) ListUnitsByNamesContext(ctx context.Context, units []string) ([]UnitStatus, error) {
 	return c.listUnitsInternal(c.sysobj.CallWithContext(ctx, "org.freedesktop.systemd1.Manager.ListUnitsByNames", 0, units).Store)
-||||||| 5e58841cce7
-// Note: Requires systemd v230 or higher
-func (c *Conn) ListUnitsByNames(units []string) ([]UnitStatus, error) {
-	return c.listUnitsInternal(c.sysobj.Call("org.freedesktop.systemd1.Manager.ListUnitsByNames", 0, units).Store)
-=======
-// Note: Requires systemd v230 or higher
-// Deprecated: use ListUnitsByNamesContext instead
-func (c *Conn) ListUnitsByNames(units []string) ([]UnitStatus, error) {
-	return c.ListUnitsByNamesContext(context.Background(), units)
-}
-
-// ListUnitsByNamesContext same as ListUnitsByNames with context
-func (c *Conn) ListUnitsByNamesContext(ctx context.Context, units []string) ([]UnitStatus, error) {
-	return c.listUnitsInternal(c.sysobj.CallWithContext(ctx, "org.freedesktop.systemd1.Manager.ListUnitsByNames", 0, units).Store)
->>>>>>> v1.21.4
 }
 
 type UnitFile struct {
@@ -918,60 +501,24 @@ func (c *Conn) listUnitFilesInternal(f storeFunc) ([]UnitFile, error) {
 	return files, nil
 }
 
-<<<<<<< HEAD
 // Deprecated: use ListUnitFilesContext instead.
-||||||| 5e58841cce7
-// ListUnitFiles returns an array of all available units on disk.
-=======
-// ListUnitFiles returns an array of all available units on disk.
-// Deprecated: use ListUnitFilesContext instead
->>>>>>> v1.21.4
 func (c *Conn) ListUnitFiles() ([]UnitFile, error) {
-<<<<<<< HEAD
 	return c.ListUnitFilesContext(context.Background())
 }
 
 // ListUnitFiles returns an array of all available units on disk.
 func (c *Conn) ListUnitFilesContext(ctx context.Context) ([]UnitFile, error) {
 	return c.listUnitFilesInternal(c.sysobj.CallWithContext(ctx, "org.freedesktop.systemd1.Manager.ListUnitFiles", 0).Store)
-||||||| 5e58841cce7
-	return c.listUnitFilesInternal(c.sysobj.Call("org.freedesktop.systemd1.Manager.ListUnitFiles", 0).Store)
-=======
-	return c.ListUnitFilesContext(context.Background())
 }
 
-// ListUnitFilesContext same as ListUnitFiles with context
-func (c *Conn) ListUnitFilesContext(ctx context.Context) ([]UnitFile, error) {
-	return c.listUnitFilesInternal(c.sysobj.CallWithContext(ctx, "org.freedesktop.systemd1.Manager.ListUnitFiles", 0).Store)
->>>>>>> v1.21.4
-}
-
-<<<<<<< HEAD
 // Deprecated: use ListUnitFilesByPatternsContext instead.
-||||||| 5e58841cce7
-// ListUnitFilesByPatterns returns an array of all available units on disk matched the patterns.
-=======
-// ListUnitFilesByPatterns returns an array of all available units on disk matched the patterns.
-// Deprecated: use ListUnitFilesByPatternsContext instead
->>>>>>> v1.21.4
 func (c *Conn) ListUnitFilesByPatterns(states []string, patterns []string) ([]UnitFile, error) {
-<<<<<<< HEAD
 	return c.ListUnitFilesByPatternsContext(context.Background(), states, patterns)
 }
 
 // ListUnitFilesByPatternsContext returns an array of all available units on disk matched the patterns.
 func (c *Conn) ListUnitFilesByPatternsContext(ctx context.Context, states []string, patterns []string) ([]UnitFile, error) {
 	return c.listUnitFilesInternal(c.sysobj.CallWithContext(ctx, "org.freedesktop.systemd1.Manager.ListUnitFilesByPatterns", 0, states, patterns).Store)
-||||||| 5e58841cce7
-	return c.listUnitFilesInternal(c.sysobj.Call("org.freedesktop.systemd1.Manager.ListUnitFilesByPatterns", 0, states, patterns).Store)
-=======
-	return c.ListUnitFilesByPatternsContext(context.Background(), states, patterns)
-}
-
-// ListUnitFilesByPatternsContext same as ListUnitFilesByPatterns with context
-func (c *Conn) ListUnitFilesByPatternsContext(ctx context.Context, states []string, patterns []string) ([]UnitFile, error) {
-	return c.listUnitFilesInternal(c.sysobj.CallWithContext(ctx, "org.freedesktop.systemd1.Manager.ListUnitFilesByPatterns", 0, states, patterns).Store)
->>>>>>> v1.21.4
 }
 
 type LinkUnitFileChange EnableUnitFileChange
@@ -998,19 +545,7 @@ func (c *Conn) LinkUnitFiles(files []string, runtime bool, force bool) ([]LinkUn
 // structures with three strings: the type of the change (one of symlink
 // or unlink), the file name of the symlink and the destination of the
 // symlink.
-<<<<<<< HEAD
 func (c *Conn) LinkUnitFilesContext(ctx context.Context, files []string, runtime bool, force bool) ([]LinkUnitFileChange, error) {
-||||||| 5e58841cce7
-func (c *Conn) LinkUnitFiles(files []string, runtime bool, force bool) ([]LinkUnitFileChange, error) {
-=======
-// Deprecated: use LinkUnitFilesContext instead
-func (c *Conn) LinkUnitFiles(files []string, runtime bool, force bool) ([]LinkUnitFileChange, error) {
-	return c.LinkUnitFilesContext(context.Background(), files, runtime, force)
-}
-
-// LinkUnitFilesContext same as LinkUnitFiles with context
-func (c *Conn) LinkUnitFilesContext(ctx context.Context, files []string, runtime bool, force bool) ([]LinkUnitFileChange, error) {
->>>>>>> v1.21.4
 	result := make([][]interface{}, 0)
 	err := c.sysobj.CallWithContext(ctx, "org.freedesktop.systemd1.Manager.LinkUnitFiles", 0, files, runtime, force).Store(&result)
 	if err != nil {
@@ -1057,19 +592,7 @@ func (c *Conn) EnableUnitFiles(files []string, runtime bool, force bool) (bool, 
 // structures with three strings: the type of the change (one of symlink
 // or unlink), the file name of the symlink and the destination of the
 // symlink.
-<<<<<<< HEAD
 func (c *Conn) EnableUnitFilesContext(ctx context.Context, files []string, runtime bool, force bool) (bool, []EnableUnitFileChange, error) {
-||||||| 5e58841cce7
-func (c *Conn) EnableUnitFiles(files []string, runtime bool, force bool) (bool, []EnableUnitFileChange, error) {
-=======
-// Deprecated: use EnableUnitFilesContext instead
-func (c *Conn) EnableUnitFiles(files []string, runtime bool, force bool) (bool, []EnableUnitFileChange, error) {
-	return c.EnableUnitFilesContext(context.Background(), files, runtime, force)
-}
-
-// EnableUnitFilesContext same as EnableUnitFiles with context
-func (c *Conn) EnableUnitFilesContext(ctx context.Context, files []string, runtime bool, force bool) (bool, []EnableUnitFileChange, error) {
->>>>>>> v1.21.4
 	var carries_install_info bool
 
 	result := make([][]interface{}, 0)
@@ -1120,19 +643,7 @@ func (c *Conn) DisableUnitFiles(files []string, runtime bool) ([]DisableUnitFile
 // consists of structures with three strings: the type of the change (one of
 // symlink or unlink), the file name of the symlink and the destination of the
 // symlink.
-<<<<<<< HEAD
 func (c *Conn) DisableUnitFilesContext(ctx context.Context, files []string, runtime bool) ([]DisableUnitFileChange, error) {
-||||||| 5e58841cce7
-func (c *Conn) DisableUnitFiles(files []string, runtime bool) ([]DisableUnitFileChange, error) {
-=======
-// Deprecated: use DisableUnitFilesContext instead
-func (c *Conn) DisableUnitFiles(files []string, runtime bool) ([]DisableUnitFileChange, error) {
-	return c.DisableUnitFilesContext(context.Background(), files, runtime)
-}
-
-// DisableUnitFilesContext same as DisableUnitFiles with context
-func (c *Conn) DisableUnitFilesContext(ctx context.Context, files []string, runtime bool) ([]DisableUnitFileChange, error) {
->>>>>>> v1.21.4
 	result := make([][]interface{}, 0)
 	err := c.sysobj.CallWithContext(ctx, "org.freedesktop.systemd1.Manager.DisableUnitFiles", 0, files, runtime).Store(&result)
 	if err != nil {
@@ -1164,32 +675,8 @@ type DisableUnitFileChange struct {
 	Destination string // Destination of the symlink
 }
 
-<<<<<<< HEAD
 // Deprecated: use MaskUnitFilesContext instead.
-||||||| 5e58841cce7
-// MaskUnitFiles masks one or more units in the system
-//
-// It takes three arguments:
-//   * list of units to mask (either just file names or full
-//     absolute paths if the unit files are residing outside
-//     the usual unit search paths)
-//   * runtime to specify whether the unit was enabled for runtime
-//     only (true, /run/systemd/..), or persistently (false, /etc/systemd/..)
-//   * force flag
-=======
-// MaskUnitFiles masks one or more units in the system
-//
-// It takes three arguments:
-//   * list of units to mask (either just file names or full
-//     absolute paths if the unit files are residing outside
-//     the usual unit search paths)
-//   * runtime to specify whether the unit was enabled for runtime
-//     only (true, /run/systemd/..), or persistently (false, /etc/systemd/..)
-//   * force flag
-// Deprecated: use MaskUnitFilesContext instead
->>>>>>> v1.21.4
 func (c *Conn) MaskUnitFiles(files []string, runtime bool, force bool) ([]MaskUnitFileChange, error) {
-<<<<<<< HEAD
 	return c.MaskUnitFilesContext(context.Background(), files, runtime, force)
 }
 
@@ -1203,14 +690,6 @@ func (c *Conn) MaskUnitFiles(files []string, runtime bool, force bool) ([]MaskUn
 // runtime only (true, /run/systemd/..), or persistently (false,
 // /etc/systemd/..).
 func (c *Conn) MaskUnitFilesContext(ctx context.Context, files []string, runtime bool, force bool) ([]MaskUnitFileChange, error) {
-||||||| 5e58841cce7
-=======
-	return c.MaskUnitFilesContext(context.Background(), files, runtime, force)
-}
-
-// MaskUnitFilesContext same as MaskUnitFiles with context
-func (c *Conn) MaskUnitFilesContext(ctx context.Context, files []string, runtime bool, force bool) ([]MaskUnitFileChange, error) {
->>>>>>> v1.21.4
 	result := make([][]interface{}, 0)
 	err := c.sysobj.CallWithContext(ctx, "org.freedesktop.systemd1.Manager.MaskUnitFiles", 0, files, runtime, force).Store(&result)
 	if err != nil {
@@ -1242,30 +721,8 @@ type MaskUnitFileChange struct {
 	Destination string // Destination of the symlink
 }
 
-<<<<<<< HEAD
 // Deprecated: use UnmaskUnitFilesContext instead.
-||||||| 5e58841cce7
-// UnmaskUnitFiles unmasks one or more units in the system
-//
-// It takes two arguments:
-//   * list of unit files to mask (either just file names or full
-//     absolute paths if the unit files are residing outside
-//     the usual unit search paths)
-//   * runtime to specify whether the unit was enabled for runtime
-//     only (true, /run/systemd/..), or persistently (false, /etc/systemd/..)
-=======
-// UnmaskUnitFiles unmasks one or more units in the system
-//
-// It takes two arguments:
-//   * list of unit files to mask (either just file names or full
-//     absolute paths if the unit files are residing outside
-//     the usual unit search paths)
-//   * runtime to specify whether the unit was enabled for runtime
-//     only (true, /run/systemd/..), or persistently (false, /etc/systemd/..)
-// Deprecated: use UnmaskUnitFilesContext instead
->>>>>>> v1.21.4
 func (c *Conn) UnmaskUnitFiles(files []string, runtime bool) ([]UnmaskUnitFileChange, error) {
-<<<<<<< HEAD
 	return c.UnmaskUnitFilesContext(context.Background(), files, runtime)
 }
 
@@ -1277,14 +734,6 @@ func (c *Conn) UnmaskUnitFiles(files []string, runtime bool) ([]UnmaskUnitFileCh
 // for runtime only (true, /run/systemd/..), or persistently (false,
 // /etc/systemd/..).
 func (c *Conn) UnmaskUnitFilesContext(ctx context.Context, files []string, runtime bool) ([]UnmaskUnitFileChange, error) {
-||||||| 5e58841cce7
-=======
-	return c.UnmaskUnitFilesContext(context.Background(), files, runtime)
-}
-
-// UnmaskUnitFilesContext same as UnmaskUnitFiles with context
-func (c *Conn) UnmaskUnitFilesContext(ctx context.Context, files []string, runtime bool) ([]UnmaskUnitFileChange, error) {
->>>>>>> v1.21.4
 	result := make([][]interface{}, 0)
 	err := c.sysobj.CallWithContext(ctx, "org.freedesktop.systemd1.Manager.UnmaskUnitFiles", 0, files, runtime).Store(&result)
 	if err != nil {
@@ -1316,18 +765,8 @@ type UnmaskUnitFileChange struct {
 	Destination string // Destination of the symlink
 }
 
-<<<<<<< HEAD
 // Deprecated: use ReloadContext instead.
-||||||| 5e58841cce7
-// Reload instructs systemd to scan for and reload unit files. This is
-// equivalent to a 'systemctl daemon-reload'.
-=======
-// Reload instructs systemd to scan for and reload unit files. This is
-// equivalent to a 'systemctl daemon-reload'.
-// Deprecated: use ReloadContext instead
->>>>>>> v1.21.4
 func (c *Conn) Reload() error {
-<<<<<<< HEAD
 	return c.ReloadContext(context.Background())
 }
 
@@ -1335,16 +774,6 @@ func (c *Conn) Reload() error {
 // an equivalent to systemctl daemon-reload.
 func (c *Conn) ReloadContext(ctx context.Context) error {
 	return c.sysobj.CallWithContext(ctx, "org.freedesktop.systemd1.Manager.Reload", 0).Store()
-||||||| 5e58841cce7
-	return c.sysobj.Call("org.freedesktop.systemd1.Manager.Reload", 0).Store()
-=======
-	return c.ReloadContext(context.Background())
-}
-
-// ReloadContext same as Reload with context
-func (c *Conn) ReloadContext(ctx context.Context) error {
-	return c.sysobj.CallWithContext(ctx, "org.freedesktop.systemd1.Manager.Reload", 0).Store()
->>>>>>> v1.21.4
 }
 
 func unitPath(name string) dbus.ObjectPath {
@@ -1355,7 +784,6 @@ func unitPath(name string) dbus.ObjectPath {
 func unitName(dpath dbus.ObjectPath) string {
 	return pathBusUnescape(path.Base(string(dpath)))
 }
-<<<<<<< HEAD
 
 // JobStatus holds a currently queued job definition.
 type JobStatus struct {
@@ -1400,51 +828,3 @@ func (c *Conn) listJobsInternal(ctx context.Context) ([]JobStatus, error) {
 
 	return status, nil
 }
-||||||| 5e58841cce7
-=======
-
-// Currently queued job definition
-type JobStatus struct {
-	Id       uint32          // The numeric job id
-	Unit     string          // The primary unit name for this job
-	JobType  string          // The job type as string
-	Status   string          // The job state as string
-	JobPath  dbus.ObjectPath // The job object path
-	UnitPath dbus.ObjectPath // The unit object path
-}
-
-// ListJobs returns an array with all currently queued jobs
-// Deprecated: use ListJobsContext instead
-func (c *Conn) ListJobs() ([]JobStatus, error) {
-	return c.ListJobsContext(context.Background())
-}
-
-// ListJobsContext same as ListJobs with context
-func (c *Conn) ListJobsContext(ctx context.Context) ([]JobStatus, error) {
-	return c.listJobsInternal(ctx)
-}
-
-func (c *Conn) listJobsInternal(ctx context.Context) ([]JobStatus, error) {
-	result := make([][]interface{}, 0)
-	if err := c.sysobj.CallWithContext(ctx, "org.freedesktop.systemd1.Manager.ListJobs", 0).Store(&result); err != nil {
-		return nil, err
-	}
-
-	resultInterface := make([]interface{}, len(result))
-	for i := range result {
-		resultInterface[i] = result[i]
-	}
-
-	status := make([]JobStatus, len(result))
-	statusInterface := make([]interface{}, len(status))
-	for i := range status {
-		statusInterface[i] = &status[i]
-	}
-
-	if err := dbus.Store(resultInterface, statusInterface...); err != nil {
-		return nil, err
-	}
-
-	return status, nil
-}
->>>>>>> v1.21.4

@@ -16,7 +16,6 @@ import (
 	"github.com/opencontainers/runc/libcontainer/configs"
 )
 
-<<<<<<< HEAD
 func isIoSet(r *configs.Resources) bool {
 	return r.BlkioWeight != 0 ||
 		len(r.BlkioWeightDevice) > 0 ||
@@ -24,24 +23,8 @@ func isIoSet(r *configs.Resources) bool {
 		len(r.BlkioThrottleWriteBpsDevice) > 0 ||
 		len(r.BlkioThrottleReadIOPSDevice) > 0 ||
 		len(r.BlkioThrottleWriteIOPSDevice) > 0
-||||||| 5e58841cce7
-func isIoSet(cgroup *configs.Cgroup) bool {
-	return cgroup.Resources.BlkioWeight != 0 ||
-		len(cgroup.Resources.BlkioThrottleReadBpsDevice) > 0 ||
-		len(cgroup.Resources.BlkioThrottleWriteBpsDevice) > 0 ||
-		len(cgroup.Resources.BlkioThrottleReadIOPSDevice) > 0 ||
-		len(cgroup.Resources.BlkioThrottleWriteIOPSDevice) > 0
-=======
-func isIoSet(r *configs.Resources) bool {
-	return r.BlkioWeight != 0 ||
-		len(r.BlkioThrottleReadBpsDevice) > 0 ||
-		len(r.BlkioThrottleWriteBpsDevice) > 0 ||
-		len(r.BlkioThrottleReadIOPSDevice) > 0 ||
-		len(r.BlkioThrottleWriteIOPSDevice) > 0
->>>>>>> v1.21.4
 }
 
-<<<<<<< HEAD
 // bfqDeviceWeightSupported checks for per-device BFQ weight support (added
 // in kernel v5.4, commit 795fe54c2a8) by reading from "io.bfq.weight".
 func bfqDeviceWeightSupported(bfq *os.File) bool {
@@ -58,17 +41,9 @@ func bfqDeviceWeightSupported(bfq *os.File) bool {
 
 func setIo(dirPath string, r *configs.Resources) error {
 	if !isIoSet(r) {
-||||||| 5e58841cce7
-func setIo(dirPath string, cgroup *configs.Cgroup) error {
-	if !isIoSet(cgroup) {
-=======
-func setIo(dirPath string, r *configs.Resources) error {
-	if !isIoSet(r) {
->>>>>>> v1.21.4
 		return nil
 	}
 
-<<<<<<< HEAD
 	// If BFQ IO scheduler is available, use it.
 	var bfq *os.File
 	if r.BlkioWeight != 0 || len(r.BlkioWeightDevice) > 0 {
@@ -78,30 +53,8 @@ func setIo(dirPath string, r *configs.Resources) error {
 			defer bfq.Close()
 		} else if !os.IsNotExist(err) {
 			return err
-||||||| 5e58841cce7
-	if cgroup.Resources.BlkioWeight != 0 {
-		filename := "io.bfq.weight"
-		if err := fscommon.WriteFile(dirPath, filename,
-			strconv.FormatUint(cgroups.ConvertBlkIOToCgroupV2Value(cgroup.Resources.BlkioWeight), 10)); err != nil {
-			return err
-=======
-	if r.BlkioWeight != 0 {
-		filename := "io.bfq.weight"
-		if err := fscommon.WriteFile(dirPath, filename,
-			strconv.FormatUint(uint64(r.BlkioWeight), 10)); err != nil {
-			// if io.bfq.weight does not exist, then bfq module is not loaded.
-			// Fallback to use io.weight with a conversion scheme
-			if !os.IsNotExist(err) {
-				return err
-			}
-			v := cgroups.ConvertBlkIOToIOWeightValue(r.BlkioWeight)
-			if err := fscommon.WriteFile(dirPath, "io.weight", strconv.FormatUint(v, 10)); err != nil {
-				return err
-			}
->>>>>>> v1.21.4
 		}
 	}
-<<<<<<< HEAD
 
 	if r.BlkioWeight != 0 {
 		if bfq != nil { // Use BFQ.
@@ -125,52 +78,21 @@ func setIo(dirPath string, r *configs.Resources) error {
 	}
 	for _, td := range r.BlkioThrottleReadBpsDevice {
 		if err := cgroups.WriteFile(dirPath, "io.max", td.StringName("rbps")); err != nil {
-||||||| 5e58841cce7
-	for _, td := range cgroup.Resources.BlkioThrottleReadBpsDevice {
-		if err := fscommon.WriteFile(dirPath, "io.max", td.StringName("rbps")); err != nil {
-=======
-	for _, td := range r.BlkioThrottleReadBpsDevice {
-		if err := fscommon.WriteFile(dirPath, "io.max", td.StringName("rbps")); err != nil {
->>>>>>> v1.21.4
 			return err
 		}
 	}
-<<<<<<< HEAD
 	for _, td := range r.BlkioThrottleWriteBpsDevice {
 		if err := cgroups.WriteFile(dirPath, "io.max", td.StringName("wbps")); err != nil {
-||||||| 5e58841cce7
-	for _, td := range cgroup.Resources.BlkioThrottleWriteBpsDevice {
-		if err := fscommon.WriteFile(dirPath, "io.max", td.StringName("wbps")); err != nil {
-=======
-	for _, td := range r.BlkioThrottleWriteBpsDevice {
-		if err := fscommon.WriteFile(dirPath, "io.max", td.StringName("wbps")); err != nil {
->>>>>>> v1.21.4
 			return err
 		}
 	}
-<<<<<<< HEAD
 	for _, td := range r.BlkioThrottleReadIOPSDevice {
 		if err := cgroups.WriteFile(dirPath, "io.max", td.StringName("riops")); err != nil {
-||||||| 5e58841cce7
-	for _, td := range cgroup.Resources.BlkioThrottleReadIOPSDevice {
-		if err := fscommon.WriteFile(dirPath, "io.max", td.StringName("riops")); err != nil {
-=======
-	for _, td := range r.BlkioThrottleReadIOPSDevice {
-		if err := fscommon.WriteFile(dirPath, "io.max", td.StringName("riops")); err != nil {
->>>>>>> v1.21.4
 			return err
 		}
 	}
-<<<<<<< HEAD
 	for _, td := range r.BlkioThrottleWriteIOPSDevice {
 		if err := cgroups.WriteFile(dirPath, "io.max", td.StringName("wiops")); err != nil {
-||||||| 5e58841cce7
-	for _, td := range cgroup.Resources.BlkioThrottleWriteIOPSDevice {
-		if err := fscommon.WriteFile(dirPath, "io.max", td.StringName("wiops")); err != nil {
-=======
-	for _, td := range r.BlkioThrottleWriteIOPSDevice {
-		if err := fscommon.WriteFile(dirPath, "io.max", td.StringName("wiops")); err != nil {
->>>>>>> v1.21.4
 			return err
 		}
 	}

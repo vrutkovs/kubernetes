@@ -310,7 +310,6 @@ func getUnitName(c *configs.Cgroup) string {
 	return c.Name
 }
 
-<<<<<<< HEAD
 // This code should be in sync with getUnitName.
 func getUnitType(unitName string) string {
 	if strings.HasSuffix(unitName, ".slice") {
@@ -321,26 +320,10 @@ func getUnitType(unitName string) string {
 
 // isDbusError returns true if the error is a specific dbus error.
 func isDbusError(err error, name string) bool {
-||||||| 5e58841cce7
-// isUnitExists returns true if the error is that a systemd unit already exists.
-func isUnitExists(err error) bool {
-=======
-// isDbusError returns true if the error is a specific dbus error.
-func isDbusError(err error, name string) bool {
->>>>>>> v1.21.4
 	if err != nil {
-<<<<<<< HEAD
 		var derr dbus.Error
 		if errors.As(err, &derr) {
 			return strings.Contains(derr.Name, name)
-||||||| 5e58841cce7
-		if dbusError, ok := err.(dbus.Error); ok {
-			return strings.Contains(dbusError.Name, "org.freedesktop.systemd1.UnitExists")
-=======
-		var derr *dbus.Error
-		if errors.As(err, &derr) {
-			return strings.Contains(derr.Name, name)
->>>>>>> v1.21.4
 		}
 	}
 	return false
@@ -382,7 +365,6 @@ func startUnit(cm *dbusConnManager, unitName string, properties []systemdDbus.Pr
 
 func stopUnit(cm *dbusConnManager, unitName string) error {
 	statusChan := make(chan string, 1)
-<<<<<<< HEAD
 	err := cm.retryOnDisconnect(func(c *systemdDbus.Conn) error {
 		_, err := c.StopUnitContext(context.TODO(), unitName, "replace", statusChan)
 		return err
@@ -391,15 +373,6 @@ func stopUnit(cm *dbusConnManager, unitName string) error {
 		timeout := time.NewTimer(30 * time.Second)
 		defer timeout.Stop()
 
-||||||| 5e58841cce7
-	if _, err := dbusConnection.StopUnit(unitName, "replace", statusChan); err == nil {
-=======
-	err := cm.retryOnDisconnect(func(c *systemdDbus.Conn) error {
-		_, err := c.StopUnitContext(context.TODO(), unitName, "replace", statusChan)
-		return err
-	})
-	if err == nil {
->>>>>>> v1.21.4
 		select {
 		case s := <-statusChan:
 			close(statusChan)
@@ -414,7 +387,6 @@ func stopUnit(cm *dbusConnManager, unitName string) error {
 	return nil
 }
 
-<<<<<<< HEAD
 func resetFailedUnit(cm *dbusConnManager, name string) {
 	err := cm.retryOnDisconnect(func(c *systemdDbus.Conn) error {
 		return c.ResetFailedUnitContext(context.TODO(), name)
@@ -453,39 +425,6 @@ func getManagerProperty(cm *dbusConnManager, name string) (string, error) {
 }
 
 func systemdVersion(cm *dbusConnManager) int {
-||||||| 5e58841cce7
-func systemdVersion(conn *systemdDbus.Conn) int {
-=======
-func resetFailedUnit(cm *dbusConnManager, name string) {
-	err := cm.retryOnDisconnect(func(c *systemdDbus.Conn) error {
-		return c.ResetFailedUnitContext(context.TODO(), name)
-	})
-	if err != nil {
-		logrus.Warnf("unable to reset failed unit: %v", err)
-	}
-}
-
-func setUnitProperties(cm *dbusConnManager, name string, properties ...systemdDbus.Property) error {
-	return cm.retryOnDisconnect(func(c *systemdDbus.Conn) error {
-		return c.SetUnitPropertiesContext(context.TODO(), name, true, properties...)
-	})
-}
-
-func getManagerProperty(cm *dbusConnManager, name string) (string, error) {
-	str := ""
-	err := cm.retryOnDisconnect(func(c *systemdDbus.Conn) error {
-		var err error
-		str, err = c.GetManagerProperty(name)
-		return err
-	})
-	if err != nil {
-		return "", err
-	}
-	return strconv.Unquote(str)
-}
-
-func systemdVersion(cm *dbusConnManager) int {
->>>>>>> v1.21.4
 	versionOnce.Do(func() {
 		version = -1
 		verStr, err := getManagerProperty(cm, "Version")

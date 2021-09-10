@@ -29,7 +29,6 @@ var (
 
 // Spec represents decoded BTF.
 type Spec struct {
-<<<<<<< HEAD
 	rawTypes   []rawType
 	strings    stringTable
 	types      []Type
@@ -38,23 +37,6 @@ type Spec struct {
 	lineInfos  map[string]extInfo
 	coreRelos  map[string]coreRelos
 	byteOrder  binary.ByteOrder
-||||||| 5e58841cce7
-	rawTypes  []rawType
-	strings   stringTable
-	types     map[string][]namedType
-	funcInfos map[string]extInfo
-	lineInfos map[string]extInfo
-	byteOrder binary.ByteOrder
-=======
-	rawTypes   []rawType
-	strings    stringTable
-	types      []Type
-	namedTypes map[string][]namedType
-	funcInfos  map[string]extInfo
-	lineInfos  map[string]extInfo
-	coreRelos  map[string]bpfCoreRelos
-	byteOrder  binary.ByteOrder
->>>>>>> v1.21.4
 }
 
 type btfHeader struct {
@@ -456,70 +438,13 @@ func (s *Spec) Program(name string, length uint64) (*Program, error) {
 
 	funcInfos, funcOK := s.funcInfos[name]
 	lineInfos, lineOK := s.lineInfos[name]
-<<<<<<< HEAD
 	relos, coreOK := s.coreRelos[name]
-||||||| 5e58841cce7
-=======
-	coreRelos, coreOK := s.coreRelos[name]
->>>>>>> v1.21.4
 
 	if !funcOK && !lineOK && !coreOK {
 		return nil, fmt.Errorf("no extended BTF info for section %s", name)
 	}
 
-<<<<<<< HEAD
 	return &Program{s, length, funcInfos, lineInfos, relos}, nil
-||||||| 5e58841cce7
-	return &Program{s, length, funcInfos, lineInfos}, nil
-}
-
-// Map finds the BTF for a map.
-//
-// Returns an error if there is no BTF for the given name.
-func (s *Spec) Map(name string) (*Map, []Member, error) {
-	var mapVar Var
-	if err := s.FindType(name, &mapVar); err != nil {
-		return nil, nil, err
-	}
-
-	mapStruct, ok := mapVar.Type.(*Struct)
-	if !ok {
-		return nil, nil, fmt.Errorf("expected struct, have %s", mapVar.Type)
-	}
-
-	var key, value Type
-	for _, member := range mapStruct.Members {
-		switch member.Name {
-		case "key":
-			key = member.Type
-			if pk, isPtr := key.(*Pointer); !isPtr {
-				return nil, nil, fmt.Errorf("key type is not a pointer: %T", key)
-			} else {
-				key = pk.Target
-			}
-
-		case "value":
-			value = member.Type
-			if vk, isPtr := value.(*Pointer); !isPtr {
-				return nil, nil, fmt.Errorf("value type is not a pointer: %T", value)
-			} else {
-				value = vk.Target
-			}
-		}
-	}
-
-	if key == nil {
-		key = (*Void)(nil)
-	}
-
-	if value == nil {
-		value = (*Void)(nil)
-	}
-
-	return &Map{s, key, value}, mapStruct.Members, nil
-=======
-	return &Program{s, length, funcInfos, lineInfos, coreRelos}, nil
->>>>>>> v1.21.4
 }
 
 // Datasec returns the BTF required to create maps which represent data sections.
@@ -682,12 +607,7 @@ type Program struct {
 	spec                 *Spec
 	length               uint64
 	funcInfos, lineInfos extInfo
-<<<<<<< HEAD
 	coreRelos            coreRelos
-||||||| 5e58841cce7
-=======
-	coreRelos            bpfCoreRelos
->>>>>>> v1.21.4
 }
 
 // ProgramSpec returns the Spec needed for loading function and line infos into the kernel.
@@ -746,7 +666,6 @@ func ProgramLineInfos(s *Program) (recordSize uint32, bytes []byte, err error) {
 	return s.lineInfos.recordSize, bytes, nil
 }
 
-<<<<<<< HEAD
 // ProgramFixups returns the changes required to adjust the program to the target.
 //
 // This is a free function instead of a method to hide it from users
@@ -767,22 +686,6 @@ func ProgramFixups(s *Program, target *Spec) (COREFixups, error) {
 	return coreRelocate(s.spec, target, s.coreRelos)
 }
 
-||||||| 5e58841cce7
-=======
-// ProgramRelocations returns the CO-RE relocations required to adjust the
-// program to the target.
-//
-// This is a free function instead of a method to hide it from users
-// of package ebpf.
-func ProgramRelocations(s *Program, target *Spec) (map[uint64]Relocation, error) {
-	if len(s.coreRelos) == 0 {
-		return nil, nil
-	}
-
-	return coreRelocate(s.spec, target, s.coreRelos)
-}
-
->>>>>>> v1.21.4
 type bpfLoadBTFAttr struct {
 	btf         internal.Pointer
 	logBuf      internal.Pointer

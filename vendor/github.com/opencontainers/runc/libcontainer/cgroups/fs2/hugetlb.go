@@ -20,16 +20,8 @@ func setHugeTlb(dirPath string, r *configs.Resources) error {
 	if !isHugeTlbSet(r) {
 		return nil
 	}
-<<<<<<< HEAD
 	for _, hugetlb := range r.HugetlbLimit {
 		if err := cgroups.WriteFile(dirPath, "hugetlb."+hugetlb.Pagesize+".max", strconv.FormatUint(hugetlb.Limit, 10)); err != nil {
-||||||| 5e58841cce7
-	for _, hugetlb := range cgroup.Resources.HugetlbLimit {
-		if err := fscommon.WriteFile(dirPath, "hugetlb."+hugetlb.Pagesize+".max", strconv.FormatUint(hugetlb.Limit, 10)); err != nil {
-=======
-	for _, hugetlb := range r.HugetlbLimit {
-		if err := fscommon.WriteFile(dirPath, "hugetlb."+hugetlb.Pagesize+".max", strconv.FormatUint(hugetlb.Limit, 10)); err != nil {
->>>>>>> v1.21.4
 			return err
 		}
 	}

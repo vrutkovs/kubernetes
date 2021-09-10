@@ -111,18 +111,8 @@ type Conn struct {
 	}
 }
 
-<<<<<<< HEAD
 // Deprecated: use NewWithContext instead.
-||||||| 5e58841cce7
-// New establishes a connection to any available bus and authenticates.
-// Callers should call Close() when done with the connection.
-=======
-// New establishes a connection to any available bus and authenticates.
-// Callers should call Close() when done with the connection.
-// Deprecated: use NewWithContext instead
->>>>>>> v1.21.4
 func New() (*Conn, error) {
-<<<<<<< HEAD
 	return NewWithContext(context.Background())
 }
 
@@ -130,48 +120,20 @@ func New() (*Conn, error) {
 // Callers should call Close() when done with the connection.
 func NewWithContext(ctx context.Context) (*Conn, error) {
 	conn, err := NewSystemConnectionContext(ctx)
-||||||| 5e58841cce7
-	conn, err := NewSystemConnection()
-=======
-	return NewWithContext(context.Background())
-}
-
-// NewWithContext same as New with context
-func NewWithContext(ctx context.Context) (*Conn, error) {
-	conn, err := NewSystemConnectionContext(ctx)
->>>>>>> v1.21.4
 	if err != nil && os.Geteuid() == 0 {
 		return NewSystemdConnectionContext(ctx)
 	}
 	return conn, err
 }
 
-<<<<<<< HEAD
 // Deprecated: use NewSystemConnectionContext instead.
-||||||| 5e58841cce7
-// NewSystemConnection establishes a connection to the system bus and authenticates.
-// Callers should call Close() when done with the connection
-=======
-// NewSystemConnection establishes a connection to the system bus and authenticates.
-// Callers should call Close() when done with the connection
-// Deprecated: use NewSystemConnectionContext instead
->>>>>>> v1.21.4
 func NewSystemConnection() (*Conn, error) {
-<<<<<<< HEAD
 	return NewSystemConnectionContext(context.Background())
 }
 
 // NewSystemConnectionContext establishes a connection to the system bus and authenticates.
 // Callers should call Close() when done with the connection.
 func NewSystemConnectionContext(ctx context.Context) (*Conn, error) {
-||||||| 5e58841cce7
-=======
-	return NewSystemConnectionContext(context.Background())
-}
-
-// NewSystemConnectionContext same as NewSystemConnection with context
-func NewSystemConnectionContext(ctx context.Context) (*Conn, error) {
->>>>>>> v1.21.4
 	return NewConnection(func() (*dbus.Conn, error) {
 		return dbusAuthHelloConnection(ctx, dbus.SystemBusPrivate)
 	})
@@ -185,19 +147,7 @@ func NewUserConnection() (*Conn, error) {
 // NewUserConnectionContext establishes a connection to the session bus and
 // authenticates. This can be used to connect to systemd user instances.
 // Callers should call Close() when done with the connection.
-<<<<<<< HEAD
 func NewUserConnectionContext(ctx context.Context) (*Conn, error) {
-||||||| 5e58841cce7
-func NewUserConnection() (*Conn, error) {
-=======
-// Deprecated: use NewUserConnectionContext instead
-func NewUserConnection() (*Conn, error) {
-	return NewUserConnectionContext(context.Background())
-}
-
-// NewUserConnectionContext same as NewUserConnection with context
-func NewUserConnectionContext(ctx context.Context) (*Conn, error) {
->>>>>>> v1.21.4
 	return NewConnection(func() (*dbus.Conn, error) {
 		return dbusAuthHelloConnection(ctx, dbus.SessionBusPrivate)
 	})
@@ -211,19 +161,7 @@ func NewSystemdConnection() (*Conn, error) {
 // NewSystemdConnectionContext establishes a private, direct connection to systemd.
 // This can be used for communicating with systemd without a dbus daemon.
 // Callers should call Close() when done with the connection.
-<<<<<<< HEAD
 func NewSystemdConnectionContext(ctx context.Context) (*Conn, error) {
-||||||| 5e58841cce7
-func NewSystemdConnection() (*Conn, error) {
-=======
-// Deprecated: use NewSystemdConnectionContext instead
-func NewSystemdConnection() (*Conn, error) {
-	return NewSystemdConnectionContext(context.Background())
-}
-
-// NewSystemdConnectionContext same as NewSystemdConnection with context
-func NewSystemdConnectionContext(ctx context.Context) (*Conn, error) {
->>>>>>> v1.21.4
 	return NewConnection(func() (*dbus.Conn, error) {
 		// We skip Hello when talking directly to systemd.
 		return dbusAuthConnection(ctx, func(opts ...dbus.ConnOption) (*dbus.Conn, error) {

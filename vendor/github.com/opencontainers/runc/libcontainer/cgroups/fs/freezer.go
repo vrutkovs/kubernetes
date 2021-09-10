@@ -28,7 +28,6 @@ func (s *FreezerGroup) Apply(path string, d *cgroupData) error {
 func (s *FreezerGroup) Set(path string, r *configs.Resources) (Err error) {
 	switch r.Freezer {
 	case configs.Frozen:
-<<<<<<< HEAD
 		defer func() {
 			if Err != nil {
 				// Freezing failed, and it is bad and dangerous
@@ -38,18 +37,6 @@ func (s *FreezerGroup) Set(path string, r *configs.Resources) (Err error) {
 			}
 		}()
 
-||||||| 5e58841cce7
-=======
-		defer func() {
-			if Err != nil {
-				// Freezing failed, and it is bad and dangerous
-				// to leave the cgroup in FROZEN or FREEZING
-				// state, so (try to) thaw it back.
-				_ = fscommon.WriteFile(path, "freezer.state", string(configs.Thawed))
-			}
-		}()
-
->>>>>>> v1.21.4
 		// As per older kernel docs (freezer-subsystem.txt before
 		// kernel commit ef9fe980c6fcc1821), if FREEZING is seen,
 		// userspace should either retry or thaw. While current
@@ -74,7 +61,6 @@ func (s *FreezerGroup) Set(path string, r *configs.Resources) (Err error) {
 		// belong to the kernel (cgroup v2 do not have this bug).
 
 		for i := 0; i < 1000; i++ {
-<<<<<<< HEAD
 			if i%50 == 49 {
 				// Occasional thaw and sleep improves
 				// the chances to succeed in freezing
@@ -85,24 +71,9 @@ func (s *FreezerGroup) Set(path string, r *configs.Resources) (Err error) {
 			}
 
 			if err := cgroups.WriteFile(path, "freezer.state", string(configs.Frozen)); err != nil {
-||||||| 5e58841cce7
-			if err := fscommon.WriteFile(path, "freezer.state", string(configs.Frozen)); err != nil {
-=======
-			if i%50 == 49 {
-				// Occasional thaw and sleep improves
-				// the chances to succeed in freezing
-				// in case new processes keep appearing
-				// in the cgroup.
-				_ = fscommon.WriteFile(path, "freezer.state", string(configs.Thawed))
-				time.Sleep(10 * time.Millisecond)
-			}
-
-			if err := fscommon.WriteFile(path, "freezer.state", string(configs.Frozen)); err != nil {
->>>>>>> v1.21.4
 				return err
 			}
 
-<<<<<<< HEAD
 			if i%25 == 24 {
 				// Occasional short sleep before reading
 				// the state back also improves the chances to
@@ -111,18 +82,6 @@ func (s *FreezerGroup) Set(path string, r *configs.Resources) (Err error) {
 				time.Sleep(10 * time.Microsecond)
 			}
 			state, err := cgroups.ReadFile(path, "freezer.state")
-||||||| 5e58841cce7
-			state, err := fscommon.ReadFile(path, "freezer.state")
-=======
-			if i%25 == 24 {
-				// Occasional short sleep before reading
-				// the state back also improves the chances to
-				// succeed in freezing in case of a very slow
-				// system.
-				time.Sleep(10 * time.Microsecond)
-			}
-			state, err := fscommon.ReadFile(path, "freezer.state")
->>>>>>> v1.21.4
 			if err != nil {
 				return err
 			}

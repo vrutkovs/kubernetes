@@ -15,15 +15,7 @@ import (
 	"sync"
 	"time"
 
-<<<<<<< HEAD
 	"github.com/opencontainers/runc/libcontainer/userns"
-||||||| 5e58841cce7
-	"github.com/opencontainers/runc/libcontainer/cgroups/fscommon"
-	"github.com/opencontainers/runc/libcontainer/system"
-=======
-	"github.com/opencontainers/runc/libcontainer/cgroups/fscommon"
-	"github.com/opencontainers/runc/libcontainer/userns"
->>>>>>> v1.21.4
 	"github.com/sirupsen/logrus"
 	"golang.org/x/sys/unix"
 )

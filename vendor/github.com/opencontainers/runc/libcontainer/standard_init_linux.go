@@ -182,7 +182,6 @@ func (l *linuxStandardInit) Init() error {
 		return err
 	}
 	// Close the pipe to signal that we have completed our init.
-<<<<<<< HEAD
 	logrus.Debugf("init: closing the pipe to signal completion")
 	_ = l.pipe.Close()
 
@@ -191,18 +190,6 @@ func (l *linuxStandardInit) Init() error {
 		return newSystemErrorWithCause(err, "closing log pipe fd")
 	}
 
-||||||| 5e58841cce7
-	l.pipe.Close()
-=======
-	logrus.Debugf("init: closing the pipe to signal completion")
-	l.pipe.Close()
-
-	// Close the log pipe fd so the parent's ForwardLogs can exit.
-	if err := unix.Close(l.logFd); err != nil {
-		return newSystemErrorWithCause(err, "closing log pipe fd")
-	}
-
->>>>>>> v1.21.4
 	// Wait for the FIFO to be opened on the other side before exec-ing the
 	// user process. We open it through /proc/self/fd/$fd, because the fd that
 	// was given to us was an O_PATH fd to the fifo itself. Linux allows us to
