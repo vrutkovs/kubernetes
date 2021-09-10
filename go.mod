@@ -41,15 +41,8 @@ require (
 	github.com/fsnotify/fsnotify v1.4.9
 	github.com/go-bindata/go-bindata v3.1.2+incompatible
 	github.com/go-openapi/spec v0.19.5
-<<<<<<< HEAD
-	github.com/godbus/dbus/v5 v5.0.4
-||||||| 5e58841cce7
-	github.com/go-ozzo/ozzo-validation v3.5.0+incompatible // indirect
-	github.com/godbus/dbus/v5 v5.0.3
-=======
 	github.com/go-ozzo/ozzo-validation v3.5.0+incompatible // indirect
 	github.com/godbus/dbus/v5 v5.0.4
->>>>>>> v1.21.4
 	github.com/gogo/protobuf v1.3.2
 	github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e
 	github.com/golang/mock v1.4.4
@@ -57,13 +50,7 @@ require (
 	github.com/golangplus/testing v0.0.0-20180327235837-af21d9c3145e // indirect
 	github.com/google/btree v1.0.0
 	github.com/google/cadvisor v0.39.0
-<<<<<<< HEAD
 	github.com/google/go-cmp v0.5.5
-||||||| 5e58841cce7
-	github.com/google/go-cmp v0.5.2
-=======
-	github.com/google/go-cmp v0.5.4
->>>>>>> v1.21.4
 	github.com/google/gofuzz v1.1.0
 	github.com/google/uuid v1.1.2
 	github.com/googleapis/gnostic v0.4.1
@@ -81,20 +68,12 @@ require (
 	github.com/onsi/ginkgo v4.7.0-origin.0+incompatible
 	github.com/onsi/gomega v1.7.0
 	github.com/opencontainers/go-digest v1.0.0
-<<<<<<< HEAD
 	github.com/opencontainers/runc v1.0.2
 	github.com/opencontainers/selinux v1.8.2
 	github.com/openshift/api v0.0.0-20210713130143-be21c6cb1bea
 	github.com/openshift/apiserver-library-go v0.0.0-20210721120111-70ce3cad7d84
 	github.com/openshift/client-go v0.0.0-20210521082421-73d9475a9142
 	github.com/openshift/library-go v0.0.0-20210521084623-7392ea9b02ca
-||||||| 5e58841cce7
-	github.com/opencontainers/runc v1.0.0-rc93
-	github.com/opencontainers/selinux v1.8.0
-=======
-	github.com/opencontainers/runc v1.0.0-rc95
-	github.com/opencontainers/selinux v1.8.0
->>>>>>> v1.21.4
 	github.com/pkg/errors v0.9.1
 	github.com/pmezard/go-difflib v1.0.0
 	github.com/prometheus/client_model v0.2.0
@@ -155,16 +134,8 @@ require (
 	k8s.io/mount-utils v0.0.0
 	k8s.io/sample-apiserver v0.0.0
 	k8s.io/system-validators v1.4.0
-<<<<<<< HEAD
-	k8s.io/utils v0.0.0-20210521133846-da695404a2bc
-	sigs.k8s.io/structured-merge-diff/v4 v4.1.0
-||||||| 5e58841cce7
-	k8s.io/utils v0.0.0-20201110183641-67b214c5f920
-	sigs.k8s.io/structured-merge-diff/v4 v4.1.0
-=======
 	k8s.io/utils v0.0.0-20201110183641-67b214c5f920
 	sigs.k8s.io/structured-merge-diff/v4 v4.1.2
->>>>>>> v1.21.4
 	sigs.k8s.io/yaml v1.2.0
 )
 
@@ -226,13 +197,7 @@ replace (
 	github.com/chzyer/logex => github.com/chzyer/logex v1.1.10
 	github.com/chzyer/readline => github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e
 	github.com/chzyer/test => github.com/chzyer/test v0.0.0-20180213035817-a1ea475d72b1
-<<<<<<< HEAD
 	github.com/cilium/ebpf => github.com/cilium/ebpf v0.6.2
-||||||| 5e58841cce7
-	github.com/cilium/ebpf => github.com/cilium/ebpf v0.2.0
-=======
-	github.com/cilium/ebpf => github.com/cilium/ebpf v0.5.0
->>>>>>> v1.21.4
 	github.com/clusterhq/flocker-go => github.com/clusterhq/flocker-go v0.0.0-20160920122132-2b8b7259d313
 	github.com/cockroachdb/datadriven => github.com/cockroachdb/datadriven v0.0.0-20190809214429-80d97fb3cbaa
 	github.com/container-storage-interface/spec => github.com/container-storage-interface/spec v1.3.0
@@ -251,13 +216,7 @@ replace (
 	github.com/coreos/go-oidc => github.com/coreos/go-oidc v2.1.0+incompatible
 	github.com/coreos/go-semver => github.com/coreos/go-semver v0.3.0
 	github.com/coreos/go-systemd => github.com/coreos/go-systemd v0.0.0-20190321100706-95778dfbb74e
-<<<<<<< HEAD
 	github.com/coreos/go-systemd/v22 => github.com/coreos/go-systemd/v22 v22.3.2
-||||||| 5e58841cce7
-	github.com/coreos/go-systemd/v22 => github.com/coreos/go-systemd/v22 v22.1.0
-=======
-	github.com/coreos/go-systemd/v22 => github.com/coreos/go-systemd/v22 v22.3.1
->>>>>>> v1.21.4
 	github.com/coreos/pkg => github.com/coreos/pkg v0.0.0-20180928190104-399ea9e2e55f
 	github.com/cpuguy83/go-md2man/v2 => github.com/cpuguy83/go-md2man/v2 v2.0.0
 	github.com/creack/pty => github.com/creack/pty v1.1.11
@@ -326,16 +285,8 @@ replace (
 	github.com/gonum/lapack => github.com/gonum/lapack v0.0.0-20181123203213-e4cdc5a0bff9
 	github.com/gonum/matrix => github.com/gonum/matrix v0.0.0-20181209220409-c518dec07be9
 	github.com/google/btree => github.com/google/btree v1.0.0
-<<<<<<< HEAD
 	github.com/google/cadvisor => github.com/openshift/google-cadvisor v0.33.2-0.20210610135131-57b941c7657a
 	github.com/google/go-cmp => github.com/google/go-cmp v0.5.5
-||||||| 5e58841cce7
-	github.com/google/cadvisor => github.com/google/cadvisor v0.39.0
-	github.com/google/go-cmp => github.com/google/go-cmp v0.5.2
-=======
-	github.com/google/cadvisor => github.com/google/cadvisor v0.39.0
-	github.com/google/go-cmp => github.com/google/go-cmp v0.5.4
->>>>>>> v1.21.4
 	github.com/google/gofuzz => github.com/google/gofuzz v1.1.0
 	github.com/google/martian => github.com/google/martian v2.1.0+incompatible
 	github.com/google/pprof => github.com/google/pprof v0.0.0-20200229191704-1ebb73c60ed3
@@ -444,7 +395,6 @@ replace (
 	github.com/onsi/gomega => github.com/onsi/gomega v1.7.0
 	github.com/opencontainers/go-digest => github.com/opencontainers/go-digest v1.0.0
 	github.com/opencontainers/image-spec => github.com/opencontainers/image-spec v1.0.1
-<<<<<<< HEAD
 	github.com/opencontainers/runc => github.com/opencontainers/runc v1.0.2
 	github.com/opencontainers/runtime-spec => github.com/opencontainers/runtime-spec v1.0.3-0.20210326190908-1c3f411f0417
 	github.com/opencontainers/selinux => github.com/opencontainers/selinux v1.8.2
@@ -453,15 +403,6 @@ replace (
 	github.com/openshift/build-machinery-go => github.com/openshift/build-machinery-go v0.0.0-20210209125900-0da259a2c359
 	github.com/openshift/client-go => github.com/openshift/client-go v0.0.0-20210422153130-25c8450d1535
 	github.com/openshift/library-go => github.com/openshift/library-go v0.0.0-20210407092538-7021fda6f427
-||||||| 5e58841cce7
-	github.com/opencontainers/runc => github.com/opencontainers/runc v1.0.0-rc93
-	github.com/opencontainers/runtime-spec => github.com/opencontainers/runtime-spec v1.0.3-0.20200929063507-e6143ca7d51d
-	github.com/opencontainers/selinux => github.com/opencontainers/selinux v1.8.0
-=======
-	github.com/opencontainers/runc => github.com/opencontainers/runc v1.0.0-rc95
-	github.com/opencontainers/runtime-spec => github.com/opencontainers/runtime-spec v1.0.3-0.20210326190908-1c3f411f0417
-	github.com/opencontainers/selinux => github.com/opencontainers/selinux v1.8.0
->>>>>>> v1.21.4
 	github.com/pascaldekloe/goe => github.com/pascaldekloe/goe v0.0.0-20180627143212-57f6aae5913c
 	github.com/pelletier/go-toml => github.com/pelletier/go-toml v1.2.0
 	github.com/peterbourgon/diskv => github.com/peterbourgon/diskv v2.0.1+incompatible
@@ -607,15 +548,7 @@ replace (
 	modernc.org/strutil => modernc.org/strutil v1.0.0
 	modernc.org/xc => modernc.org/xc v1.0.0
 	rsc.io/pdf => rsc.io/pdf v0.1.1
-<<<<<<< HEAD
-	sigs.k8s.io/apiserver-network-proxy/konnectivity-client => sigs.k8s.io/apiserver-network-proxy/konnectivity-client v0.0.15
-	sigs.k8s.io/controller-tools => sigs.k8s.io/controller-tools v0.2.8
-	sigs.k8s.io/kube-storage-version-migrator => sigs.k8s.io/kube-storage-version-migrator v0.0.3
-||||||| 5e58841cce7
-	sigs.k8s.io/apiserver-network-proxy/konnectivity-client => sigs.k8s.io/apiserver-network-proxy/konnectivity-client v0.0.15
-=======
 	sigs.k8s.io/apiserver-network-proxy/konnectivity-client => sigs.k8s.io/apiserver-network-proxy/konnectivity-client v0.0.22
->>>>>>> v1.21.4
 	sigs.k8s.io/kustomize/api => sigs.k8s.io/kustomize/api v0.8.8
 	sigs.k8s.io/kustomize/cmd/config => sigs.k8s.io/kustomize/cmd/config v0.9.10
 	sigs.k8s.io/kustomize/kustomize/v4 => sigs.k8s.io/kustomize/kustomize/v4 v4.1.2

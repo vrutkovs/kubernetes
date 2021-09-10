@@ -211,21 +211,9 @@ github.com/checkpoint-restore/go-criu/v5/rpc
 # github.com/chzyer/logex => github.com/chzyer/logex v1.1.10
 # github.com/chzyer/readline => github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e
 # github.com/chzyer/test => github.com/chzyer/test v0.0.0-20180213035817-a1ea475d72b1
-<<<<<<< HEAD
 # github.com/cilium/ebpf v0.6.2 => github.com/cilium/ebpf v0.6.2
-||||||| 5e58841cce7
-# github.com/cilium/ebpf v0.2.0 => github.com/cilium/ebpf v0.2.0
-=======
-# github.com/cilium/ebpf v0.5.0 => github.com/cilium/ebpf v0.5.0
->>>>>>> v1.21.4
 github.com/cilium/ebpf
-<<<<<<< HEAD
 # github.com/cilium/ebpf => github.com/cilium/ebpf v0.6.2
-||||||| 5e58841cce7
-# github.com/cilium/ebpf => github.com/cilium/ebpf v0.2.0
-=======
-# github.com/cilium/ebpf => github.com/cilium/ebpf v0.5.0
->>>>>>> v1.21.4
 github.com/cilium/ebpf/asm
 github.com/cilium/ebpf/internal
 github.com/cilium/ebpf/internal/btf
@@ -297,16 +285,8 @@ github.com/coreos/go-semver/semver
 github.com/coreos/go-systemd/daemon
 github.com/coreos/go-systemd/journal
 github.com/coreos/go-systemd/util
-<<<<<<< HEAD
 # github.com/coreos/go-systemd/v22 v22.3.2 => github.com/coreos/go-systemd/v22 v22.3.2
 # github.com/coreos/go-systemd/v22 => github.com/coreos/go-systemd/v22 v22.3.2
-||||||| 5e58841cce7
-# github.com/coreos/go-systemd/v22 v22.1.0 => github.com/coreos/go-systemd/v22 v22.1.0
-# github.com/coreos/go-systemd/v22 => github.com/coreos/go-systemd/v22 v22.1.0
-=======
-# github.com/coreos/go-systemd/v22 v22.3.1 => github.com/coreos/go-systemd/v22 v22.3.1
-# github.com/coreos/go-systemd/v22 => github.com/coreos/go-systemd/v22 v22.3.1
->>>>>>> v1.21.4
 github.com/coreos/go-systemd/v22/dbus
 # github.com/coreos/pkg v0.0.0-20180928190104-399ea9e2e55f => github.com/coreos/pkg v0.0.0-20180928190104-399ea9e2e55f
 ## explicit
@@ -575,21 +555,9 @@ github.com/google/cadvisor/utils/sysinfo
 github.com/google/cadvisor/version
 github.com/google/cadvisor/watcher
 github.com/google/cadvisor/zfs
-<<<<<<< HEAD
 # github.com/google/go-cmp v0.5.5 => github.com/google/go-cmp v0.5.5
-||||||| 5e58841cce7
-# github.com/google/go-cmp v0.5.2 => github.com/google/go-cmp v0.5.2
-=======
-# github.com/google/go-cmp v0.5.4 => github.com/google/go-cmp v0.5.4
->>>>>>> v1.21.4
 ## explicit
-<<<<<<< HEAD
 # github.com/google/go-cmp => github.com/google/go-cmp v0.5.5
-||||||| 5e58841cce7
-# github.com/google/go-cmp => github.com/google/go-cmp v0.5.2
-=======
-# github.com/google/go-cmp => github.com/google/go-cmp v0.5.4
->>>>>>> v1.21.4
 github.com/google/go-cmp/cmp
 github.com/google/go-cmp/cmp/cmpopts
 github.com/google/go-cmp/cmp/internal/diff
@@ -920,21 +888,9 @@ github.com/opencontainers/go-digest
 # github.com/opencontainers/image-spec => github.com/opencontainers/image-spec v1.0.1
 github.com/opencontainers/image-spec/specs-go
 github.com/opencontainers/image-spec/specs-go/v1
-<<<<<<< HEAD
 # github.com/opencontainers/runc v1.0.2 => github.com/opencontainers/runc v1.0.2
-||||||| 5e58841cce7
-# github.com/opencontainers/runc v1.0.0-rc93 => github.com/opencontainers/runc v1.0.0-rc93
-=======
-# github.com/opencontainers/runc v1.0.0-rc95 => github.com/opencontainers/runc v1.0.0-rc95
->>>>>>> v1.21.4
 ## explicit
-<<<<<<< HEAD
 # github.com/opencontainers/runc => github.com/opencontainers/runc v1.0.2
-||||||| 5e58841cce7
-# github.com/opencontainers/runc => github.com/opencontainers/runc v1.0.0-rc93
-=======
-# github.com/opencontainers/runc => github.com/opencontainers/runc v1.0.0-rc95
->>>>>>> v1.21.4
 github.com/opencontainers/runc/libcontainer
 github.com/opencontainers/runc/libcontainer/apparmor
 github.com/opencontainers/runc/libcontainer/capabilities
