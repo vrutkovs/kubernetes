@@ -354,7 +354,7 @@ func newSourceVIP(hns HostNetworkService, network string, ip string, mac string,
 
 func (ep *endpointsInfo) Cleanup() {
 	Log(ep, "Endpoint Cleanup", 3)
-	if ep.refCount != nil {
+	if !ep.GetIsLocal() && ep.refCount != nil {
 		*ep.refCount--
 
 		// Remove the remote hns endpoint, if no service is referring it
@@ -1157,10 +1157,10 @@ func (proxier *Proxier) syncProxyRules() {
 			} else {
 				// We only share the refCounts for remote endpoints
 				ep.refCount = proxier.endPointsRefCount.getRefCount(newHnsEndpoint.hnsID)
+				*ep.refCount++
 			}
 
 			ep.hnsID = newHnsEndpoint.hnsID
-			*ep.refCount++
 
 			Log(ep, "Endpoint resource found", 3)
 		}
@@ -1265,7 +1265,7 @@ func (proxier *Proxier) syncProxyRules() {
 			}
 			hnsLoadBalancer, err := hns.getLoadBalancer(
 				lbIngressEndpoints,
-				loadBalancerFlags{isDSR: svcInfo.preserveDIP || proxier.isDSR || svcInfo.localTrafficDSR, useMUX: svcInfo.preserveDIP, preserveDIP: svcInfo.preserveDIP, sessionAffinity: sessionAffinityClientIP, isIPv6: proxier.isIPv6Mode},
+				loadBalancerFlags{isDSR: svcInfo.preserveDIP || svcInfo.localTrafficDSR, useMUX: svcInfo.preserveDIP, preserveDIP: svcInfo.preserveDIP, sessionAffinity: sessionAffinityClientIP, isIPv6: proxier.isIPv6Mode},
 				sourceVip,
 				lbIngressIP.ip,
 				Enum(svcInfo.Protocol()),

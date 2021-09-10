@@ -210,10 +210,21 @@ func (m *legacyManager) Destroy() error {
 
 	stopErr := stopUnit(m.dbus, getUnitName(m.cgroups))
 
+<<<<<<< HEAD
 	// Both on success and on error, cleanup all the cgroups
 	// we are aware of, as some of them were created directly
 	// by Apply() and are not managed by systemd.
 	if err := cgroups.RemovePaths(m.paths); err != nil && stopErr == nil {
+||||||| 5e58841cce7
+	stopErr := stopUnit(dbusConnection, unitName)
+	// Both on success and on error, cleanup all the cgroups we are aware of.
+	// Some of them were created directly by Apply() and are not managed by systemd.
+	if err := cgroups.RemovePaths(m.paths); err != nil {
+=======
+	// Both on success and on error, cleanup all the cgroups we are aware of.
+	// Some of them were created directly by Apply() and are not managed by systemd.
+	if err := cgroups.RemovePaths(m.paths); err != nil {
+>>>>>>> v1.21.4
 		return err
 	}
 
@@ -296,8 +307,22 @@ func (m *legacyManager) doFreeze(state configs.FreezerState) error {
 		return errSubsystemDoesNotExist
 	}
 	freezer := &fs.FreezerGroup{}
+<<<<<<< HEAD
 	resources := &configs.Resources{Freezer: state}
 	return freezer.Set(path, resources)
+||||||| 5e58841cce7
+	if err := freezer.Set(path, m.cgroups); err != nil {
+		m.cgroups.Resources.Freezer = prevState
+		return err
+	}
+	return nil
+=======
+	if err := freezer.Set(path, m.cgroups.Resources); err != nil {
+		m.cgroups.Resources.Freezer = prevState
+		return err
+	}
+	return nil
+>>>>>>> v1.21.4
 }
 
 func (m *legacyManager) GetPids() ([]int, error) {
@@ -333,6 +358,7 @@ func (m *legacyManager) GetStats() (*cgroups.Stats, error) {
 	return stats, nil
 }
 
+<<<<<<< HEAD
 // freezeBeforeSet answers whether there is a need to freeze the cgroup before
 // applying its systemd unit properties, and thaw after, while avoiding
 // unnecessary freezer state changes.
@@ -399,6 +425,11 @@ func (m *legacyManager) freezeBeforeSet(unitName string, r *configs.Resources) (
 }
 
 func (m *legacyManager) Set(r *configs.Resources) error {
+||||||| 5e58841cce7
+func (m *legacyManager) Set(container *configs.Config) error {
+=======
+func (m *legacyManager) Set(r *configs.Resources) error {
+>>>>>>> v1.21.4
 	// If Paths are set, then we are just joining cgroups paths
 	// and there is no need to set any values.
 	if m.cgroups.Paths != nil {
@@ -407,6 +438,7 @@ func (m *legacyManager) Set(r *configs.Resources) error {
 	if r.Unified != nil {
 		return cgroups.ErrV1NoUnified
 	}
+<<<<<<< HEAD
 	properties, err := genV1ResourcesProperties(r, m.dbus)
 	if err != nil {
 		return err
@@ -414,6 +446,15 @@ func (m *legacyManager) Set(r *configs.Resources) error {
 
 	unitName := getUnitName(m.cgroups)
 	needsFreeze, needsThaw, err := m.freezeBeforeSet(unitName, r)
+||||||| 5e58841cce7
+	dbusConnection, err := getDbusConnection(false)
+	if err != nil {
+		return err
+	}
+	properties, err := genV1ResourcesProperties(container.Cgroups, dbusConnection)
+=======
+	properties, err := genV1ResourcesProperties(r, m.dbus)
+>>>>>>> v1.21.4
 	if err != nil {
 		return err
 	}
@@ -424,6 +465,7 @@ func (m *legacyManager) Set(r *configs.Resources) error {
 			logrus.Infof("freeze container before SetUnitProperties failed: %v", err)
 		}
 	}
+<<<<<<< HEAD
 	setErr := setUnitProperties(m.dbus, unitName, properties...)
 	if needsThaw {
 		if err := m.doFreeze(configs.Thawed); err != nil {
@@ -432,6 +474,17 @@ func (m *legacyManager) Set(r *configs.Resources) error {
 	}
 	if setErr != nil {
 		return setErr
+||||||| 5e58841cce7
+
+	if err := dbusConnection.SetUnitProperties(getUnitName(container.Cgroups), true, properties...); err != nil {
+		_ = m.Freeze(targetFreezerState)
+		return err
+=======
+
+	if err := setUnitProperties(m.dbus, getUnitName(m.cgroups), properties...); err != nil {
+		_ = m.Freeze(targetFreezerState)
+		return err
+>>>>>>> v1.21.4
 	}
 
 	for _, sys := range legacySubsystems {

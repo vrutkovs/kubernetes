@@ -113,20 +113,60 @@ type MapKV struct {
 
 func (ms *MapSpec) checkCompatibility(m *Map) error {
 	switch {
+<<<<<<< HEAD
 	case m.typ != ms.Type:
 		return fmt.Errorf("expected type %v, got %v: %w", ms.Type, m.typ, ErrMapIncompatible)
+||||||| 5e58841cce7
+	case m.abi.Type != ms.Type:
+		return fmt.Errorf("expected type %v, got %v", ms.Type, m.abi.Type)
+=======
+	case m.typ != ms.Type:
+		return fmt.Errorf("expected type %v, got %v", ms.Type, m.typ)
+>>>>>>> v1.21.4
 
+<<<<<<< HEAD
 	case m.keySize != ms.KeySize:
 		return fmt.Errorf("expected key size %v, got %v: %w", ms.KeySize, m.keySize, ErrMapIncompatible)
+||||||| 5e58841cce7
+	case m.abi.KeySize != ms.KeySize:
+		return fmt.Errorf("expected key size %v, got %v", ms.KeySize, m.abi.KeySize)
+=======
+	case m.keySize != ms.KeySize:
+		return fmt.Errorf("expected key size %v, got %v", ms.KeySize, m.keySize)
+>>>>>>> v1.21.4
 
+<<<<<<< HEAD
 	case m.valueSize != ms.ValueSize:
 		return fmt.Errorf("expected value size %v, got %v: %w", ms.ValueSize, m.valueSize, ErrMapIncompatible)
+||||||| 5e58841cce7
+	case m.abi.ValueSize != ms.ValueSize:
+		return fmt.Errorf("expected value size %v, got %v", ms.ValueSize, m.abi.ValueSize)
+=======
+	case m.valueSize != ms.ValueSize:
+		return fmt.Errorf("expected value size %v, got %v", ms.ValueSize, m.valueSize)
+>>>>>>> v1.21.4
 
+<<<<<<< HEAD
 	case m.maxEntries != ms.MaxEntries:
 		return fmt.Errorf("expected max entries %v, got %v: %w", ms.MaxEntries, m.maxEntries, ErrMapIncompatible)
+||||||| 5e58841cce7
+	case m.abi.MaxEntries != ms.MaxEntries:
+		return fmt.Errorf("expected max entries %v, got %v", ms.MaxEntries, m.abi.MaxEntries)
+=======
+	case m.maxEntries != ms.MaxEntries:
+		return fmt.Errorf("expected max entries %v, got %v", ms.MaxEntries, m.maxEntries)
+>>>>>>> v1.21.4
 
+<<<<<<< HEAD
 	case m.flags != ms.Flags:
 		return fmt.Errorf("expected flags %v, got %v: %w", ms.Flags, m.flags, ErrMapIncompatible)
+||||||| 5e58841cce7
+	case m.abi.Flags != ms.Flags:
+		return fmt.Errorf("expected flags %v, got %v", ms.Flags, m.abi.Flags)
+=======
+	case m.flags != ms.Flags:
+		return fmt.Errorf("expected flags %v, got %v", ms.Flags, m.flags)
+>>>>>>> v1.21.4
 	}
 	return nil
 }
@@ -192,12 +232,31 @@ func NewMap(spec *MapSpec) (*Map, error) {
 //
 // May return an error wrapping ErrMapIncompatible.
 func NewMapWithOptions(spec *MapSpec, opts MapOptions) (*Map, error) {
+<<<<<<< HEAD
 	handles := newHandleCache()
 	defer handles.close()
 
 	return newMapWithOptions(spec, opts, handles)
+||||||| 5e58841cce7
+	if spec.BTF == nil {
+		return newMapWithBTF(spec, nil, opts)
+	}
+
+	handle, err := btf.NewHandle(btf.MapSpec(spec.BTF))
+	if err != nil && !errors.Is(err, btf.ErrNotSupported) {
+		return nil, fmt.Errorf("can't load BTF: %w", err)
+	}
+
+	return newMapWithBTF(spec, handle, opts)
+=======
+	btfs := make(btfHandleCache)
+	defer btfs.close()
+
+	return newMapWithOptions(spec, opts, btfs)
+>>>>>>> v1.21.4
 }
 
+<<<<<<< HEAD
 func newMapWithOptions(spec *MapSpec, opts MapOptions, handles *handleCache) (_ *Map, err error) {
 	closeOnError := func(c io.Closer) {
 		if err != nil {
@@ -205,6 +264,17 @@ func newMapWithOptions(spec *MapSpec, opts MapOptions, handles *handleCache) (_ 
 		}
 	}
 
+||||||| 5e58841cce7
+func newMapWithBTF(spec *MapSpec, handle *btf.Handle, opts MapOptions) (*Map, error) {
+=======
+func newMapWithOptions(spec *MapSpec, opts MapOptions, btfs btfHandleCache) (_ *Map, err error) {
+	closeOnError := func(c io.Closer) {
+		if err != nil {
+			c.Close()
+		}
+	}
+
+>>>>>>> v1.21.4
 	switch spec.Pinning {
 	case PinByName:
 		if spec.Name == "" || opts.PinPath == "" {
@@ -222,7 +292,14 @@ func newMapWithOptions(spec *MapSpec, opts MapOptions, handles *handleCache) (_ 
 		defer closeOnError(m)
 
 		if err := spec.checkCompatibility(m); err != nil {
+<<<<<<< HEAD
 			return nil, fmt.Errorf("use pinned map %s: %w", spec.Name, err)
+||||||| 5e58841cce7
+			m.Close()
+			return nil, fmt.Errorf("use pinned map %s: %s", spec.Name, err)
+=======
+			return nil, fmt.Errorf("use pinned map %s: %s", spec.Name, err)
+>>>>>>> v1.21.4
 		}
 
 		return m, nil
@@ -240,11 +317,21 @@ func newMapWithOptions(spec *MapSpec, opts MapOptions, handles *handleCache) (_ 
 			return nil, fmt.Errorf("%s requires InnerMap", spec.Type)
 		}
 
+<<<<<<< HEAD
 		if spec.InnerMap.Pinning != PinNone {
 			return nil, errors.New("inner maps cannot be pinned")
 		}
 
 		template, err := createMap(spec.InnerMap, nil, opts, handles)
+||||||| 5e58841cce7
+		template, err := createMap(spec.InnerMap, nil, handle, opts)
+=======
+		if spec.InnerMap.Pinning != PinNone {
+			return nil, errors.New("inner maps cannot be pinned")
+		}
+
+		template, err := createMap(spec.InnerMap, nil, opts, btfs)
+>>>>>>> v1.21.4
 		if err != nil {
 			return nil, err
 		}
@@ -253,7 +340,13 @@ func newMapWithOptions(spec *MapSpec, opts MapOptions, handles *handleCache) (_ 
 		innerFd = template.fd
 	}
 
+<<<<<<< HEAD
 	m, err := createMap(spec, innerFd, opts, handles)
+||||||| 5e58841cce7
+	m, err := createMap(spec, innerFd, handle, opts)
+=======
+	m, err := createMap(spec, innerFd, opts, btfs)
+>>>>>>> v1.21.4
 	if err != nil {
 		return nil, err
 	}
@@ -269,7 +362,13 @@ func newMapWithOptions(spec *MapSpec, opts MapOptions, handles *handleCache) (_ 
 	return m, nil
 }
 
+<<<<<<< HEAD
 func createMap(spec *MapSpec, inner *internal.FD, opts MapOptions, handles *handleCache) (_ *Map, err error) {
+||||||| 5e58841cce7
+func createMap(spec *MapSpec, inner *internal.FD, handle *btf.Handle, opts MapOptions) (_ *Map, err error) {
+=======
+func createMap(spec *MapSpec, inner *internal.FD, opts MapOptions, btfs btfHandleCache) (_ *Map, err error) {
+>>>>>>> v1.21.4
 	closeOnError := func(closer io.Closer) {
 		if err != nil {
 			closer.Close()
@@ -327,6 +426,7 @@ func createMap(spec *MapSpec, inner *internal.FD, opts MapOptions, handles *hand
 		}
 	}
 
+<<<<<<< HEAD
 	attr := internal.BPFMapCreateAttr{
 		MapType:    uint32(spec.Type),
 		KeySize:    spec.KeySize,
@@ -334,6 +434,23 @@ func createMap(spec *MapSpec, inner *internal.FD, opts MapOptions, handles *hand
 		MaxEntries: spec.MaxEntries,
 		Flags:      spec.Flags,
 		NumaNode:   spec.NumaNode,
+||||||| 5e58841cce7
+	attr := bpfMapCreateAttr{
+		mapType:    abi.Type,
+		keySize:    abi.KeySize,
+		valueSize:  abi.ValueSize,
+		maxEntries: abi.MaxEntries,
+		flags:      abi.Flags,
+		numaNode:   spec.NumaNode,
+=======
+	attr := bpfMapCreateAttr{
+		mapType:    spec.Type,
+		keySize:    spec.KeySize,
+		valueSize:  spec.ValueSize,
+		maxEntries: spec.MaxEntries,
+		flags:      spec.Flags,
+		numaNode:   spec.NumaNode,
+>>>>>>> v1.21.4
 	}
 
 	if inner != nil {
@@ -344,6 +461,7 @@ func createMap(spec *MapSpec, inner *internal.FD, opts MapOptions, handles *hand
 		}
 	}
 
+<<<<<<< HEAD
 	if haveObjName() == nil {
 		attr.MapName = internal.NewBPFObjName(spec.Name)
 	}
@@ -361,9 +479,43 @@ func createMap(spec *MapSpec, inner *internal.FD, opts MapOptions, handles *hand
 			attr.BTFKeyTypeID = uint32(btf.MapKey(spec.BTF).ID())
 			attr.BTFValueTypeID = uint32(btf.MapValue(spec.BTF).ID())
 		}
+||||||| 5e58841cce7
+	if handle != nil && spec.BTF != nil {
+		attr.btfFd = uint32(handle.FD())
+		attr.btfKeyTypeID = btf.MapKey(spec.BTF).ID()
+		attr.btfValueTypeID = btf.MapValue(spec.BTF).ID()
 	}
 
+	if haveObjName() == nil {
+		attr.mapName = newBPFObjName(spec.Name)
+=======
+	if haveObjName() == nil {
+		attr.mapName = newBPFObjName(spec.Name)
+>>>>>>> v1.21.4
+	}
+
+<<<<<<< HEAD
 	fd, err := internal.BPFMapCreate(&attr)
+||||||| 5e58841cce7
+	fd, err := bpfMapCreate(&attr)
+=======
+	var btfDisabled bool
+	if spec.BTF != nil {
+		handle, err := btfs.load(btf.MapSpec(spec.BTF))
+		btfDisabled = errors.Is(err, btf.ErrNotSupported)
+		if err != nil && !btfDisabled {
+			return nil, fmt.Errorf("load BTF: %w", err)
+		}
+
+		if handle != nil {
+			attr.btfFd = uint32(handle.FD())
+			attr.btfKeyTypeID = btf.MapKey(spec.BTF).ID()
+			attr.btfValueTypeID = btf.MapValue(spec.BTF).ID()
+		}
+	}
+
+	fd, err := bpfMapCreate(&attr)
+>>>>>>> v1.21.4
 	if err != nil {
 		if errors.Is(err, unix.EPERM) {
 			return nil, fmt.Errorf("map create: RLIMIT_MEMLOCK may be too low: %w", err)
@@ -901,6 +1053,33 @@ func (m *Map) populate(contents []MapKV) error {
 	return nil
 }
 
+<<<<<<< HEAD
+func (m *Map) marshalKey(data interface{}) (internal.Pointer, error) {
+	if data == nil {
+		if m.keySize == 0 {
+			// Queues have a key length of zero, so passing nil here is valid.
+			return internal.NewPointer(nil), nil
+		}
+		return internal.Pointer{}, errors.New("can't use nil as key of map")
+	}
+
+	return marshalPtr(data, int(m.keySize))
+}
+
+func (m *Map) unmarshalKey(data interface{}, buf []byte) error {
+	if buf == nil {
+		// This is from a makeBuffer call, nothing do do here.
+		return nil
+||||||| 5e58841cce7
+// LoadPinnedMap load a Map from a BPF file.
+//
+// The function is not compatible with nested maps.
+// Use LoadPinnedMapExplicit in these situations.
+func LoadPinnedMap(fileName string) (*Map, error) {
+	fd, err := internal.BPFObjGet(fileName)
+	if err != nil {
+		return nil, err
+=======
 func (m *Map) marshalKey(data interface{}) (internal.Pointer, error) {
 	if data == nil {
 		if m.keySize == 0 {
@@ -918,6 +1097,16 @@ func (m *Map) unmarshalKey(data interface{}, buf []byte) error {
 		// This is from a makeBuffer call, nothing do do here.
 		return nil
 	}
+
+	return unmarshalBytes(data, buf)
+}
+
+func (m *Map) marshalValue(data interface{}) (internal.Pointer, error) {
+	if m.typ.hasPerCPUValue() {
+		return marshalPerCPUValue(data, int(m.valueSize))
+>>>>>>> v1.21.4
+	}
+<<<<<<< HEAD
 
 	return unmarshalBytes(data, buf)
 }
@@ -949,6 +1138,33 @@ func (m *Map) marshalValue(data interface{}) (internal.Pointer, error) {
 		return marshalPtr(data, int(m.valueSize))
 	}
 
+||||||| 5e58841cce7
+	name, abi, err := newMapABIFromFd(fd)
+=======
+
+	var (
+		buf []byte
+		err error
+	)
+
+	switch value := data.(type) {
+	case *Map:
+		if !m.typ.canStoreMap() {
+			return internal.Pointer{}, fmt.Errorf("can't store map in %s", m.typ)
+		}
+		buf, err = marshalMap(value, int(m.valueSize))
+
+	case *Program:
+		if !m.typ.canStoreProgram() {
+			return internal.Pointer{}, fmt.Errorf("can't store program in %s", m.typ)
+		}
+		buf, err = marshalProgram(value, int(m.valueSize))
+
+	default:
+		return marshalPtr(data, int(m.valueSize))
+	}
+
+>>>>>>> v1.21.4
 	if err != nil {
 		return internal.Pointer{}, err
 	}

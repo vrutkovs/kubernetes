@@ -28,7 +28,10 @@ type ConfigValidator struct{}
 
 type check func(config *configs.Config) error
 
+type check func(config *configs.Config) error
+
 func (v *ConfigValidator) Validate(config *configs.Config) error {
+<<<<<<< HEAD
 	checks := []check{
 		v.cgroups,
 		v.rootfs,
@@ -53,8 +56,57 @@ func (v *ConfigValidator) Validate(config *configs.Config) error {
 	for _, c := range warns {
 		if err := c(config); err != nil {
 			logrus.WithError(err).Warnf("invalid configuration")
+||||||| 5e58841cce7
+	if err := v.rootfs(config); err != nil {
+		return err
+	}
+	if err := v.network(config); err != nil {
+		return err
+	}
+	if err := v.hostname(config); err != nil {
+		return err
+	}
+	if err := v.security(config); err != nil {
+		return err
+	}
+	if err := v.usernamespace(config); err != nil {
+		return err
+	}
+	if err := v.cgroupnamespace(config); err != nil {
+		return err
+	}
+	if err := v.sysctl(config); err != nil {
+		return err
+	}
+	if err := v.intelrdt(config); err != nil {
+		return err
+	}
+	if config.RootlessEUID {
+		if err := v.rootlessEUID(config); err != nil {
+			return err
+=======
+	checks := []check{
+		v.rootfs,
+		v.network,
+		v.hostname,
+		v.security,
+		v.usernamespace,
+		v.cgroupnamespace,
+		v.sysctl,
+		v.intelrdt,
+		v.rootlessEUID,
+		v.mounts,
+	}
+	for _, c := range checks {
+		if err := c(config); err != nil {
+			return err
+>>>>>>> v1.21.4
 		}
 	}
+	if err := v.cgroups(config); err != nil {
+		return err
+	}
+
 	return nil
 }
 

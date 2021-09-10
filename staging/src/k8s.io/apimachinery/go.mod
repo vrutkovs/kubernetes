@@ -10,8 +10,16 @@ require (
 	github.com/evanphx/json-patch v4.9.0+incompatible
 	github.com/gogo/protobuf v1.3.2
 	github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e
+<<<<<<< HEAD
 	github.com/golang/protobuf v1.5.0
 	github.com/google/go-cmp v0.5.5
+||||||| 5e58841cce7
+	github.com/golang/protobuf v1.4.3
+	github.com/google/go-cmp v0.5.2
+=======
+	github.com/golang/protobuf v1.4.3
+	github.com/google/go-cmp v0.5.4
+>>>>>>> v1.21.4
 	github.com/google/gofuzz v1.1.0
 	github.com/google/uuid v1.1.2
 	github.com/googleapis/gnostic v0.4.1
@@ -36,7 +44,7 @@ require (
 	gopkg.in/yaml.v2 v2.4.0
 	k8s.io/klog/v2 v2.8.0
 	k8s.io/kube-openapi v0.0.0-20210305001622-591a79e4bda7
-	sigs.k8s.io/structured-merge-diff/v4 v4.1.0
+	sigs.k8s.io/structured-merge-diff/v4 v4.1.2
 	sigs.k8s.io/yaml v1.2.0
 )
 

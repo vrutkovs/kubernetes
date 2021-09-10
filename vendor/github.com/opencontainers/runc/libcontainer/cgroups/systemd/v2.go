@@ -412,13 +412,85 @@ func (m *unifiedManager) GetStats() (*cgroups.Stats, error) {
 	return fsMgr.GetStats()
 }
 
+<<<<<<< HEAD
+func (m *unifiedManager) Set(r *configs.Resources) error {
+	properties, err := genV2ResourcesProperties(r, m.dbus)
+	if err != nil {
+		return err
+	}
+||||||| 5e58841cce7
+func (m *unifiedManager) Set(container *configs.Config) error {
+	dbusConnection, err := getDbusConnection(m.rootless)
+	if err != nil {
+		return err
+	}
+	properties, err := genV2ResourcesProperties(m.cgroups, dbusConnection)
+	if err != nil {
+		return err
+	}
+
+	// We have to freeze the container while systemd sets the cgroup settings.
+	// The reason for this is that systemd's application of DeviceAllow rules
+	// is done disruptively, resulting in spurrious errors to common devices
+	// (unlike our fs driver, they will happily write deny-all rules to running
+	// containers). So we freeze the container to avoid them hitting the cgroup
+	// error. But if the freezer cgroup isn't supported, we just warn about it.
+	targetFreezerState := configs.Undefined
+	if !m.cgroups.SkipDevices {
+		// Figure out the current freezer state, so we can revert to it after we
+		// temporarily freeze the container.
+		targetFreezerState, err = m.GetFreezerState()
+		if err != nil {
+			return err
+		}
+		if targetFreezerState == configs.Undefined {
+			targetFreezerState = configs.Thawed
+		}
+
+		if err := m.Freeze(configs.Frozen); err != nil {
+			logrus.Infof("freeze container before SetUnitProperties failed: %v", err)
+		}
+	}
+=======
 func (m *unifiedManager) Set(r *configs.Resources) error {
 	properties, err := genV2ResourcesProperties(r, m.dbus)
 	if err != nil {
 		return err
 	}
 
+	// We have to freeze the container while systemd sets the cgroup settings.
+	// The reason for this is that systemd's application of DeviceAllow rules
+	// is done disruptively, resulting in spurrious errors to common devices
+	// (unlike our fs driver, they will happily write deny-all rules to running
+	// containers). So we freeze the container to avoid them hitting the cgroup
+	// error. But if the freezer cgroup isn't supported, we just warn about it.
+	targetFreezerState := configs.Undefined
+	if !m.cgroups.SkipDevices {
+		// Figure out the current freezer state, so we can revert to it after we
+		// temporarily freeze the container.
+		targetFreezerState, err = m.GetFreezerState()
+		if err != nil {
+			return err
+		}
+		if targetFreezerState == configs.Undefined {
+			targetFreezerState = configs.Thawed
+		}
+
+		if err := m.Freeze(configs.Frozen); err != nil {
+			logrus.Infof("freeze container before SetUnitProperties failed: %v", err)
+		}
+	}
+>>>>>>> v1.21.4
+
+<<<<<<< HEAD
 	if err := setUnitProperties(m.dbus, getUnitName(m.cgroups), properties...); err != nil {
+||||||| 5e58841cce7
+	if err := dbusConnection.SetUnitProperties(getUnitName(m.cgroups), true, properties...); err != nil {
+		_ = m.Freeze(targetFreezerState)
+=======
+	if err := setUnitProperties(m.dbus, getUnitName(m.cgroups), properties...); err != nil {
+		_ = m.Freeze(targetFreezerState)
+>>>>>>> v1.21.4
 		return errors.Wrap(err, "error while setting unit properties")
 	}
 

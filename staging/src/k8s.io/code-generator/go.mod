@@ -8,6 +8,14 @@ require (
 	github.com/emicklei/go-restful v2.9.5+incompatible // indirect
 	github.com/go-openapi/spec v0.19.5
 	github.com/gogo/protobuf v1.3.2
+<<<<<<< HEAD
+||||||| 5e58841cce7
+	github.com/golang/protobuf v1.4.3 // indirect
+	github.com/google/go-cmp v0.5.2 // indirect
+=======
+	github.com/golang/protobuf v1.4.3 // indirect
+	github.com/google/go-cmp v0.5.4 // indirect
+>>>>>>> v1.21.4
 	github.com/googleapis/gnostic v0.4.1
 	github.com/json-iterator/go v1.1.10 // indirect
 	github.com/kr/text v0.2.0 // indirect
@@ -28,7 +36,7 @@ require (
 	k8s.io/gengo v0.0.0-20201214224949-b6c5ce23f027
 	k8s.io/klog/v2 v2.8.0
 	k8s.io/kube-openapi v0.0.0-20210305001622-591a79e4bda7
-	sigs.k8s.io/structured-merge-diff/v4 v4.1.0 // indirect
+	sigs.k8s.io/structured-merge-diff/v4 v4.1.2 // indirect
 )
 
 replace (

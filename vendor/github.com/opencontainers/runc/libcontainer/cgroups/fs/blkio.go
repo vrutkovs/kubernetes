@@ -27,24 +27,52 @@ func (s *BlkioGroup) Apply(path string, d *cgroupData) error {
 	return join(path, d.pid)
 }
 
+<<<<<<< HEAD
 func (s *BlkioGroup) Set(path string, r *configs.Resources) error {
 	s.detectWeightFilenames(path)
 	if r.BlkioWeight != 0 {
 		if err := cgroups.WriteFile(path, s.weightFilename, strconv.FormatUint(uint64(r.BlkioWeight), 10)); err != nil {
+||||||| 5e58841cce7
+func (s *BlkioGroup) Set(path string, cgroup *configs.Cgroup) error {
+	if cgroup.Resources.BlkioWeight != 0 {
+		if err := fscommon.WriteFile(path, "blkio.weight", strconv.FormatUint(uint64(cgroup.Resources.BlkioWeight), 10)); err != nil {
+=======
+func (s *BlkioGroup) Set(path string, r *configs.Resources) error {
+	if r.BlkioWeight != 0 {
+		if err := fscommon.WriteFile(path, "blkio.weight", strconv.FormatUint(uint64(r.BlkioWeight), 10)); err != nil {
+>>>>>>> v1.21.4
 			return err
 		}
 	}
 
+<<<<<<< HEAD
 	if r.BlkioLeafWeight != 0 {
 		if err := cgroups.WriteFile(path, "blkio.leaf_weight", strconv.FormatUint(uint64(r.BlkioLeafWeight), 10)); err != nil {
+||||||| 5e58841cce7
+	if cgroup.Resources.BlkioLeafWeight != 0 {
+		if err := fscommon.WriteFile(path, "blkio.leaf_weight", strconv.FormatUint(uint64(cgroup.Resources.BlkioLeafWeight), 10)); err != nil {
+=======
+	if r.BlkioLeafWeight != 0 {
+		if err := fscommon.WriteFile(path, "blkio.leaf_weight", strconv.FormatUint(uint64(r.BlkioLeafWeight), 10)); err != nil {
+>>>>>>> v1.21.4
 			return err
 		}
 	}
+<<<<<<< HEAD
 	for _, wd := range r.BlkioWeightDevice {
 		if wd.Weight != 0 {
 			if err := cgroups.WriteFile(path, s.weightDeviceFilename, wd.WeightString()); err != nil {
 				return err
 			}
+||||||| 5e58841cce7
+	for _, wd := range cgroup.Resources.BlkioWeightDevice {
+		if err := fscommon.WriteFile(path, "blkio.weight_device", wd.WeightString()); err != nil {
+			return err
+=======
+	for _, wd := range r.BlkioWeightDevice {
+		if err := fscommon.WriteFile(path, "blkio.weight_device", wd.WeightString()); err != nil {
+			return err
+>>>>>>> v1.21.4
 		}
 		if wd.LeafWeight != 0 {
 			if err := cgroups.WriteFile(path, "blkio.leaf_weight_device", wd.LeafWeightString()); err != nil {
@@ -52,23 +80,55 @@ func (s *BlkioGroup) Set(path string, r *configs.Resources) error {
 			}
 		}
 	}
+<<<<<<< HEAD
 	for _, td := range r.BlkioThrottleReadBpsDevice {
 		if err := cgroups.WriteFile(path, "blkio.throttle.read_bps_device", td.String()); err != nil {
+||||||| 5e58841cce7
+	for _, td := range cgroup.Resources.BlkioThrottleReadBpsDevice {
+		if err := fscommon.WriteFile(path, "blkio.throttle.read_bps_device", td.String()); err != nil {
+=======
+	for _, td := range r.BlkioThrottleReadBpsDevice {
+		if err := fscommon.WriteFile(path, "blkio.throttle.read_bps_device", td.String()); err != nil {
+>>>>>>> v1.21.4
 			return err
 		}
 	}
+<<<<<<< HEAD
 	for _, td := range r.BlkioThrottleWriteBpsDevice {
 		if err := cgroups.WriteFile(path, "blkio.throttle.write_bps_device", td.String()); err != nil {
+||||||| 5e58841cce7
+	for _, td := range cgroup.Resources.BlkioThrottleWriteBpsDevice {
+		if err := fscommon.WriteFile(path, "blkio.throttle.write_bps_device", td.String()); err != nil {
+=======
+	for _, td := range r.BlkioThrottleWriteBpsDevice {
+		if err := fscommon.WriteFile(path, "blkio.throttle.write_bps_device", td.String()); err != nil {
+>>>>>>> v1.21.4
 			return err
 		}
 	}
+<<<<<<< HEAD
 	for _, td := range r.BlkioThrottleReadIOPSDevice {
 		if err := cgroups.WriteFile(path, "blkio.throttle.read_iops_device", td.String()); err != nil {
+||||||| 5e58841cce7
+	for _, td := range cgroup.Resources.BlkioThrottleReadIOPSDevice {
+		if err := fscommon.WriteFile(path, "blkio.throttle.read_iops_device", td.String()); err != nil {
+=======
+	for _, td := range r.BlkioThrottleReadIOPSDevice {
+		if err := fscommon.WriteFile(path, "blkio.throttle.read_iops_device", td.String()); err != nil {
+>>>>>>> v1.21.4
 			return err
 		}
 	}
+<<<<<<< HEAD
 	for _, td := range r.BlkioThrottleWriteIOPSDevice {
 		if err := cgroups.WriteFile(path, "blkio.throttle.write_iops_device", td.String()); err != nil {
+||||||| 5e58841cce7
+	for _, td := range cgroup.Resources.BlkioThrottleWriteIOPSDevice {
+		if err := fscommon.WriteFile(path, "blkio.throttle.write_iops_device", td.String()); err != nil {
+=======
+	for _, td := range r.BlkioThrottleWriteIOPSDevice {
+		if err := fscommon.WriteFile(path, "blkio.throttle.write_iops_device", td.String()); err != nil {
+>>>>>>> v1.21.4
 			return err
 		}
 	}

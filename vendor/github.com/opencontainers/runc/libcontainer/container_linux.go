@@ -1215,7 +1215,14 @@ func (c *linuxContainer) makeCriuRestoreMountpoints(m *configs.Mount) error {
 		if err := checkProcMount(c.config.Rootfs, dest, ""); err != nil {
 			return err
 		}
+<<<<<<< HEAD
 		if err := os.MkdirAll(dest, 0o755); err != nil {
+||||||| 5e58841cce7
+		m.Destination = dest
+		if err := os.MkdirAll(dest, 0755); err != nil {
+=======
+		if err := os.MkdirAll(dest, 0755); err != nil {
+>>>>>>> v1.21.4
 			return err
 		}
 	}

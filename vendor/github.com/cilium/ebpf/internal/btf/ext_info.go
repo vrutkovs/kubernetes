@@ -25,12 +25,23 @@ type btfExtHeader struct {
 	LineInfoLen uint32
 }
 
+<<<<<<< HEAD
 type btfExtCoreHeader struct {
 	CoreReloOff uint32
 	CoreReloLen uint32
 }
 
 func parseExtInfos(r io.ReadSeeker, bo binary.ByteOrder, strings stringTable) (funcInfo, lineInfo map[string]extInfo, relos map[string]coreRelos, err error) {
+||||||| 5e58841cce7
+func parseExtInfos(r io.ReadSeeker, bo binary.ByteOrder, strings stringTable) (funcInfo, lineInfo map[string]extInfo, err error) {
+=======
+type btfExtCoreHeader struct {
+	CoreReloOff uint32
+	CoreReloLen uint32
+}
+
+func parseExtInfos(r io.ReadSeeker, bo binary.ByteOrder, strings stringTable) (funcInfo, lineInfo map[string]extInfo, coreRelos map[string]bpfCoreRelos, err error) {
+>>>>>>> v1.21.4
 	var header btfExtHeader
 	var coreHeader btfExtCoreHeader
 	if err := binary.Read(r, bo, &header); err != nil {
@@ -89,6 +100,7 @@ func parseExtInfos(r io.ReadSeeker, bo binary.ByteOrder, strings stringTable) (f
 		return nil, nil, nil, fmt.Errorf("line info: %w", err)
 	}
 
+<<<<<<< HEAD
 	if coreHeader.CoreReloOff > 0 && coreHeader.CoreReloLen > 0 {
 		if _, err := r.Seek(int64(header.HdrLen+coreHeader.CoreReloOff), io.SeekStart); err != nil {
 			return nil, nil, nil, fmt.Errorf("can't seek to CO-RE relocation section: %v", err)
@@ -101,6 +113,22 @@ func parseExtInfos(r io.ReadSeeker, bo binary.ByteOrder, strings stringTable) (f
 	}
 
 	return funcInfo, lineInfo, relos, nil
+||||||| 5e58841cce7
+	return funcInfo, lineInfo, nil
+=======
+	if coreHeader.CoreReloOff > 0 && coreHeader.CoreReloLen > 0 {
+		if _, err := r.Seek(int64(header.HdrLen+coreHeader.CoreReloOff), io.SeekStart); err != nil {
+			return nil, nil, nil, fmt.Errorf("can't seek to CO-RE relocation section: %v", err)
+		}
+
+		coreRelos, err = parseExtInfoRelos(io.LimitReader(r, int64(coreHeader.CoreReloLen)), bo, strings)
+		if err != nil {
+			return nil, nil, nil, fmt.Errorf("CO-RE relocation info: %w", err)
+		}
+	}
+
+	return funcInfo, lineInfo, coreRelos, nil
+>>>>>>> v1.21.4
 }
 
 type btfExtInfoSec struct {
@@ -202,6 +230,7 @@ func parseExtInfo(r io.Reader, bo binary.ByteOrder, strings stringTable) (map[st
 		}
 	}
 }
+<<<<<<< HEAD
 
 // bpfCoreRelo matches `struct bpf_core_relo` from the kernel
 type bpfCoreRelo struct {
@@ -301,3 +330,83 @@ func parseExtInfoHeader(r io.Reader, bo binary.ByteOrder, strings stringTable) (
 
 	return secName, &infoHeader, nil
 }
+||||||| 5e58841cce7
+=======
+
+// bpfCoreRelo matches `struct bpf_core_relo` from the kernel
+type bpfCoreRelo struct {
+	InsnOff      uint32
+	TypeID       TypeID
+	AccessStrOff uint32
+	ReloKind     coreReloKind
+}
+
+type bpfCoreRelos []bpfCoreRelo
+
+// append two slices of extInfoRelo to each other. The InsnOff of b are adjusted
+// by offset.
+func (r bpfCoreRelos) append(other bpfCoreRelos, offset uint64) bpfCoreRelos {
+	result := make([]bpfCoreRelo, 0, len(r)+len(other))
+	result = append(result, r...)
+	for _, relo := range other {
+		relo.InsnOff += uint32(offset)
+		result = append(result, relo)
+	}
+	return result
+}
+
+var extInfoReloSize = binary.Size(bpfCoreRelo{})
+
+func parseExtInfoRelos(r io.Reader, bo binary.ByteOrder, strings stringTable) (map[string]bpfCoreRelos, error) {
+	var recordSize uint32
+	if err := binary.Read(r, bo, &recordSize); err != nil {
+		return nil, fmt.Errorf("read record size: %v", err)
+	}
+
+	if recordSize != uint32(extInfoReloSize) {
+		return nil, fmt.Errorf("expected record size %d, got %d", extInfoReloSize, recordSize)
+	}
+
+	result := make(map[string]bpfCoreRelos)
+	for {
+		secName, infoHeader, err := parseExtInfoHeader(r, bo, strings)
+		if errors.Is(err, io.EOF) {
+			return result, nil
+		}
+
+		var relos []bpfCoreRelo
+		for i := uint32(0); i < infoHeader.NumInfo; i++ {
+			var relo bpfCoreRelo
+			if err := binary.Read(r, bo, &relo); err != nil {
+				return nil, fmt.Errorf("section %v: read record: %v", secName, err)
+			}
+
+			if relo.InsnOff%asm.InstructionSize != 0 {
+				return nil, fmt.Errorf("section %v: offset %v is not aligned with instruction size", secName, relo.InsnOff)
+			}
+
+			relos = append(relos, relo)
+		}
+
+		result[secName] = relos
+	}
+}
+
+func parseExtInfoHeader(r io.Reader, bo binary.ByteOrder, strings stringTable) (string, *btfExtInfoSec, error) {
+	var infoHeader btfExtInfoSec
+	if err := binary.Read(r, bo, &infoHeader); err != nil {
+		return "", nil, fmt.Errorf("read ext info header: %w", err)
+	}
+
+	secName, err := strings.Lookup(infoHeader.SecNameOff)
+	if err != nil {
+		return "", nil, fmt.Errorf("get section name: %w", err)
+	}
+
+	if infoHeader.NumInfo == 0 {
+		return "", nil, fmt.Errorf("section %s has zero records", secName)
+	}
+
+	return secName, &infoHeader, nil
+}
+>>>>>>> v1.21.4

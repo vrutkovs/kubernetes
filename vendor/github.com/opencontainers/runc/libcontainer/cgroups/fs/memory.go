@@ -39,12 +39,34 @@ func setMemory(path string, val int64) error {
 	if val == 0 {
 		return nil
 	}
+<<<<<<< HEAD
 
 	err := cgroups.WriteFile(path, cgroupMemoryLimit, strconv.FormatInt(val, 10))
 	if !errors.Is(err, unix.EBUSY) {
 		return err
+||||||| 5e58841cce7
+	if memoryAssigned(d.config) {
+		if _, err := os.Stat(path); os.IsNotExist(err) {
+			if err := os.MkdirAll(path, 0755); err != nil {
+				return err
+			}
+			// Only enable kernel memory accouting when this cgroup
+			// is created by libcontainer, otherwise we might get
+			// error when people use `cgroupsPath` to join an existed
+			// cgroup whose kernel memory is not initialized.
+			if err := EnableKernelMemoryAccounting(path); err != nil {
+				return err
+			}
+		}
+=======
+
+	err := fscommon.WriteFile(path, cgroupMemoryLimit, strconv.FormatInt(val, 10))
+	if !errors.Is(err, unix.EBUSY) {
+		return err
+>>>>>>> v1.21.4
 	}
 
+<<<<<<< HEAD
 	// EBUSY means the kernel can't set new limit as it's too low
 	// (lower than the current usage). Return more specific error.
 	usage, err := fscommon.GetCgroupParamUint(path, cgroupMemoryUsage)
@@ -65,9 +87,41 @@ func setSwap(path string, val int64) error {
 	}
 
 	return cgroups.WriteFile(path, cgroupMemorySwapLimit, strconv.FormatInt(val, 10))
+||||||| 5e58841cce7
+	// We need to join memory cgroup after set memory limits, because
+	// kmem.limit_in_bytes can only be set when the cgroup is empty.
+	return join(path, d.pid)
+=======
+	// EBUSY means the kernel can't set new limit as it's too low
+	// (lower than the current usage). Return more specific error.
+	usage, err := fscommon.GetCgroupParamUint(path, cgroupMemoryUsage)
+	if err != nil {
+		return err
+	}
+	max, err := fscommon.GetCgroupParamUint(path, cgroupMemoryMaxUsage)
+	if err != nil {
+		return err
+	}
+
+	return errors.Errorf("unable to set memory limit to %d (current usage: %d, peak usage: %d)", val, usage, max)
+>>>>>>> v1.21.4
+}
+
+<<<<<<< HEAD
+func setMemoryAndSwap(path string, r *configs.Resources) error {
+||||||| 5e58841cce7
+func setMemoryAndSwap(path string, cgroup *configs.Cgroup) error {
+=======
+func setSwap(path string, val int64) error {
+	if val == 0 {
+		return nil
+	}
+
+	return fscommon.WriteFile(path, cgroupMemorySwapLimit, strconv.FormatInt(val, 10))
 }
 
 func setMemoryAndSwap(path string, r *configs.Resources) error {
+>>>>>>> v1.21.4
 	// If the memory update is set to -1 and the swap is not explicitly
 	// set, we should also set swap to -1, it means unlimited memory.
 	if r.Memory == -1 && r.MemorySwap == 0 {
@@ -88,11 +142,43 @@ func setMemoryAndSwap(path string, r *configs.Resources) error {
 		// When update memory limit, we should adapt the write sequence
 		// for memory and swap memory, so it won't fail because the new
 		// value and the old value don't fit kernel's validation.
+<<<<<<< HEAD
 		if r.MemorySwap == -1 || curLimit < uint64(r.MemorySwap) {
 			if err := setSwap(path, r.MemorySwap); err != nil {
 				return err
 			}
 			if err := setMemory(path, r.Memory); err != nil {
+||||||| 5e58841cce7
+		if cgroup.Resources.MemorySwap == -1 || memoryUsage.Limit < uint64(cgroup.Resources.MemorySwap) {
+			if err := fscommon.WriteFile(path, cgroupMemorySwapLimit, strconv.FormatInt(cgroup.Resources.MemorySwap, 10)); err != nil {
+				return err
+			}
+			if err := fscommon.WriteFile(path, cgroupMemoryLimit, strconv.FormatInt(cgroup.Resources.Memory, 10)); err != nil {
+				return err
+			}
+		} else {
+			if err := fscommon.WriteFile(path, cgroupMemoryLimit, strconv.FormatInt(cgroup.Resources.Memory, 10)); err != nil {
+				return err
+			}
+			if err := fscommon.WriteFile(path, cgroupMemorySwapLimit, strconv.FormatInt(cgroup.Resources.MemorySwap, 10)); err != nil {
+				return err
+			}
+		}
+	} else {
+		if cgroup.Resources.Memory != 0 {
+			if err := fscommon.WriteFile(path, cgroupMemoryLimit, strconv.FormatInt(cgroup.Resources.Memory, 10)); err != nil {
+				return err
+			}
+		}
+		if cgroup.Resources.MemorySwap != 0 {
+			if err := fscommon.WriteFile(path, cgroupMemorySwapLimit, strconv.FormatInt(cgroup.Resources.MemorySwap, 10)); err != nil {
+=======
+		if r.MemorySwap == -1 || curLimit < uint64(r.MemorySwap) {
+			if err := setSwap(path, r.MemorySwap); err != nil {
+				return err
+			}
+			if err := setMemory(path, r.Memory); err != nil {
+>>>>>>> v1.21.4
 				return err
 			}
 			return nil
@@ -116,21 +202,58 @@ func (s *MemoryGroup) Set(path string, r *configs.Resources) error {
 
 	// ignore KernelMemory and KernelMemoryTCP
 
+<<<<<<< HEAD
 	if r.MemoryReservation != 0 {
 		if err := cgroups.WriteFile(path, "memory.soft_limit_in_bytes", strconv.FormatInt(r.MemoryReservation, 10)); err != nil {
+||||||| 5e58841cce7
+	if cgroup.Resources.MemoryReservation != 0 {
+		if err := fscommon.WriteFile(path, "memory.soft_limit_in_bytes", strconv.FormatInt(cgroup.Resources.MemoryReservation, 10)); err != nil {
+=======
+	if r.MemoryReservation != 0 {
+		if err := fscommon.WriteFile(path, "memory.soft_limit_in_bytes", strconv.FormatInt(r.MemoryReservation, 10)); err != nil {
+>>>>>>> v1.21.4
 			return err
 		}
 	}
 
+<<<<<<< HEAD
 	if r.OomKillDisable {
 		if err := cgroups.WriteFile(path, "memory.oom_control", "1"); err != nil {
 			return err
 		}
 	}
 	if r.MemorySwappiness == nil || int64(*r.MemorySwappiness) == -1 {
+||||||| 5e58841cce7
+	if cgroup.Resources.KernelMemoryTCP != 0 {
+		if err := fscommon.WriteFile(path, "memory.kmem.tcp.limit_in_bytes", strconv.FormatInt(cgroup.Resources.KernelMemoryTCP, 10)); err != nil {
+			return err
+		}
+	}
+	if cgroup.Resources.OomKillDisable {
+		if err := fscommon.WriteFile(path, "memory.oom_control", "1"); err != nil {
+			return err
+		}
+	}
+	if cgroup.Resources.MemorySwappiness == nil || int64(*cgroup.Resources.MemorySwappiness) == -1 {
+=======
+	if r.OomKillDisable {
+		if err := fscommon.WriteFile(path, "memory.oom_control", "1"); err != nil {
+			return err
+		}
+	}
+	if r.MemorySwappiness == nil || int64(*r.MemorySwappiness) == -1 {
+>>>>>>> v1.21.4
 		return nil
+<<<<<<< HEAD
 	} else if *r.MemorySwappiness <= 100 {
 		if err := cgroups.WriteFile(path, "memory.swappiness", strconv.FormatUint(*r.MemorySwappiness, 10)); err != nil {
+||||||| 5e58841cce7
+	} else if *cgroup.Resources.MemorySwappiness <= 100 {
+		if err := fscommon.WriteFile(path, "memory.swappiness", strconv.FormatUint(*cgroup.Resources.MemorySwappiness, 10)); err != nil {
+=======
+	} else if *r.MemorySwappiness <= 100 {
+		if err := fscommon.WriteFile(path, "memory.swappiness", strconv.FormatUint(*r.MemorySwappiness, 10)); err != nil {
+>>>>>>> v1.21.4
 			return err
 		}
 	} else {
@@ -199,6 +322,28 @@ func (s *MemoryGroup) GetStats(path string, stats *cgroups.Stats) error {
 	return nil
 }
 
+<<<<<<< HEAD
+||||||| 5e58841cce7
+func memoryAssigned(cgroup *configs.Cgroup) bool {
+	return cgroup.Resources.Memory != 0 ||
+		cgroup.Resources.MemoryReservation != 0 ||
+		cgroup.Resources.MemorySwap > 0 ||
+		cgroup.Resources.KernelMemory > 0 ||
+		cgroup.Resources.KernelMemoryTCP > 0 ||
+		cgroup.Resources.OomKillDisable ||
+		(cgroup.Resources.MemorySwappiness != nil && int64(*cgroup.Resources.MemorySwappiness) != -1)
+}
+
+=======
+func memoryAssigned(cgroup *configs.Cgroup) bool {
+	return cgroup.Resources.Memory != 0 ||
+		cgroup.Resources.MemoryReservation != 0 ||
+		cgroup.Resources.MemorySwap > 0 ||
+		cgroup.Resources.OomKillDisable ||
+		(cgroup.Resources.MemorySwappiness != nil && int64(*cgroup.Resources.MemorySwappiness) != -1)
+}
+
+>>>>>>> v1.21.4
 func getMemoryData(path, name string) (cgroups.MemoryData, error) {
 	memoryData := cgroups.MemoryData{}
 

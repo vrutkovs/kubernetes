@@ -295,14 +295,29 @@ func (fk FwdKind) String() string {
 type Fwd struct {
 	TypeID
 	Name
+<<<<<<< HEAD
+	Kind FwdKind
+||||||| 5e58841cce7
+=======
 	Kind FwdKind
 }
 
 func (f *Fwd) String() string {
 	return fmt.Sprintf("fwd#%d[%s %q]", f.TypeID, f.Kind, f.Name)
+>>>>>>> v1.21.4
+}
+
+<<<<<<< HEAD
+func (f *Fwd) String() string {
+	return fmt.Sprintf("fwd#%d[%s %q]", f.TypeID, f.Kind, f.Name)
 }
 
 func (f *Fwd) walk(*typeDeque) {}
+||||||| 5e58841cce7
+func (f *Fwd) walk(*copyStack) {}
+=======
+func (f *Fwd) walk(*typeDeque) {}
+>>>>>>> v1.21.4
 func (f *Fwd) copy() Type {
 	cpy := *f
 	return &cpy
@@ -388,7 +403,17 @@ func (f *Func) String() string {
 	return fmt.Sprintf("func#%d[%s %q proto=#%d]", f.TypeID, f.Linkage, f.Name, f.Type.ID())
 }
 
+<<<<<<< HEAD
 func (f *Func) walk(tdq *typeDeque) { tdq.push(&f.Type) }
+||||||| 5e58841cce7
+func (f *Func) walk(cs *copyStack) { cs.push(&f.Type) }
+=======
+func (f *Func) String() string {
+	return fmt.Sprintf("func#%d[%q proto=#%d]", f.TypeID, f.Name, f.Type.ID())
+}
+
+func (f *Func) walk(tdq *typeDeque) { tdq.push(&f.Type) }
+>>>>>>> v1.21.4
 func (f *Func) copy() Type {
 	cpy := *f
 	return &cpy
@@ -438,11 +463,22 @@ type Var struct {
 	Linkage VarLinkage
 }
 
+<<<<<<< HEAD
 func (v *Var) String() string {
 	return fmt.Sprintf("var#%d[%s %q]", v.TypeID, v.Linkage, v.Name)
 }
 
 func (v *Var) walk(tdq *typeDeque) { tdq.push(&v.Type) }
+||||||| 5e58841cce7
+func (v *Var) walk(cs *copyStack) { cs.push(&v.Type) }
+=======
+func (v *Var) String() string {
+	// TODO: Linkage
+	return fmt.Sprintf("var#%d[%q]", v.TypeID, v.Name)
+}
+
+func (v *Var) walk(tdq *typeDeque) { tdq.push(&v.Type) }
+>>>>>>> v1.21.4
 func (v *Var) copy() Type {
 	cpy := *v
 	return &cpy
@@ -607,6 +643,32 @@ type typeDeque struct {
 }
 
 // push adds a type to the stack.
+<<<<<<< HEAD
+func (dq *typeDeque) push(t *Type) {
+	if dq.write-dq.read < uint64(len(dq.types)) {
+		dq.types[dq.write&dq.mask] = t
+		dq.write++
+		return
+	}
+
+	new := len(dq.types) * 2
+	if new == 0 {
+		new = 8
+	}
+
+	types := make([]*Type, new)
+	pivot := dq.read & dq.mask
+	n := copy(types, dq.types[pivot:])
+	n += copy(types[n:], dq.types[:pivot])
+	types[n] = t
+
+	dq.types = types
+	dq.mask = uint64(new) - 1
+	dq.read, dq.write = 0, uint64(n+1)
+||||||| 5e58841cce7
+func (cs *copyStack) push(t *Type) {
+	*cs = append(*cs, t)
+=======
 func (dq *typeDeque) push(t *Type) {
 	if dq.write-dq.read < uint64(len(dq.types)) {
 		dq.types[dq.write&dq.mask] = t
@@ -641,8 +703,44 @@ func (dq *typeDeque) shift() *Type {
 	dq.types[index] = nil
 	dq.read++
 	return t
+>>>>>>> v1.21.4
 }
 
+<<<<<<< HEAD
+// shift returns the first element or null.
+func (dq *typeDeque) shift() *Type {
+	if dq.read == dq.write {
+||||||| 5e58841cce7
+// pop returns the topmost Type, or nil.
+func (cs *copyStack) pop() *Type {
+	n := len(*cs)
+	if n == 0 {
+=======
+// pop returns the last element or null.
+func (dq *typeDeque) pop() *Type {
+	if dq.read == dq.write {
+>>>>>>> v1.21.4
+		return nil
+	}
+
+<<<<<<< HEAD
+	index := dq.read & dq.mask
+	t := dq.types[index]
+	dq.types[index] = nil
+	dq.read++
+||||||| 5e58841cce7
+	t := (*cs)[n-1]
+	*cs = (*cs)[:n-1]
+=======
+	dq.write--
+	index := dq.write & dq.mask
+	t := dq.types[index]
+	dq.types[index] = nil
+>>>>>>> v1.21.4
+	return t
+}
+
+<<<<<<< HEAD
 // pop returns the last element or null.
 func (dq *typeDeque) pop() *Type {
 	if dq.read == dq.write {
@@ -668,6 +766,21 @@ func (dq *typeDeque) all() []*Type {
 	return types
 }
 
+||||||| 5e58841cce7
+=======
+// all returns all elements.
+//
+// The deque is empty after calling this method.
+func (dq *typeDeque) all() []*Type {
+	length := dq.write - dq.read
+	types := make([]*Type, 0, length)
+	for t := dq.shift(); t != nil; t = dq.shift() {
+		types = append(types, t)
+	}
+	return types
+}
+
+>>>>>>> v1.21.4
 // inflateRawTypes takes a list of raw btf types linked via type IDs, and turns
 // it into a graph of Types connected via pointers.
 //

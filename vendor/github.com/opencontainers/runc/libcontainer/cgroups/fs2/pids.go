@@ -22,8 +22,16 @@ func setPids(dirPath string, r *configs.Resources) error {
 	if !isPidsSet(r) {
 		return nil
 	}
+<<<<<<< HEAD
 	if val := numToStr(r.PidsLimit); val != "" {
 		if err := cgroups.WriteFile(dirPath, "pids.max", val); err != nil {
+||||||| 5e58841cce7
+	if val := numToStr(cgroup.Resources.PidsLimit); val != "" {
+		if err := fscommon.WriteFile(dirPath, "pids.max", val); err != nil {
+=======
+	if val := numToStr(r.PidsLimit); val != "" {
+		if err := fscommon.WriteFile(dirPath, "pids.max", val); err != nil {
+>>>>>>> v1.21.4
 			return err
 		}
 	}

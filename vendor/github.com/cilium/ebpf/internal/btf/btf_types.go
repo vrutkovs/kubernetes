@@ -33,6 +33,7 @@ const (
 	kindDatasec
 )
 
+<<<<<<< HEAD
 // FuncLinkage describes BTF function linkage metadata.
 type FuncLinkage int
 
@@ -45,11 +46,28 @@ const (
 
 // VarLinkage describes BTF variable linkage metadata.
 type VarLinkage int
+||||||| 5e58841cce7
+type btfFuncLinkage uint8
+=======
+// btfFuncLinkage describes BTF function linkage metadata.
+type btfFuncLinkage uint8
+>>>>>>> v1.21.4
 
+// Equivalent of enum btf_func_linkage.
 const (
+<<<<<<< HEAD
 	StaticVar VarLinkage = iota // static
 	GlobalVar                   // global
 	ExternVar                   // extern
+||||||| 5e58841cce7
+	linkageStatic btfFuncLinkage = iota
+	linkageGlobal
+	linkageExtern
+=======
+	linkageStatic btfFuncLinkage = iota
+	linkageGlobal
+	// linkageExtern // Currently unused in libbpf.
+>>>>>>> v1.21.4
 )
 
 const (

@@ -117,7 +117,13 @@ func fixupJumpsAndCalls(insns asm.Instructions) error {
 			// Rewrite bpf to bpf call
 			callOffset, ok := symbolOffsets[ins.Reference]
 			if !ok {
+<<<<<<< HEAD
 				return fmt.Errorf("call at %d: reference to missing symbol %q", i, ins.Reference)
+||||||| 5e58841cce7
+				return fmt.Errorf("instruction %d: reference to missing symbol %s", i, ins.Reference)
+=======
+				return fmt.Errorf("instruction %d: reference to missing symbol %q", i, ins.Reference)
+>>>>>>> v1.21.4
 			}
 
 			ins.Constant = int64(callOffset - offset - 1)
@@ -126,7 +132,13 @@ func fixupJumpsAndCalls(insns asm.Instructions) error {
 			// Rewrite jump to label
 			jumpOffset, ok := symbolOffsets[ins.Reference]
 			if !ok {
+<<<<<<< HEAD
 				return fmt.Errorf("jump at %d: reference to missing symbol %q", i, ins.Reference)
+||||||| 5e58841cce7
+				return fmt.Errorf("instruction %d: reference to missing symbol %s", i, ins.Reference)
+=======
+				return fmt.Errorf("instruction %d: reference to missing symbol %q", i, ins.Reference)
+>>>>>>> v1.21.4
 			}
 
 			ins.Offset = int16(jumpOffset - offset - 1)

@@ -13,7 +13,13 @@ require (
 	github.com/evanphx/json-patch v4.9.0+incompatible
 	github.com/go-openapi/spec v0.19.5
 	github.com/gogo/protobuf v1.3.2
+<<<<<<< HEAD
 	github.com/google/go-cmp v0.5.5
+||||||| 5e58841cce7
+	github.com/google/go-cmp v0.5.2
+=======
+	github.com/google/go-cmp v0.5.4
+>>>>>>> v1.21.4
 	github.com/google/gofuzz v1.1.0
 	github.com/google/uuid v1.1.2
 	github.com/googleapis/gnostic v0.4.1
@@ -30,7 +36,15 @@ require (
 	golang.org/x/crypto v0.0.0-20210220033148-5ea612d1eb83
 	golang.org/x/net v0.0.0-20210224082022-3d97a244fca7
 	golang.org/x/sync v0.0.0-20201020160332-67f06af15bc9
+<<<<<<< HEAD
 	golang.org/x/sys v0.0.0-20210426230700-d19ff857e887
+||||||| 5e58841cce7
+	golang.org/x/sys v0.0.0-20210225134936-a50acf3fe073
+	google.golang.org/genproto v0.0.0-20201110150050-8816d57aaa9a // indirect
+=======
+	golang.org/x/sys v0.0.0-20210426230700-d19ff857e887
+	google.golang.org/genproto v0.0.0-20201110150050-8816d57aaa9a // indirect
+>>>>>>> v1.21.4
 	google.golang.org/grpc v1.27.1
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
 	gopkg.in/square/go-jose.v2 v2.2.2
@@ -41,9 +55,19 @@ require (
 	k8s.io/component-base v0.21.0-rc.0
 	k8s.io/klog/v2 v2.8.0
 	k8s.io/kube-openapi v0.0.0-20210305001622-591a79e4bda7
+<<<<<<< HEAD
 	k8s.io/utils v0.0.0-20210521133846-da695404a2bc
 	sigs.k8s.io/apiserver-network-proxy/konnectivity-client v0.0.15
 	sigs.k8s.io/structured-merge-diff/v4 v4.1.0
+||||||| 5e58841cce7
+	k8s.io/utils v0.0.0-20201110183641-67b214c5f920
+	sigs.k8s.io/apiserver-network-proxy/konnectivity-client v0.0.15
+	sigs.k8s.io/structured-merge-diff/v4 v4.1.0
+=======
+	k8s.io/utils v0.0.0-20201110183641-67b214c5f920
+	sigs.k8s.io/apiserver-network-proxy/konnectivity-client v0.0.22
+	sigs.k8s.io/structured-merge-diff/v4 v4.1.2
+>>>>>>> v1.21.4
 	sigs.k8s.io/yaml v1.2.0
 )
 

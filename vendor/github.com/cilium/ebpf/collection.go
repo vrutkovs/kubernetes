@@ -245,6 +245,7 @@ func NewCollection(spec *CollectionSpec) (*Collection, error) {
 }
 
 // NewCollectionWithOptions creates a Collection from a specification.
+<<<<<<< HEAD
 func NewCollectionWithOptions(spec *CollectionSpec, opts CollectionOptions) (*Collection, error) {
 	loadMap, loadProgram, done, cleanup := lazyLoadCollection(spec, &opts)
 	defer cleanup()
@@ -324,15 +325,95 @@ func lazyLoadCollection(coll *CollectionSpec, opts *CollectionOptions) (
 	done func() (map[string]*Map, map[string]*Program),
 	cleanup func(),
 ) {
+||||||| 5e58841cce7
+//
+// Only maps referenced by at least one of the programs are initialized.
+func NewCollectionWithOptions(spec *CollectionSpec, opts CollectionOptions) (coll *Collection, err error) {
+=======
+func NewCollectionWithOptions(spec *CollectionSpec, opts CollectionOptions) (*Collection, error) {
+	loadMap, loadProgram, done, cleanup := lazyLoadCollection(spec, &opts)
+	defer cleanup()
+
+	for mapName := range spec.Maps {
+		_, err := loadMap(mapName)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	for progName := range spec.Programs {
+		_, err := loadProgram(progName)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	maps, progs := done()
+	return &Collection{
+		progs,
+		maps,
+	}, nil
+}
+
+type btfHandleCache map[*btf.Spec]*btf.Handle
+
+func (btfs btfHandleCache) load(spec *btf.Spec) (*btf.Handle, error) {
+	if btfs[spec] != nil {
+		return btfs[spec], nil
+	}
+
+	handle, err := btf.NewHandle(spec)
+	if err != nil {
+		return nil, err
+	}
+
+	btfs[spec] = handle
+	return handle, nil
+}
+
+func (btfs btfHandleCache) close() {
+	for _, handle := range btfs {
+		handle.Close()
+	}
+}
+
+func lazyLoadCollection(coll *CollectionSpec, opts *CollectionOptions) (
+	loadMap func(string) (*Map, error),
+	loadProgram func(string) (*Program, error),
+	done func() (map[string]*Map, map[string]*Program),
+	cleanup func(),
+) {
+>>>>>>> v1.21.4
 	var (
+<<<<<<< HEAD
 		maps             = make(map[string]*Map)
 		progs            = make(map[string]*Program)
 		handles          = newHandleCache()
 		skipMapsAndProgs = false
+||||||| 5e58841cce7
+		maps  = make(map[string]*Map)
+		progs = make(map[string]*Program)
+		btfs  = make(map[*btf.Spec]*btf.Handle)
+=======
+		maps             = make(map[string]*Map)
+		progs            = make(map[string]*Program)
+		btfs             = make(btfHandleCache)
+		skipMapsAndProgs = false
+>>>>>>> v1.21.4
 	)
 
+<<<<<<< HEAD
 	cleanup = func() {
 		handles.close()
+||||||| 5e58841cce7
+	defer func() {
+		for _, btf := range btfs {
+			btf.Close()
+		}
+=======
+	cleanup = func() {
+		btfs.close()
+>>>>>>> v1.21.4
 
 		if skipMapsAndProgs {
 			return
@@ -362,7 +443,13 @@ func lazyLoadCollection(coll *CollectionSpec, opts *CollectionOptions) (
 			return nil, fmt.Errorf("missing map %s", mapName)
 		}
 
+<<<<<<< HEAD
 		m, err := newMapWithOptions(mapSpec, opts.Maps, handles)
+||||||| 5e58841cce7
+		m, err := newMapWithBTF(mapSpec, handle, opts.Maps)
+=======
+		m, err := newMapWithOptions(mapSpec, opts.Maps, btfs)
+>>>>>>> v1.21.4
 		if err != nil {
 			return nil, fmt.Errorf("map %s: %w", mapName, err)
 		}
@@ -397,9 +484,19 @@ func lazyLoadCollection(coll *CollectionSpec, opts *CollectionOptions) (
 				continue
 			}
 
+<<<<<<< HEAD
 			m, err := loadMap(ins.Reference)
 			if err != nil {
 				return nil, fmt.Errorf("program %s: %w", progName, err)
+||||||| 5e58841cce7
+			m := maps[ins.Reference]
+			if m == nil {
+				return nil, fmt.Errorf("program %s: missing map %s", progName, ins.Reference)
+=======
+			m, err := loadMap(ins.Reference)
+			if err != nil {
+				return nil, fmt.Errorf("program %s: %s", progName, err)
+>>>>>>> v1.21.4
 			}
 
 			fd := m.FD()
@@ -411,7 +508,21 @@ func lazyLoadCollection(coll *CollectionSpec, opts *CollectionOptions) (
 			}
 		}
 
+<<<<<<< HEAD
 		prog, err := newProgramWithOptions(progSpec, opts.Programs, handles)
+||||||| 5e58841cce7
+		var handle *btf.Handle
+		if progSpec.BTF != nil {
+			handle, err = loadBTF(btf.ProgramSpec(progSpec.BTF))
+			if err != nil && !errors.Is(err, btf.ErrNotSupported) {
+				return nil, err
+			}
+		}
+
+		prog, err := newProgramWithBTF(progSpec, handle, opts.Programs)
+=======
+		prog, err := newProgramWithOptions(progSpec, opts.Programs, btfs)
+>>>>>>> v1.21.4
 		if err != nil {
 			return nil, fmt.Errorf("program %s: %w", progName, err)
 		}
@@ -510,6 +621,7 @@ func (coll *Collection) Assign(to interface{}) error {
 }
 
 func assignValues(to interface{}, valueOf func(reflect.Type, string) (reflect.Value, error)) error {
+<<<<<<< HEAD
 	type structField struct {
 		reflect.StructField
 		value reflect.Value
@@ -579,6 +691,81 @@ func assignValues(to interface{}, valueOf func(reflect.Type, string) (reflect.Va
 
 	if err := flattenStruct(toValue.Elem()); err != nil {
 		return err
+||||||| 5e58841cce7
+	v := reflect.ValueOf(to)
+	if v.Kind() != reflect.Ptr || v.Elem().Kind() != reflect.Struct {
+		return fmt.Errorf("%T is not a pointer to a struct", to)
+=======
+	type structField struct {
+		reflect.StructField
+		value reflect.Value
+	}
+
+	var (
+		fields        []structField
+		visitedTypes  = make(map[reflect.Type]bool)
+		flattenStruct func(reflect.Value) error
+	)
+
+	flattenStruct = func(structVal reflect.Value) error {
+		structType := structVal.Type()
+		if structType.Kind() != reflect.Struct {
+			return fmt.Errorf("%s is not a struct", structType)
+		}
+
+		if visitedTypes[structType] {
+			return fmt.Errorf("recursion on type %s", structType)
+		}
+
+		for i := 0; i < structType.NumField(); i++ {
+			field := structField{structType.Field(i), structVal.Field(i)}
+
+			name := field.Tag.Get("ebpf")
+			if name != "" {
+				fields = append(fields, field)
+				continue
+			}
+
+			var err error
+			switch field.Type.Kind() {
+			case reflect.Ptr:
+				if field.Type.Elem().Kind() != reflect.Struct {
+					continue
+				}
+
+				if field.value.IsNil() {
+					return fmt.Errorf("nil pointer to %s", structType)
+				}
+
+				err = flattenStruct(field.value.Elem())
+
+			case reflect.Struct:
+				err = flattenStruct(field.value)
+
+			default:
+				continue
+			}
+
+			if err != nil {
+				return fmt.Errorf("field %s: %s", field.Name, err)
+			}
+		}
+
+		return nil
+	}
+
+	toValue := reflect.ValueOf(to)
+	if toValue.Type().Kind() != reflect.Ptr {
+		return fmt.Errorf("%T is not a pointer to struct", to)
+	}
+
+	if toValue.IsNil() {
+		return fmt.Errorf("nil pointer to %T", to)
+	}
+
+	if err := flattenStruct(toValue.Elem()); err != nil {
+		return err
+>>>>>>> v1.21.4
 	}
 
 	type elem struct {

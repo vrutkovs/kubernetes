@@ -167,10 +167,19 @@ func (ins *Instruction) mapOffset() uint32 {
 	return uint32(uint64(ins.Constant) >> 32)
 }
 
+<<<<<<< HEAD
 // IsLoadFromMap returns true if the instruction loads from a map.
 //
 // This covers both loading the map pointer and direct map value loads.
 func (ins *Instruction) IsLoadFromMap() bool {
+||||||| 5e58841cce7
+func (ins *Instruction) isLoadFromMap() bool {
+=======
+// isLoadFromMap returns true if the instruction loads from a map.
+//
+// This covers both loading the map pointer and direct map value loads.
+func (ins *Instruction) isLoadFromMap() bool {
+>>>>>>> v1.21.4
 	return ins.OpCode == LoadImmOp(DWord) && (ins.Src == PseudoMapFD || ins.Src == PseudoMapValue)
 }
 
@@ -405,6 +414,7 @@ func (insns Instructions) Marshal(w io.Writer, bo binary.ByteOrder) error {
 	return nil
 }
 
+<<<<<<< HEAD
 // Tag calculates the kernel tag for a series of instructions.
 //
 // It mirrors bpf_prog_calc_tag in the kernel and so can be compared
@@ -424,6 +434,28 @@ func (insns Instructions) Tag(bo binary.ByteOrder) (string, error) {
 	return hex.EncodeToString(h.Sum(nil)[:unix.BPF_TAG_SIZE]), nil
 }
 
+||||||| 5e58841cce7
+=======
+// Tag calculates the kernel tag for a series of instructions.
+//
+// It mirrors bpf_prog_calc_tag in the kernel and so can be compared
+// to ProgramInfo.Tag to figure out whether a loaded program matches
+// certain instructions.
+func (insns Instructions) Tag(bo binary.ByteOrder) (string, error) {
+	h := sha1.New()
+	for i, ins := range insns {
+		if ins.isLoadFromMap() {
+			ins.Constant = 0
+		}
+		_, err := ins.Marshal(h, bo)
+		if err != nil {
+			return "", fmt.Errorf("instruction %d: %w", i, err)
+		}
+	}
+	return hex.EncodeToString(h.Sum(nil)[:unix.BPF_TAG_SIZE]), nil
+}
+
+>>>>>>> v1.21.4
 // Iterate allows iterating a BPF program while keeping track of
 // various offsets.
 //

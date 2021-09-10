@@ -260,9 +260,19 @@ func mountCgroupV1(m *configs.Mount, c *mountConfig) error {
 		return err
 	}
 	for _, b := range binds {
+<<<<<<< HEAD
 		if c.cgroupns {
 			subsystemPath := filepath.Join(c.root, b.Destination)
 			if err := os.MkdirAll(subsystemPath, 0o755); err != nil {
+||||||| 5e58841cce7
+		if enableCgroupns {
+			subsystemPath := filepath.Join(rootfs, b.Destination)
+			if err := os.MkdirAll(subsystemPath, 0755); err != nil {
+=======
+		if c.cgroupns {
+			subsystemPath := filepath.Join(c.root, b.Destination)
+			if err := os.MkdirAll(subsystemPath, 0755); err != nil {
+>>>>>>> v1.21.4
 				return err
 			}
 			if err := utils.WithProcfd(c.root, b.Destination, func(procfd string) error {
@@ -306,7 +316,13 @@ func mountCgroupV2(m *configs.Mount, c *mountConfig) error {
 	if err != nil {
 		return err
 	}
+<<<<<<< HEAD
 	if err := os.MkdirAll(dest, 0o755); err != nil {
+||||||| 5e58841cce7
+	if err := os.MkdirAll(cgroupPath, 0755); err != nil {
+=======
+	if err := os.MkdirAll(dest, 0755); err != nil {
+>>>>>>> v1.21.4
 		return err
 	}
 	return utils.WithProcfd(c.root, m.Destination, func(procfd string) error {
@@ -473,7 +489,15 @@ func mountToRootfs(m *configs.Mount, c *mountConfig) error {
 		if err := checkProcMount(rootfs, dest, m.Source); err != nil {
 			return err
 		}
+<<<<<<< HEAD
 		if err := os.MkdirAll(dest, 0o755); err != nil {
+||||||| 5e58841cce7
+		// update the mount with the correct dest after symlinks are resolved.
+		m.Destination = dest
+		if err := os.MkdirAll(dest, 0755); err != nil {
+=======
+		if err := os.MkdirAll(dest, 0755); err != nil {
+>>>>>>> v1.21.4
 			return err
 		}
 		return mountPropagate(m, rootfs, mountLabel)
@@ -635,8 +659,16 @@ func reOpenDevNull() error {
 
 // Create the device nodes in the container.
 func createDevices(config *configs.Config) error {
+<<<<<<< HEAD
 	useBindMount := userns.RunningInUserNS() || config.Namespaces.Contains(configs.NEWUSER)
 	oldMask := unix.Umask(0o000)
+||||||| 5e58841cce7
+	useBindMount := system.RunningInUserNS() || config.Namespaces.Contains(configs.NEWUSER)
+	oldMask := unix.Umask(0000)
+=======
+	useBindMount := userns.RunningInUserNS() || config.Namespaces.Contains(configs.NEWUSER)
+	oldMask := unix.Umask(0000)
+>>>>>>> v1.21.4
 	for _, node := range config.Devices {
 
 		// The /dev/ptmx device is setup by setupPtmx()
@@ -674,11 +706,22 @@ func createDeviceNode(rootfs string, node *devices.Device, bind bool) error {
 		// The node only exists for cgroup reasons, ignore it here.
 		return nil
 	}
+<<<<<<< HEAD
 	dest, err := securejoin.SecureJoin(rootfs, node.Path)
 	if err != nil {
 		return err
 	}
 	if err := os.MkdirAll(filepath.Dir(dest), 0o755); err != nil {
+||||||| 5e58841cce7
+	dest := filepath.Join(rootfs, node.Path)
+	if err := os.MkdirAll(filepath.Dir(dest), 0755); err != nil {
+=======
+	dest, err := securejoin.SecureJoin(rootfs, node.Path)
+	if err != nil {
+		return err
+	}
+	if err := os.MkdirAll(filepath.Dir(dest), 0755); err != nil {
+>>>>>>> v1.21.4
 		return err
 	}
 	if bind {
