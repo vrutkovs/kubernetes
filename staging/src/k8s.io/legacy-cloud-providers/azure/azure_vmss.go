@@ -74,7 +74,8 @@ type scaleSet struct {
 	*Cloud
 
 	// availabilitySet is also required for scaleSet because some instances
-	// (e.g. master nodes) may not belong to any scale sets.
+	// (e.g. control plane nodes) may not belong to any scale sets.
+	// this also allows for clusters with both VM and VMSS nodes.
 	availabilitySet VMSet
 
 	vmssCache                 *azcache.TimedCache
@@ -1033,7 +1034,6 @@ func (ss *scaleSet) EnsureHostInPool(service *v1.Service, nodeName types.NodeNam
 		})
 	primaryIPConfiguration.LoadBalancerBackendAddressPools = &newBackendPools
 	newVM := &compute.VirtualMachineScaleSetVM{
-		Sku:      vm.Sku,
 		Location: vm.Location,
 		VirtualMachineScaleSetVMProperties: &compute.VirtualMachineScaleSetVMProperties{
 			HardwareProfile: vm.HardwareProfile,
@@ -1175,7 +1175,6 @@ func (ss *scaleSet) ensureVMSSInPool(service *v1.Service, nodes []*v1.Node, back
 			})
 		primaryIPConfig.LoadBalancerBackendAddressPools = &loadBalancerBackendAddressPools
 		newVMSS := compute.VirtualMachineScaleSet{
-			Sku:      vmss.Sku,
 			Location: vmss.Location,
 			VirtualMachineScaleSetProperties: &compute.VirtualMachineScaleSetProperties{
 				VirtualMachineProfile: &compute.VirtualMachineScaleSetVMProfile{
@@ -1356,7 +1355,6 @@ func (ss *scaleSet) ensureBackendPoolDeletedFromNode(nodeName, backendPoolID str
 	// Compose a new vmssVM with added backendPoolID.
 	primaryIPConfiguration.LoadBalancerBackendAddressPools = &newBackendPools
 	newVM := &compute.VirtualMachineScaleSetVM{
-		Sku:      vm.Sku,
 		Location: vm.Location,
 		VirtualMachineScaleSetVMProperties: &compute.VirtualMachineScaleSetVMProperties{
 			HardwareProfile: vm.HardwareProfile,
@@ -1379,8 +1377,17 @@ func (ss *scaleSet) ensureBackendPoolDeletedFromNode(nodeName, backendPoolID str
 func (ss *scaleSet) GetNodeNameByIPConfigurationID(ipConfigurationID string) (string, string, error) {
 	matches := vmssIPConfigurationRE.FindStringSubmatch(ipConfigurationID)
 	if len(matches) != 4 {
+		if ss.DisableAvailabilitySetNodes {
+			return "", "", ErrorNotVmssInstance
+		}
+
 		klog.V(4).Infof("Can not extract scale set name from ipConfigurationID (%s), assuming it is managed by availability set", ipConfigurationID)
-		return "", "", ErrorNotVmssInstance
+		name, rg, err := ss.availabilitySet.GetNodeNameByIPConfigurationID(ipConfigurationID)
+		if err != nil {
+			klog.Errorf("GetNodeNameByIPConfigurationID: failed to invoke availabilitySet.GetNodeNameByIPConfigurationID: %s", err.Error())
+			return "", "", err
+		}
+		return name, rg, nil
 	}
 
 	resourceGroup := matches[1]
@@ -1478,7 +1485,6 @@ func (ss *scaleSet) ensureBackendPoolDeletedFromVMSS(service *v1.Service, backen
 		// Compose a new vmss with added backendPoolID.
 		primaryIPConfig.LoadBalancerBackendAddressPools = &newBackendPools
 		newVMSS := compute.VirtualMachineScaleSet{
-			Sku:      vmss.Sku,
 			Location: vmss.Location,
 			VirtualMachineScaleSetProperties: &compute.VirtualMachineScaleSetProperties{
 				VirtualMachineProfile: &compute.VirtualMachineScaleSetVMProfile{

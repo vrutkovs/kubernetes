@@ -925,7 +925,7 @@ github.com/opencontainers/runtime-spec/specs-go
 github.com/opencontainers/selinux/go-selinux
 github.com/opencontainers/selinux/go-selinux/label
 github.com/opencontainers/selinux/pkg/pwalk
-# github.com/openshift/api v0.0.0-20210713130143-be21c6cb1bea => github.com/openshift/api v0.0.0-20210713130143-be21c6cb1bea
+# github.com/openshift/api v0.0.0-20210910062324-a41d3573a3ba => github.com/openshift/api v0.0.0-20210713130143-be21c6cb1bea
 ## explicit
 # github.com/openshift/api => github.com/openshift/api v0.0.0-20210713130143-be21c6cb1bea
 github.com/openshift/api/apiserver/v1
@@ -1080,7 +1080,7 @@ github.com/openshift/client-go/user/informers/externalversions/internalinterface
 github.com/openshift/client-go/user/informers/externalversions/user
 github.com/openshift/client-go/user/informers/externalversions/user/v1
 github.com/openshift/client-go/user/listers/user/v1
-# github.com/openshift/library-go v0.0.0-20210521084623-7392ea9b02ca => github.com/openshift/library-go v0.0.0-20210407092538-7021fda6f427
+# github.com/openshift/library-go v0.0.0-20210825122301-7f0bf922c345 => github.com/openshift/library-go v0.0.0-20210407092538-7021fda6f427
 ## explicit
 # github.com/openshift/library-go => github.com/openshift/library-go v0.0.0-20210407092538-7021fda6f427
 github.com/openshift/library-go/pkg/apiserver/admission/admissionregistrationtesting
@@ -2814,8 +2814,9 @@ k8s.io/utils/trace
 # modernc.org/strutil => modernc.org/strutil v1.0.0
 # modernc.org/xc => modernc.org/xc v1.0.0
 # rsc.io/pdf => rsc.io/pdf v0.1.1
-# sigs.k8s.io/apiserver-network-proxy/konnectivity-client v0.0.15 => sigs.k8s.io/apiserver-network-proxy/konnectivity-client v0.0.15
-# sigs.k8s.io/apiserver-network-proxy/konnectivity-client => sigs.k8s.io/apiserver-network-proxy/konnectivity-client v0.0.15
+# sigs.k8s.io/apiserver-network-proxy/konnectivity-client v0.0.22 => sigs.k8s.io/apiserver-network-proxy/konnectivity-client v0.0.22
+## explicit
+# sigs.k8s.io/apiserver-network-proxy/konnectivity-client => sigs.k8s.io/apiserver-network-proxy/konnectivity-client v0.0.22
 sigs.k8s.io/apiserver-network-proxy/konnectivity-client/pkg/client
 sigs.k8s.io/apiserver-network-proxy/konnectivity-client/proto/client
 # sigs.k8s.io/controller-tools => sigs.k8s.io/controller-tools v0.2.8
@@ -2900,9 +2901,9 @@ sigs.k8s.io/kustomize/kyaml/yaml/merge2
 sigs.k8s.io/kustomize/kyaml/yaml/merge3
 sigs.k8s.io/kustomize/kyaml/yaml/schema
 sigs.k8s.io/kustomize/kyaml/yaml/walk
-# sigs.k8s.io/structured-merge-diff/v4 v4.1.0 => sigs.k8s.io/structured-merge-diff/v4 v4.1.0
+# sigs.k8s.io/structured-merge-diff/v4 v4.1.2 => sigs.k8s.io/structured-merge-diff/v4 v4.1.2
 ## explicit
-# sigs.k8s.io/structured-merge-diff/v4 => sigs.k8s.io/structured-merge-diff/v4 v4.1.0
+# sigs.k8s.io/structured-merge-diff/v4 => sigs.k8s.io/structured-merge-diff/v4 v4.1.2
 sigs.k8s.io/structured-merge-diff/v4/fieldpath
 sigs.k8s.io/structured-merge-diff/v4/merge
 sigs.k8s.io/structured-merge-diff/v4/schema
