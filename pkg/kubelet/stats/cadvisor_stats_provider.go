@@ -21,6 +21,7 @@ import (
 	"path"
 	"sort"
 	"strings"
+	"context"
 
 	cadvisorapiv2 "github.com/google/cadvisor/info/v2"
 	"k8s.io/klog/v2"
@@ -79,6 +80,7 @@ func (p *cadvisorStatsProvider) ListPodStats() ([]statsapi.PodStats, error) {
 	// Gets node root filesystem information and image filesystem stats, which
 	// will be used to populate the available and capacity bytes/inodes in
 	// container stats.
+	ctx := context.TODO()
 	rootFsInfo, err := p.cadvisor.RootFsInfo()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get rootFs info: %v", err)
@@ -154,7 +156,7 @@ func (p *cadvisorStatsProvider) ListPodStats() ([]statsapi.PodStats, error) {
 			podStats.ProcessStats = cadvisorInfoToProcessStats(podInfo)
 		}
 
-		status, found := p.statusProvider.GetPodStatus(podUID)
+		status, found := p.statusProvider.GetPodStatus(ctx, podUID)
 		if found && status.StartTime != nil && !status.StartTime.IsZero() {
 			podStats.StartTime = *status.StartTime
 			// only append stats if we were able to get the start time of the pod

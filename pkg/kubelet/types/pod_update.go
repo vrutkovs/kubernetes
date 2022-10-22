@@ -17,6 +17,7 @@ limitations under the License.
 package types
 
 import (
+	"context"
 	"fmt"
 
 	v1 "k8s.io/api/core/v1"
@@ -150,14 +151,15 @@ func IsMirrorPod(pod *v1.Pod) bool {
 }
 
 // IsStaticPod returns true if the pod is a static pod.
-func IsStaticPod(pod *v1.Pod) bool {
+func IsStaticPod(ctx context.Context, pod *v1.Pod) bool {
 	source, err := GetPodSource(pod)
 	return err == nil && source != ApiserverSource
 }
 
 // IsCriticalPod returns true if pod's priority is greater than or equal to SystemCriticalPriority.
 func IsCriticalPod(pod *v1.Pod) bool {
-	if IsStaticPod(pod) {
+	ctx := context.TODO()
+	if IsStaticPod(ctx, pod) {
 		return true
 	}
 	if IsMirrorPod(pod) {

@@ -21,6 +21,7 @@ import (
 	"math/rand"
 	"strings"
 	"time"
+	"context"
 
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/runtime"
@@ -202,8 +203,9 @@ func (w *worker) doProbe() (keepGoing bool) {
 	defer func() { recover() }() // Actually eat panics (HandleCrash takes care of logging)
 	defer runtime.HandleCrash(func(_ interface{}) { keepGoing = true })
 
+	ctx := context.TODO()
 	startTime := time.Now()
-	status, ok := w.probeManager.statusManager.GetPodStatus(w.pod.UID)
+	status, ok := w.probeManager.statusManager.GetPodStatus(ctx, w.pod.UID)
 	if !ok {
 		// Either the pod has not been created yet, or it was already deleted.
 		klog.V(3).InfoS("No status for pod", "pod", klog.KObj(w.pod))

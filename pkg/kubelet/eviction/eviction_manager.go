@@ -17,6 +17,7 @@ limitations under the License.
 package eviction
 
 import (
+	"context"
 	"fmt"
 	"sort"
 	"sync"
@@ -398,6 +399,7 @@ func (m *managerImpl) waitForPodsCleanup(podCleanedUpFunc PodCleanedUpFunc, pods
 	defer timeout.Stop()
 	ticker := m.clock.NewTicker(podCleanupPollFreq)
 	defer ticker.Stop()
+	ctx := context.TODO()
 	for {
 		select {
 		case <-timeout.C():
@@ -405,7 +407,7 @@ func (m *managerImpl) waitForPodsCleanup(podCleanedUpFunc PodCleanedUpFunc, pods
 			return
 		case <-ticker.C():
 			for i, pod := range pods {
-				if !podCleanedUpFunc(pod) {
+				if !podCleanedUpFunc(ctx, pod) {
 					break
 				}
 				if i == len(pods)-1 {

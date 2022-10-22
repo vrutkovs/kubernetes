@@ -65,6 +65,8 @@ import (
 	volumevalidation "k8s.io/kubernetes/pkg/volume/validation"
 	"k8s.io/kubernetes/third_party/forked/golang/expansion"
 	utilnet "k8s.io/utils/net"
+
+	"go.opentelemetry.io/otel/attribute"
 )
 
 const (
@@ -594,7 +596,8 @@ func (kl *Kubelet) makeEnvironmentVariables(pod *v1.Pod, container *v1.Container
 	// KUBERNETES_SERVICE_HOST injected because we didn't wait a short time for services to sync before proceeding.
 	// The KUBERNETES_SERVICE_HOST link is special because it is unconditionally injected into pods and is read by the
 	// in-cluster-config for pod clients
-	if !kubetypes.IsStaticPod(pod) && !kl.serviceHasSynced() {
+	ctx := context.TODO()
+	if !kubetypes.IsStaticPod(ctx, pod) && !kl.serviceHasSynced() {
 		return nil, fmt.Errorf("services have not yet been read at least once, cannot construct envvars")
 	}
 
@@ -855,7 +858,12 @@ func containerResourceRuntimeValue(fs *v1.ResourceFieldSelector, pod *v1.Pod, co
 // killPod instructs the container runtime to kill the pod. This method requires that
 // the pod status contains the result of the last syncPod, otherwise it may fail to
 // terminate newly created containers and sandboxes.
-func (kl *Kubelet) killPod(pod *v1.Pod, p kubecontainer.Pod, gracePeriodOverride *int64) error {
+func (kl *Kubelet) killPod(ctx context.Context, pod *v1.Pod, p kubecontainer.Pod, gracePeriodOverride *int64) error {
+	ctx, span := kl.tracer.Start(ctx, "pkg.kubelet.kubelet_pods/killPod")
+	defer span.End()
+	span.SetAttributes(attribute.String("pod.name", pod.Name))
+	span.SetAttributes(attribute.String("pod.namespace", pod.Namespace))
+
 	// Call the container runtime KillPod method which stops all known running containers of the pod
 	if err := kl.containerRuntime.KillPod(pod, p, gracePeriodOverride); err != nil {
 		return err
@@ -867,7 +875,11 @@ func (kl *Kubelet) killPod(pod *v1.Pod, p kubecontainer.Pod, gracePeriodOverride
 }
 
 // makePodDataDirs creates the dirs for the pod datas.
-func (kl *Kubelet) makePodDataDirs(pod *v1.Pod) error {
+func (kl *Kubelet) makePodDataDirs(ctx context.Context, pod *v1.Pod) error {
+	ctx, span := kl.tracer.Start(ctx, "pkg.kubelet.kubelet_pods/makePodDataDirs")
+	defer span.End()
+	span.SetAttributes(attribute.String("pod.name", pod.Name))
+	span.SetAttributes(attribute.String("pod.namespace", pod.Namespace))
 	uid := pod.UID
 	if err := os.MkdirAll(kl.getPodDir(uid), 0750); err != nil && !os.IsExist(err) {
 		return err
@@ -883,7 +895,11 @@ func (kl *Kubelet) makePodDataDirs(pod *v1.Pod) error {
 
 // getPullSecretsForPod inspects the Pod and retrieves the referenced pull
 // secrets.
-func (kl *Kubelet) getPullSecretsForPod(pod *v1.Pod) []v1.Secret {
+func (kl *Kubelet) getPullSecretsForPod(ctx context.Context, pod *v1.Pod) []v1.Secret {
+	ctx, span := kl.tracer.Start(ctx, "pkg.kubelet.kubelet_pods/getPullSecretsForPod")
+	defer span.End()
+	span.SetAttributes(attribute.String("pod.name", pod.Name))
+	span.SetAttributes(attribute.String("pod.namespace", pod.Namespace))
 	pullSecrets := []v1.Secret{}
 
 	for _, secretRef := range pod.Spec.ImagePullSecrets {
@@ -966,8 +982,8 @@ func (kl *Kubelet) PodResourcesAreReclaimed(pod *v1.Pod, status v1.PodStatus) bo
 }
 
 // podResourcesAreReclaimed simply calls PodResourcesAreReclaimed with the most up-to-date status.
-func (kl *Kubelet) podResourcesAreReclaimed(pod *v1.Pod) bool {
-	status, ok := kl.statusManager.GetPodStatus(pod.UID)
+func (kl *Kubelet) podResourcesAreReclaimed(ctx context.Context, pod *v1.Pod) bool {
+	status, ok := kl.statusManager.GetPodStatus(ctx, pod.UID)
 	if !ok {
 		status = pod.Status
 	}
@@ -979,6 +995,7 @@ func (kl *Kubelet) podResourcesAreReclaimed(pod *v1.Pod) bool {
 // when the set of pods being filtered is upstream of the pod worker, i.e.
 // the pods the pod manager is aware of.
 func (kl *Kubelet) filterOutInactivePods(pods []*v1.Pod) []*v1.Pod {
+	ctx := context.TODO()
 	filteredPods := make([]*v1.Pod, 0, len(pods))
 	for _, p := range pods {
 		// if a pod is fully terminated by UID, it should be excluded from the
@@ -988,7 +1005,7 @@ func (kl *Kubelet) filterOutInactivePods(pods []*v1.Pod) []*v1.Pod {
 		}
 
 		// terminal pods are considered inactive UNLESS they are actively terminating
-		if kl.isAdmittedPodTerminal(p) && !kl.podWorkers.IsPodTerminationRequested(p.UID) {
+		if kl.isAdmittedPodTerminal(ctx, p) && !kl.podWorkers.IsPodTerminationRequested(ctx, p.UID) {
 			continue
 		}
 
@@ -1002,7 +1019,7 @@ func (kl *Kubelet) filterOutInactivePods(pods []*v1.Pod) []*v1.Pod {
 // a terminal phase but the config source has not accepted it yet. This method
 // should only be used within the pod configuration loops that notify the pod
 // worker, other components should treat the pod worker as authoritative.
-func (kl *Kubelet) isAdmittedPodTerminal(pod *v1.Pod) bool {
+func (kl *Kubelet) isAdmittedPodTerminal(ctx context.Context, pod *v1.Pod) bool {
 	// pods are considered inactive if the config source has observed a
 	// terminal phase (if the Kubelet recorded that the pod reached a terminal
 	// phase the pod should never be restarted)
@@ -1011,7 +1028,7 @@ func (kl *Kubelet) isAdmittedPodTerminal(pod *v1.Pod) bool {
 	}
 	// a pod that has been marked terminal within the Kubelet is considered
 	// inactive (may have been rejected by Kubelet admision)
-	if status, ok := kl.statusManager.GetPodStatus(pod.UID); ok {
+	if status, ok := kl.statusManager.GetPodStatus(ctx, pod.UID); ok {
 		if status.Phase == v1.PodSucceeded || status.Phase == v1.PodFailed {
 			return true
 		}
@@ -1064,6 +1081,10 @@ func (kl *Kubelet) HandlePodCleanups() error {
 		cgroupPods map[types.UID]cm.CgroupName
 		err        error
 	)
+	ctx := context.TODO()
+	ctx, span := kl.tracer.Start(ctx, "pkg.kubelet.kubelet_pods/HandlePodCleanups")
+	defer span.End()
+
 	if kl.cgroupsPerQOS {
 		pcm := kl.containerManager.NewPodContainerManager()
 		cgroupPods, err = pcm.GetAllPodsFromCgroups()
@@ -1212,7 +1233,7 @@ func (kl *Kubelet) HandlePodCleanups() error {
 		if !ok {
 			continue
 		}
-		if kl.isAdmittedPodTerminal(pod) {
+		if kl.isAdmittedPodTerminal(ctx, pod) {
 			klog.V(3).InfoS("Pod is restartable after termination due to UID reuse, but pod phase is terminal", "pod", klog.KObj(pod), "podUID", pod.UID)
 			continue
 		}
@@ -1312,7 +1333,7 @@ func (kl *Kubelet) GetKubeletContainerLogs(ctx context.Context, podFullName, con
 	if mirrorPod, ok := kl.podManager.GetMirrorPodByPod(pod); ok {
 		podUID = mirrorPod.UID
 	}
-	podStatus, found := kl.statusManager.GetPodStatus(podUID)
+	podStatus, found := kl.statusManager.GetPodStatus(ctx, podUID)
 	if !found {
 		// If there is no cached status, use the status from the
 		// apiserver. This is useful if kubelet has recently been
@@ -1443,10 +1464,14 @@ func getPhase(spec *v1.PodSpec, info []v1.ContainerStatus) v1.PodPhase {
 
 // generateAPIPodStatus creates the final API pod status for a pod, given the
 // internal pod status. This method should only be called from within sync*Pod methods.
-func (kl *Kubelet) generateAPIPodStatus(pod *v1.Pod, podStatus *kubecontainer.PodStatus) v1.PodStatus {
+func (kl *Kubelet) generateAPIPodStatus(ctx context.Context, pod *v1.Pod, podStatus *kubecontainer.PodStatus) v1.PodStatus {
 	klog.V(3).InfoS("Generating pod status", "pod", klog.KObj(pod))
+	ctx, span := kl.tracer.Start(ctx, "pkg.kubelet.kubelet_pods/generateAPIPodStatus")
+	defer span.End()
+	span.SetAttributes(attribute.String("pod.name", pod.Name))
+	span.SetAttributes(attribute.String("pod.namespace", pod.Namespace))
 	// use the previous pod status, or the api status, as the basis for this pod
-	oldPodStatus, found := kl.statusManager.GetPodStatus(pod.UID)
+	oldPodStatus, found := kl.statusManager.GetPodStatus(ctx, pod.UID)
 	if !found {
 		oldPodStatus = pod.Status
 	}

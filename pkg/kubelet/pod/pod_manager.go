@@ -18,6 +18,7 @@ limitations under the License.
 package pod
 
 import (
+	"context"
 	"sync"
 
 	v1 "k8s.io/api/core/v1"
@@ -267,12 +268,13 @@ func (pm *basicManager) GetUIDTranslations() (podToMirror map[kubetypes.Resolved
 	mirrorToPod map[kubetypes.MirrorPodUID]kubetypes.ResolvedPodUID) {
 	pm.lock.RLock()
 	defer pm.lock.RUnlock()
+	ctx := context.TODO()
 
 	podToMirror = make(map[kubetypes.ResolvedPodUID]kubetypes.MirrorPodUID, len(pm.translationByUID))
 	mirrorToPod = make(map[kubetypes.MirrorPodUID]kubetypes.ResolvedPodUID, len(pm.translationByUID))
 	// Insert empty translation mapping for all static pods.
 	for uid, pod := range pm.podByUID {
-		if !kubetypes.IsStaticPod(pod) {
+		if !kubetypes.IsStaticPod(ctx, pod) {
 			continue
 		}
 		podToMirror[uid] = ""

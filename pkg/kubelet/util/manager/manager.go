@@ -17,6 +17,7 @@ limitations under the License.
 package manager
 
 import (
+	"context"
 	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
@@ -34,7 +35,7 @@ type Manager interface {
 	// RegisterPod registers all objects referenced from a given pod.
 	//
 	// NOTE: All implementations of RegisterPod should be idempotent.
-	RegisterPod(pod *v1.Pod)
+	RegisterPod(ctx context.Context, pod *v1.Pod)
 
 	// UnregisterPod unregisters objects referenced from a given pod that are not
 	// used by any other registered pod.

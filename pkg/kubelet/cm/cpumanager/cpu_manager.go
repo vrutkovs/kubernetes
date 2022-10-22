@@ -21,6 +21,7 @@ import (
 	"math"
 	"sync"
 	"time"
+	"context"
 
 	cadvisorapi "github.com/google/cadvisor/info/v1"
 	v1 "k8s.io/api/core/v1"
@@ -405,10 +406,12 @@ func (m *manager) reconcileState() (success []reconciledContainer, failure []rec
 	success = []reconciledContainer{}
 	failure = []reconciledContainer{}
 
+	ctx := context.TODO()
+
 	m.removeStaleState()
 	workloadEnabled := managed.IsEnabled()
 	for _, pod := range m.activePods() {
-		pstatus, ok := m.podStatusProvider.GetPodStatus(pod.UID)
+		pstatus, ok := m.podStatusProvider.GetPodStatus(ctx, pod.UID)
 		if !ok {
 			klog.V(4).InfoS("ReconcileState: skipping pod; status not found", "pod", klog.KObj(pod))
 			failure = append(failure, reconciledContainer{pod.Name, "", ""})

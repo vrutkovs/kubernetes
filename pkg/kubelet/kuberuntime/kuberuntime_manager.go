@@ -17,6 +17,7 @@ limitations under the License.
 package kuberuntime
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -58,6 +59,9 @@ import (
 	"k8s.io/kubernetes/pkg/kubelet/util/cache"
 	"k8s.io/kubernetes/pkg/kubelet/util/format"
 	sc "k8s.io/kubernetes/pkg/securitycontext"
+
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 )
 
 const (
@@ -82,7 +86,7 @@ var (
 // podStateProvider can determine if none of the elements are necessary to retain (pod content)
 // or if none of the runtime elements are necessary to retain (containers)
 type podStateProvider interface {
-	IsPodTerminationRequested(kubetypes.UID) bool
+	IsPodTerminationRequested(context.Context, kubetypes.UID) bool
 	ShouldPodContentBeRemoved(kubetypes.UID) bool
 	ShouldPodRuntimeBeRemoved(kubetypes.UID) bool
 }
@@ -157,6 +161,8 @@ type kubeGenericRuntimeManager struct {
 
 	// Memory throttling factor for MemoryQoS
 	memoryThrottlingFactor float64
+
+	tracer trace.Tracer
 }
 
 // KubeGenericRuntime is a interface contains interfaces for container runtime and command.
@@ -195,6 +201,7 @@ func NewKubeGenericRuntimeManager(
 	memorySwapBehavior string,
 	getNodeAllocatable func() v1.ResourceList,
 	memoryThrottlingFactor float64,
+	tracer trace.Tracer,
 ) (KubeGenericRuntime, error) {
 	runtimeService = newInstrumentedRuntimeService(runtimeService)
 	imageService = newInstrumentedImageManagerService(imageService)
@@ -219,6 +226,7 @@ func NewKubeGenericRuntimeManager(
 		memorySwapBehavior:     memorySwapBehavior,
 		getNodeAllocatable:     getNodeAllocatable,
 		memoryThrottlingFactor: memoryThrottlingFactor,
+		tracer:                 tracer,
 	}
 
 	typedVersion, err := kubeRuntimeManager.getTypedVersion()
@@ -665,7 +673,11 @@ func (m *kubeGenericRuntimeManager) computePodActions(pod *v1.Pod, podStatus *ku
 //  5. Create ephemeral containers.
 //  6. Create init containers.
 //  7. Create normal containers.
-func (m *kubeGenericRuntimeManager) SyncPod(pod *v1.Pod, podStatus *kubecontainer.PodStatus, pullSecrets []v1.Secret, backOff *flowcontrol.Backoff) (result kubecontainer.PodSyncResult) {
+func (m *kubeGenericRuntimeManager) SyncPod(ctx context.Context, pod *v1.Pod, podStatus *kubecontainer.PodStatus, pullSecrets []v1.Secret, backOff *flowcontrol.Backoff) (result kubecontainer.PodSyncResult) {
+	ctx, span := m.tracer.Start(ctx, "pkg.kubelet.kuberuntime.kuberuntime_manager/SyncPod")
+	defer span.End()
+	span.SetAttributes(attribute.String("pod.name", pod.Name))
+	span.SetAttributes(attribute.String("pod.namespace", pod.Namespace))
 	// Step 1: Compute sandbox and container changes.
 	podContainerChanges := m.computePodActions(pod, podStatus)
 	klog.V(3).InfoS("computePodActions got for pod", "podActions", podContainerChanges, "pod", klog.KObj(pod))
@@ -763,7 +775,7 @@ func (m *kubeGenericRuntimeManager) SyncPod(pod *v1.Pod, podStatus *kubecontaine
 			//
 			// SyncPod can still be running when we get here, which
 			// means the PodWorker has not acked the deletion.
-			if m.podStateProvider.IsPodTerminationRequested(pod.UID) {
+			if m.podStateProvider.IsPodTerminationRequested(ctx, pod.UID) {
 				klog.V(4).InfoS("Pod was deleted and sandbox failed to be created", "pod", klog.KObj(pod), "podUID", pod.UID)
 				return
 			}

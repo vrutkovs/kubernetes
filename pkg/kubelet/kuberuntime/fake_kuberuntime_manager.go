@@ -17,6 +17,7 @@ limitations under the License.
 package kuberuntime
 
 import (
+	"context"
 	"net/http"
 	"time"
 
@@ -67,7 +68,7 @@ func newFakePodStateProvider() *fakePodStateProvider {
 	}
 }
 
-func (f *fakePodStateProvider) IsPodTerminationRequested(uid types.UID) bool {
+func (f *fakePodStateProvider) IsPodTerminationRequested(ctx context.Context, uid types.UID) bool {
 	_, found := f.removed[uid]
 	return found
 }

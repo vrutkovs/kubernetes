@@ -17,6 +17,7 @@ limitations under the License.
 package lifecycle
 
 import (
+	"context"
 	"fmt"
 	"runtime"
 
@@ -276,7 +277,8 @@ func generalFilter(pod *v1.Pod, nodeInfo *schedulerframework.NodeInfo) []Predica
 	}
 
 	// Check taint/toleration except for static pods
-	if !types.IsStaticPod(pod) {
+	ctx := context.TODO()
+	if !types.IsStaticPod(ctx, pod) {
 		_, isUntolerated := corev1.FindMatchingUntoleratedTaint(nodeInfo.Node().Spec.Taints, pod.Spec.Tolerations, func(t *v1.Taint) bool {
 			// Kubelet is only interested in the NoExecute taint.
 			return t.Effect == v1.TaintEffectNoExecute

@@ -43,7 +43,7 @@ type Manager interface {
 	// i.e. should not block on network operations.
 
 	// RegisterPod registers all configmaps from a given pod.
-	RegisterPod(pod *v1.Pod)
+	RegisterPod(ctx context.Context, pod *v1.Pod)
 
 	// UnregisterPod unregisters configmaps from a given pod that are not
 	// used by any other registered pod.
@@ -65,7 +65,7 @@ func (s *simpleConfigMapManager) GetConfigMap(namespace, name string) (*v1.Confi
 	return s.kubeClient.CoreV1().ConfigMaps(namespace).Get(context.TODO(), name, metav1.GetOptions{})
 }
 
-func (s *simpleConfigMapManager) RegisterPod(pod *v1.Pod) {
+func (s *simpleConfigMapManager) RegisterPod(ctx context.Context, pod *v1.Pod) {
 }
 
 func (s *simpleConfigMapManager) UnregisterPod(pod *v1.Pod) {
@@ -90,8 +90,8 @@ func (c *configMapManager) GetConfigMap(namespace, name string) (*v1.ConfigMap, 
 	return nil, fmt.Errorf("unexpected object type: %v", object)
 }
 
-func (c *configMapManager) RegisterPod(pod *v1.Pod) {
-	c.manager.RegisterPod(pod)
+func (c *configMapManager) RegisterPod(ctx context.Context, pod *v1.Pod) {
+	c.manager.RegisterPod(ctx, pod)
 }
 
 func (c *configMapManager) UnregisterPod(pod *v1.Pod) {

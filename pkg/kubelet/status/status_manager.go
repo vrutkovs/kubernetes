@@ -40,6 +40,8 @@ import (
 	kubepod "k8s.io/kubernetes/pkg/kubelet/pod"
 	kubetypes "k8s.io/kubernetes/pkg/kubelet/types"
 	statusutil "k8s.io/kubernetes/pkg/util/pod"
+	"go.opentelemetry.io/otel/trace"
+	"go.opentelemetry.io/otel/attribute"
 )
 
 // A wrapper around v1.PodStatus that includes a version to enforce that stale pod statuses are
@@ -71,6 +73,7 @@ type manager struct {
 	// apiStatusVersions must only be accessed from the sync thread.
 	apiStatusVersions map[kubetypes.MirrorPodUID]uint64
 	podDeletionSafety PodDeletionSafetyProvider
+	tracer trace.Tracer
 }
 
 // PodStatusProvider knows how to provide status for a pod. It's intended to be used by other components
@@ -78,7 +81,7 @@ type manager struct {
 type PodStatusProvider interface {
 	// GetPodStatus returns the cached status for the provided pod UID, as well as whether it
 	// was a cache hit.
-	GetPodStatus(uid types.UID) (v1.PodStatus, bool)
+	GetPodStatus(ctx context.Context, uid types.UID) (v1.PodStatus, bool)
 }
 
 // PodDeletionSafetyProvider provides guarantees that a pod can be safely deleted.
@@ -98,7 +101,7 @@ type Manager interface {
 	Start()
 
 	// SetPodStatus caches updates the cached status for the given pod, and triggers a status update.
-	SetPodStatus(pod *v1.Pod, status v1.PodStatus)
+	SetPodStatus(ctx context.Context, pod *v1.Pod, status v1.PodStatus)
 
 	// SetContainerReadiness updates the cached container status with the given readiness, and
 	// triggers a status update.
@@ -120,7 +123,7 @@ type Manager interface {
 const syncPeriod = 10 * time.Second
 
 // NewManager returns a functional Manager.
-func NewManager(kubeClient clientset.Interface, podManager kubepod.Manager, podDeletionSafety PodDeletionSafetyProvider) Manager {
+func NewManager(kubeClient clientset.Interface, podManager kubepod.Manager, podDeletionSafety PodDeletionSafetyProvider, tracer trace.Tracer) Manager {
 	return &manager{
 		kubeClient:        kubeClient,
 		podManager:        podManager,
@@ -128,6 +131,7 @@ func NewManager(kubeClient clientset.Interface, podManager kubepod.Manager, podD
 		podStatusChannel:  make(chan podStatusSyncRequest, 1000), // Buffer up to 1000 statuses
 		apiStatusVersions: make(map[kubetypes.MirrorPodUID]uint64),
 		podDeletionSafety: podDeletionSafety,
+		tracer:            tracer,
 	}
 }
 
@@ -185,14 +189,23 @@ func (m *manager) Start() {
 	}, 0)
 }
 
-func (m *manager) GetPodStatus(uid types.UID) (v1.PodStatus, bool) {
+func (m *manager) GetPodStatus(ctx context.Context, uid types.UID) (v1.PodStatus, bool) {
+	ctx, span := m.tracer.Start(ctx, "pkg.kubelet.status.status_manager/GetPodStatus")
+	defer span.End()
+	span.SetAttributes(attribute.String("pod.uid", string(uid)))
+
 	m.podStatusesLock.RLock()
 	defer m.podStatusesLock.RUnlock()
 	status, ok := m.podStatuses[types.UID(m.podManager.TranslatePodUID(uid))]
 	return status.status, ok
 }
 
-func (m *manager) SetPodStatus(pod *v1.Pod, status v1.PodStatus) {
+func (m *manager) SetPodStatus(ctx context.Context, pod *v1.Pod, status v1.PodStatus) {
+	ctx, span := m.tracer.Start(ctx, "pkg.kubelet.status.status_manager/SetPodStatus")
+	defer span.End()
+	span.SetAttributes(attribute.String("pod.name", pod.Name))
+	span.SetAttributes(attribute.String("pod.namespace", pod.Namespace))
+	span.SetAttributes(attribute.String("pod.status", status.String()))
 	m.podStatusesLock.Lock()
 	defer m.podStatusesLock.Unlock()
 
@@ -749,6 +762,7 @@ func (m *manager) canBeDeleted(pod *v1.Pod, status v1.PodStatus) bool {
 // static pod uid here.
 // TODO(random-liu): Simplify the logic when mirror pod manager is added.
 func (m *manager) needsReconcile(uid types.UID, status v1.PodStatus) bool {
+	ctx := context.TODO()
 	// The pod could be a static pod, so we should translate first.
 	pod, ok := m.podManager.GetPodByUID(uid)
 	if !ok {
@@ -756,7 +770,7 @@ func (m *manager) needsReconcile(uid types.UID, status v1.PodStatus) bool {
 		return false
 	}
 	// If the pod is a static pod, we should check its mirror pod, because only status in mirror pod is meaningful to us.
-	if kubetypes.IsStaticPod(pod) {
+	if kubetypes.IsStaticPod(ctx, pod) {
 		mirrorPod, ok := m.podManager.GetMirrorPodByPod(pod)
 		if !ok {
 			klog.V(4).InfoS("Static pod has no corresponding mirror pod, no need to reconcile", "pod", klog.KObj(pod))

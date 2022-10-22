@@ -44,7 +44,7 @@ type Manager interface {
 	// i.e. should not block on network operations.
 
 	// RegisterPod registers all secrets from a given pod.
-	RegisterPod(pod *v1.Pod)
+	RegisterPod(ctx context.Context, pod *v1.Pod)
 
 	// UnregisterPod unregisters secrets from a given pod that are not
 	// used by any other registered pod.
@@ -66,7 +66,7 @@ func (s *simpleSecretManager) GetSecret(namespace, name string) (*v1.Secret, err
 	return s.kubeClient.CoreV1().Secrets(namespace).Get(context.TODO(), name, metav1.GetOptions{})
 }
 
-func (s *simpleSecretManager) RegisterPod(pod *v1.Pod) {
+func (s *simpleSecretManager) RegisterPod(ctx context.Context, pod *v1.Pod) {
 }
 
 func (s *simpleSecretManager) UnregisterPod(pod *v1.Pod) {
@@ -91,8 +91,8 @@ func (s *secretManager) GetSecret(namespace, name string) (*v1.Secret, error) {
 	return nil, fmt.Errorf("unexpected object type: %v", object)
 }
 
-func (s *secretManager) RegisterPod(pod *v1.Pod) {
-	s.manager.RegisterPod(pod)
+func (s *secretManager) RegisterPod(ctx context.Context, pod *v1.Pod) {
+	s.manager.RegisterPod(ctx, pod)
 }
 
 func (s *secretManager) UnregisterPod(pod *v1.Pod) {

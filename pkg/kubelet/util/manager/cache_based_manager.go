@@ -17,6 +17,7 @@ limitations under the License.
 package manager
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 	"sync"
@@ -220,7 +221,7 @@ func (c *cacheBasedManager) GetObject(namespace, name string) (runtime.Object, e
 	return c.objectStore.Get(namespace, name)
 }
 
-func (c *cacheBasedManager) RegisterPod(pod *v1.Pod) {
+func (c *cacheBasedManager) RegisterPod(ctx context.Context, pod *v1.Pod) {
 	names := c.getReferencedObjects(pod)
 	c.lock.Lock()
 	defer c.lock.Unlock()

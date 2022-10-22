@@ -36,6 +36,8 @@ import (
 	"k8s.io/kubernetes/pkg/kubelet/metrics"
 	kubetypes "k8s.io/kubernetes/pkg/kubelet/types"
 	"k8s.io/kubernetes/pkg/kubelet/util/queue"
+	"go.opentelemetry.io/otel/trace"
+	"go.opentelemetry.io/otel/attribute"
 )
 
 // OnCompleteFunc is a function that is invoked when an operation completes.
@@ -173,7 +175,7 @@ type PodWorkers interface {
 	//
 	// Intended for use by the kubelet sync* methods, but not subsystems, which should
 	// use ShouldPod*().
-	IsPodTerminationRequested(uid types.UID) bool
+	IsPodTerminationRequested(ctx context.Context, uid types.UID) bool
 
 	// ShouldPodContainersBeTerminating returns false before pod workers have synced,
 	// or once a pod has started terminating. This check is similar to
@@ -422,6 +424,8 @@ type podWorkers struct {
 
 	// podCache stores kubecontainer.PodStatus for all pods.
 	podCache kubecontainer.Cache
+
+	tracer trace.Tracer
 }
 
 func newPodWorkers(
@@ -432,6 +436,7 @@ func newPodWorkers(
 	workQueue queue.WorkQueue,
 	resyncInterval, backOffPeriod time.Duration,
 	podCache kubecontainer.Cache,
+	tracer trace.Tracer,
 ) PodWorkers {
 	return &podWorkers{
 		podSyncStatuses:                    map[types.UID]*podSyncStatus{},
@@ -447,6 +452,7 @@ func newPodWorkers(
 		resyncInterval:                     resyncInterval,
 		backOffPeriod:                      backOffPeriod,
 		podCache:                           podCache,
+		tracer:                             tracer,
 	}
 }
 
@@ -470,7 +476,11 @@ func (p *podWorkers) CouldHaveRunningContainers(uid types.UID) bool {
 	return !p.podsSynced
 }
 
-func (p *podWorkers) IsPodTerminationRequested(uid types.UID) bool {
+func (p *podWorkers) IsPodTerminationRequested(ctx context.Context, uid types.UID) bool {
+	ctx, span := p.tracer.Start(ctx, "pkg.kubelet.pod_workers/IsPodTerminationRequested")
+	defer span.End()
+	span.SetAttributes(attribute.String("pod.uid", string(uid)))
+
 	p.podLock.Lock()
 	defer p.podLock.Unlock()
 	if status, ok := p.podSyncStatuses[uid]; ok {
@@ -557,6 +567,7 @@ func isPodStatusCacheTerminal(status *kubecontainer.PodStatus) bool {
 func (p *podWorkers) UpdatePod(options UpdatePodOptions) {
 	// handle when the pod is an orphan (no config) and we only have runtime status by running only
 	// the terminating part of the lifecycle
+	ctx := context.TODO()
 	pod := options.Pod
 	var isRuntimePod bool
 	if options.RunningPod != nil {
@@ -728,7 +739,7 @@ func (p *podWorkers) UpdatePod(options UpdatePodOptions) {
 		p.podUpdates[uid] = podUpdates
 
 		// ensure that static pods start in the order they are received by UpdatePod
-		if kubetypes.IsStaticPod(pod) {
+		if kubetypes.IsStaticPod(ctx, pod) {
 			p.waitingToStartStaticPodsByFullname[status.fullname] =
 				append(p.waitingToStartStaticPodsByFullname[status.fullname], uid)
 		}
@@ -815,7 +826,8 @@ func calculateEffectiveGracePeriod(status *podSyncStatus, pod *v1.Pod, options *
 // because data is missing, or the pod was terminated before start, canEverStart
 // is false.
 func (p *podWorkers) allowPodStart(pod *v1.Pod) (canStart bool, canEverStart bool) {
-	if !kubetypes.IsStaticPod(pod) {
+	ctx := context.TODO()
+	if !kubetypes.IsStaticPod(ctx, pod) {
 		// TODO: Do we want to allow non-static pods with the same full name?
 		// Note that it may disable the force deletion of pods.
 		return true, true

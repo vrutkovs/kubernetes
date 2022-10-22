@@ -18,6 +18,7 @@ limitations under the License.
 package eviction
 
 import (
+	"context"
 	"time"
 
 	v1 "k8s.io/api/core/v1"
@@ -103,7 +104,7 @@ type MirrorPodFunc func(*v1.Pod) (*v1.Pod, bool)
 type ActivePodsFunc func() []*v1.Pod
 
 // PodCleanedUpFunc returns true if all resources associated with a pod have been reclaimed.
-type PodCleanedUpFunc func(*v1.Pod) bool
+type PodCleanedUpFunc func(context.Context, *v1.Pod) bool
 
 // statsFunc returns the usage stats if known for an input pod.
 type statsFunc func(pod *v1.Pod) (statsapi.PodStats, bool)

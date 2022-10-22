@@ -19,6 +19,7 @@ package kubelet
 import (
 	"fmt"
 	"time"
+	"context"
 
 	"k8s.io/api/core/v1"
 	"k8s.io/client-go/tools/record"
@@ -81,8 +82,9 @@ func (m *activeDeadlineHandler) pastActiveDeadline(pod *v1.Pod) bool {
 	if pod.Spec.ActiveDeadlineSeconds == nil {
 		return false
 	}
+	ctx := context.TODO()
 	// get the latest status to determine if it was started
-	podStatus, ok := m.podStatusProvider.GetPodStatus(pod.UID)
+	podStatus, ok := m.podStatusProvider.GetPodStatus(ctx, pod.UID)
 	if !ok {
 		podStatus = pod.Status
 	}

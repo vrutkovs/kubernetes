@@ -222,7 +222,7 @@ func (f *FakeRuntime) GetPods(all bool) ([]*kubecontainer.Pod, error) {
 	return pods, f.Err
 }
 
-func (f *FakeRuntime) SyncPod(pod *v1.Pod, _ *kubecontainer.PodStatus, _ []v1.Secret, backOff *flowcontrol.Backoff) (result kubecontainer.PodSyncResult) {
+func (f *FakeRuntime) SyncPod(ctx context.Context, pod *v1.Pod, _ *kubecontainer.PodStatus, _ []v1.Secret, backOff *flowcontrol.Backoff) (result kubecontainer.PodSyncResult) {
 	f.Lock()
 	defer f.Unlock()
 

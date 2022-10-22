@@ -17,6 +17,7 @@ limitations under the License.
 package prober
 
 import (
+	"context"
 	"sync"
 	"time"
 
@@ -30,6 +31,8 @@ import (
 	"k8s.io/kubernetes/pkg/kubelet/prober/results"
 	"k8s.io/kubernetes/pkg/kubelet/status"
 	"k8s.io/utils/clock"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 )
 
 // ProberResults stores the cumulative number of a probe by result as prometheus metrics.
@@ -69,7 +72,7 @@ var ProberDuration = metrics.NewHistogramVec(
 type Manager interface {
 	// AddPod creates new probe workers for every container probe. This should be called for every
 	// pod created.
-	AddPod(pod *v1.Pod)
+	AddPod(ctx context.Context, pod *v1.Pod)
 
 	// StopLivenessAndStartup handles stopping liveness and startup probes during termination.
 	StopLivenessAndStartup(pod *v1.Pod)
@@ -109,6 +112,8 @@ type manager struct {
 	prober *prober
 
 	start time.Time
+
+	tracer trace.Tracer
 }
 
 // NewManager creates a Manager for pod probing.
@@ -118,7 +123,8 @@ func NewManager(
 	readinessManager results.Manager,
 	startupManager results.Manager,
 	runner kubecontainer.CommandRunner,
-	recorder record.EventRecorder) Manager {
+	recorder record.EventRecorder,
+	tracer trace.Tracer) Manager {
 
 	prober := newProber(runner, recorder)
 	return &manager{
@@ -129,6 +135,7 @@ func NewManager(
 		startupManager:   startupManager,
 		workers:          make(map[probeKey]*worker),
 		start:            clock.RealClock{}.Now(),
+		tracer:           tracer,
 	}
 }
 
@@ -166,7 +173,12 @@ func (t probeType) String() string {
 	}
 }
 
-func (m *manager) AddPod(pod *v1.Pod) {
+func (m *manager) AddPod(ctx context.Context, pod *v1.Pod) {
+	ctx, span := m.tracer.Start(ctx, "pkg.kubelet.prober.prober_manager/AddPod")
+	defer span.End()
+	span.SetAttributes(attribute.String("pod.name", pod.Name))
+	span.SetAttributes(attribute.String("pod.namespace", pod.Namespace))
+
 	m.workerLock.Lock()
 	defer m.workerLock.Unlock()
 
