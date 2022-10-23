@@ -615,6 +615,7 @@ func NewMainKubelet(kubeCfg *kubeletconfiginternal.KubeletConfiguration,
 		kubeDeps.OSInterface,
 		kubeCfg.ContainerLogMaxSize,
 		int(kubeCfg.ContainerLogMaxFiles),
+		tracer,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize container log manager: %v", err)
@@ -707,12 +708,13 @@ func NewMainKubelet(kubeCfg *kubeletconfiginternal.KubeletConfiguration,
 	klet.pleg = pleg.NewGenericPLEG(klet.containerRuntime, plegChannelCapacity, plegRelistPeriod, klet.podCache, clock.RealClock{})
 	klet.runtimeState = newRuntimeState(maxWaitForContainerRuntime)
 	klet.runtimeState.addHealthCheck("PLEG", klet.pleg.Healthy)
-	if _, err := klet.updatePodCIDR(kubeCfg.PodCIDR); err != nil {
+	ctx := context.TODO()
+	if _, err := klet.updatePodCIDR(ctx, kubeCfg.PodCIDR); err != nil {
 		klog.ErrorS(err, "Pod CIDR update failed")
 	}
 
 	// setup containerGC
-	containerGC, err := kubecontainer.NewContainerGC(klet.containerRuntime, containerGCPolicy, klet.sourcesReady)
+	containerGC, err := kubecontainer.NewContainerGC(klet.containerRuntime, containerGCPolicy, klet.sourcesReady, tracer)
 	if err != nil {
 		return nil, err
 	}
@@ -720,7 +722,7 @@ func NewMainKubelet(kubeCfg *kubeletconfiginternal.KubeletConfiguration,
 	klet.containerDeletor = newPodContainerDeletor(klet.containerRuntime, integer.IntMax(containerGCPolicy.MaxPerPodContainer, minDeadContainerInPod), tracer)
 
 	// setup imageManager
-	imageManager, err := images.NewImageGCManager(klet.containerRuntime, klet.StatsProvider, kubeDeps.Recorder, nodeRef, imageGCPolicy, crOptions.PodSandboxImage)
+	imageManager, err := images.NewImageGCManager(klet.containerRuntime, klet.StatsProvider, kubeDeps.Recorder, nodeRef, imageGCPolicy, crOptions.PodSandboxImage, tracer)
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize image manager: %v", err)
 	}
@@ -1860,7 +1862,7 @@ func (kl *Kubelet) syncTerminatingPod(ctx context.Context, pod *v1.Pod, podStatu
 	// catch race conditions introduced by callers updating pod status out of order.
 	// TODO: have KillPod return the terminal status of stopped containers and write that into the
 	//  cache immediately
-	podStatus, err := kl.containerRuntime.GetPodStatus(pod.UID, pod.Name, pod.Namespace)
+	podStatus, err := kl.containerRuntime.GetPodStatus(ctx, pod.UID, pod.Name, pod.Namespace)
 	if err != nil {
 		klog.ErrorS(err, "Unable to read pod status prior to final pod termination", "pod", klog.KObj(pod), "podUID", pod.UID)
 		return err
@@ -2529,8 +2531,9 @@ func (kl *Kubelet) fastStatusUpdateOnce() {
 			continue
 		}
 		if len(node.Spec.PodCIDRs) != 0 {
+			ctx := context.TODO()
 			podCIDRs := strings.Join(node.Spec.PodCIDRs, ",")
-			if _, err := kl.updatePodCIDR(podCIDRs); err != nil {
+			if _, err := kl.updatePodCIDR(ctx, podCIDRs); err != nil {
 				klog.ErrorS(err, "Pod CIDR update failed", "CIDR", podCIDRs)
 				continue
 			}

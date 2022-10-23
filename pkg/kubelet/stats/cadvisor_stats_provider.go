@@ -237,11 +237,12 @@ func (p *cadvisorStatsProvider) ListPodCPUAndMemoryStats() ([]statsapi.PodStats,
 
 // ImageFsStats returns the stats of the filesystem for storing images.
 func (p *cadvisorStatsProvider) ImageFsStats() (*statsapi.FsStats, error) {
+	ctx := context.TODO()
 	imageFsInfo, err := p.cadvisor.ImagesFsInfo()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get imageFs info: %v", err)
 	}
-	imageStats, err := p.imageService.ImageStats()
+	imageStats, err := p.imageService.ImageStats(ctx)
 	if err != nil || imageStats == nil {
 		return nil, fmt.Errorf("failed to get image stats: %v", err)
 	}

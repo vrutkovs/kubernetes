@@ -17,6 +17,7 @@ limitations under the License.
 package logs
 
 import (
+	"context"
 	"compress/gzip"
 	"fmt"
 	"io"
@@ -35,6 +36,9 @@ import (
 	runtimeapi "k8s.io/cri-api/pkg/apis/runtime/v1"
 	kubecontainer "k8s.io/kubernetes/pkg/kubelet/container"
 	"k8s.io/utils/clock"
+
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 )
 
 const (
@@ -58,7 +62,7 @@ type ContainerLogManager interface {
 	// Start container log manager.
 	Start()
 	// Clean removes all logs of specified container.
-	Clean(containerID string) error
+	Clean(ctx context.Context, containerID string) error
 }
 
 // LogRotatePolicy is a policy for container log rotation. The policy applies to all
@@ -147,10 +151,11 @@ type containerLogManager struct {
 	policy         LogRotatePolicy
 	clock          clock.Clock
 	mutex          sync.Mutex
+	tracer         trace.Tracer
 }
 
 // NewContainerLogManager creates a new container log manager.
-func NewContainerLogManager(runtimeService internalapi.RuntimeService, osInterface kubecontainer.OSInterface, maxSize string, maxFiles int) (ContainerLogManager, error) {
+func NewContainerLogManager(runtimeService internalapi.RuntimeService, osInterface kubecontainer.OSInterface, maxSize string, maxFiles int, tracer trace.Tracer) (ContainerLogManager, error) {
 	if maxFiles <= 1 {
 		return nil, fmt.Errorf("invalid MaxFiles %d, must be > 1", maxFiles)
 	}
@@ -172,6 +177,7 @@ func NewContainerLogManager(runtimeService internalapi.RuntimeService, osInterfa
 		},
 		clock: clock.RealClock{},
 		mutex: sync.Mutex{},
+		tracer: tracer,
 	}, nil
 }
 
@@ -186,10 +192,13 @@ func (c *containerLogManager) Start() {
 }
 
 // Clean removes all logs of specified container (including rotated one).
-func (c *containerLogManager) Clean(containerID string) error {
+func (c *containerLogManager) Clean(ctx context.Context, containerID string) error {
+	ctx, span := c.tracer.Start(ctx, "pkg.kubelet.logs.container_log_manager/Clean")
+	defer span.End()
+	span.SetAttributes(attribute.String("containerID", containerID))
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
-	resp, err := c.runtimeService.ContainerStatus(containerID, false)
+	resp, err := c.runtimeService.ContainerStatus(ctx, containerID, false)
 	if err != nil {
 		return fmt.Errorf("failed to get container status %q: %v", containerID, err)
 	}
@@ -214,8 +223,9 @@ func (c *containerLogManager) Clean(containerID string) error {
 func (c *containerLogManager) rotateLogs() error {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
+	ctx := context.TODO()
 	// TODO(#59998): Use kubelet pod cache.
-	containers, err := c.runtimeService.ListContainers(&runtimeapi.ContainerFilter{})
+	containers, err := c.runtimeService.ListContainers(ctx, &runtimeapi.ContainerFilter{})
 	if err != nil {
 		return fmt.Errorf("failed to list containers: %v", err)
 	}
@@ -228,7 +238,7 @@ func (c *containerLogManager) rotateLogs() error {
 		}
 		id := container.GetId()
 		// Note that we should not block log rotate for an error of a single container.
-		resp, err := c.runtimeService.ContainerStatus(id, false)
+		resp, err := c.runtimeService.ContainerStatus(ctx, id, false)
 		if err != nil {
 			klog.ErrorS(err, "Failed to get container status", "containerID", id)
 			continue

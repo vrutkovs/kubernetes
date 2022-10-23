@@ -1921,7 +1921,7 @@ func (kl *Kubelet) findContainer(podFullName string, podUID types.UID, container
 }
 
 // RunInContainer runs a command in a container, returns the combined stdout, stderr as an array of bytes
-func (kl *Kubelet) RunInContainer(podFullName string, podUID types.UID, containerName string, cmd []string) ([]byte, error) {
+func (kl *Kubelet) RunInContainer(ctx context.Context, podFullName string, podUID types.UID, containerName string, cmd []string) ([]byte, error) {
 	container, err := kl.findContainer(podFullName, podUID, containerName)
 	if err != nil {
 		return nil, err
@@ -1930,7 +1930,7 @@ func (kl *Kubelet) RunInContainer(podFullName string, podUID types.UID, containe
 		return nil, fmt.Errorf("container not found (%q)", containerName)
 	}
 	// TODO(tallclair): Pass a proper timeout value.
-	return kl.runner.RunInContainer(container.ID, cmd, 0)
+	return kl.runner.RunInContainer(ctx, container.ID, cmd, 0)
 }
 
 // GetExec gets the URL the exec will be served from, or nil if the Kubelet will serve it.
@@ -1972,8 +1972,7 @@ func (kl *Kubelet) GetAttach(podFullName string, podUID types.UID, containerName
 }
 
 // GetPortForward gets the URL the port-forward will be served from, or nil if the Kubelet will serve it.
-func (kl *Kubelet) GetPortForward(podName, podNamespace string, podUID types.UID, portForwardOpts portforward.V4Options) (*url.URL, error) {
-	ctx := context.TODO()
+func (kl *Kubelet) GetPortForward(ctx context.Context, podName, podNamespace string, podUID types.UID, portForwardOpts portforward.V4Options) (*url.URL, error) {
 	pods, err := kl.containerRuntime.GetPods(ctx, false)
 	if err != nil {
 		return nil, err
@@ -1987,7 +1986,7 @@ func (kl *Kubelet) GetPortForward(podName, podNamespace string, podUID types.UID
 		return nil, fmt.Errorf("pod not found (%q)", podFullName)
 	}
 
-	return kl.streamingRuntime.GetPortForward(podName, podNamespace, podUID, portForwardOpts.Ports)
+	return kl.streamingRuntime.GetPortForward(ctx, podName, podNamespace, podUID, portForwardOpts.Ports)
 }
 
 // cleanupOrphanedPodCgroups removes cgroups that should no longer exist.

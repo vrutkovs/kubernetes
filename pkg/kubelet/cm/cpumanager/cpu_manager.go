@@ -44,7 +44,7 @@ import (
 type ActivePodsFunc func() []*v1.Pod
 
 type runtimeService interface {
-	UpdateContainerResources(id string, resources *runtimeapi.ContainerResources) error
+	UpdateContainerResources(ctx context.Context, id string, resources *runtimeapi.ContainerResources) error
 }
 
 type policyName string
@@ -522,7 +522,9 @@ func (m *manager) updateContainerCPUSet(containerID string, cpus cpuset.CPUSet) 
 	// helpers_linux.go similar to what exists for pods.
 	// It would be better to pass the full container resources here instead of
 	// this patch-like partial resources.
+	ctx := context.TODO()
 	return m.containerRuntime.UpdateContainerResources(
+		ctx,
 		containerID,
 		&runtimeapi.ContainerResources{
 			Linux: &runtimeapi.LinuxContainerResources{

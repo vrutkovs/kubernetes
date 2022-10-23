@@ -249,7 +249,7 @@ func (g *GenericPLEG) relist() {
 			// inspecting the pod and getting the PodStatus to update the cache
 			// serially may take a while. We should be aware of this and
 			// parallelize if needed.
-			if err := g.updateCache(pod, pid); err != nil {
+			if err := g.updateCache(ctx, pod, pid); err != nil {
 				// Rely on updateCache calling GetPodStatus to log the actual error.
 				klog.V(4).ErrorS(err, "PLEG: Ignoring events for pod", "pod", klog.KRef(pod.Namespace, pod.Name))
 
@@ -307,7 +307,7 @@ func (g *GenericPLEG) relist() {
 		if len(g.podsToReinspect) > 0 {
 			klog.V(5).InfoS("GenericPLEG: Reinspecting pods that previously failed inspection")
 			for pid, pod := range g.podsToReinspect {
-				if err := g.updateCache(pod, pid); err != nil {
+				if err := g.updateCache(ctx, pod, pid); err != nil {
 					// Rely on updateCache calling GetPodStatus to log the actual error.
 					klog.V(5).ErrorS(err, "PLEG: pod failed reinspection", "pod", klog.KRef(pod.Namespace, pod.Name))
 					needsReinspection[pid] = pod
@@ -390,7 +390,7 @@ func (g *GenericPLEG) getPodIPs(pid types.UID, status *kubecontainer.PodStatus) 
 	return oldStatus.IPs
 }
 
-func (g *GenericPLEG) updateCache(pod *kubecontainer.Pod, pid types.UID) error {
+func (g *GenericPLEG) updateCache(ctx context.Context, pod *kubecontainer.Pod, pid types.UID) error {
 	if pod == nil {
 		// The pod is missing in the current relist. This means that
 		// the pod has no visible (active or inactive) containers.
@@ -402,7 +402,7 @@ func (g *GenericPLEG) updateCache(pod *kubecontainer.Pod, pid types.UID) error {
 	// TODO: Consider adding a new runtime method
 	// GetPodStatus(pod *kubecontainer.Pod) so that Docker can avoid listing
 	// all containers again.
-	status, err := g.runtime.GetPodStatus(pod.ID, pod.Name, pod.Namespace)
+	status, err := g.runtime.GetPodStatus(ctx, pod.ID, pod.Name, pod.Namespace)
 	if err != nil {
 		// nolint:logcheck // Not using the result of klog.V inside the
 		// if branch is okay, we just use it to determine whether the

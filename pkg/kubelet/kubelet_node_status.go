@@ -501,6 +501,7 @@ func (kl *Kubelet) tryUpdateNodeStatus(tryNumber int) error {
 	// apiserver cache (the data might be slightly delayed but it doesn't
 	// seem to cause more conflict - the delays are pretty small).
 	// If it result in a conflict, all retries are served directly from etcd.
+	ctx := context.TODO()
 	opts := metav1.GetOptions{}
 	if tryNumber == 0 {
 		util.FromApiserverCache(&opts)
@@ -521,7 +522,7 @@ func (kl *Kubelet) tryUpdateNodeStatus(tryNumber int) error {
 		// node.Spec.PodCIDR being non-empty. We also need to know if pod CIDR is
 		// actually changed.
 		podCIDRs := strings.Join(node.Spec.PodCIDRs, ",")
-		if podCIDRChanged, err = kl.updatePodCIDR(podCIDRs); err != nil {
+		if podCIDRChanged, err = kl.updatePodCIDR(ctx, podCIDRs); err != nil {
 			klog.ErrorS(err, "Error updating pod CIDR")
 		}
 	}

@@ -36,6 +36,8 @@ import (
 	"k8s.io/kubernetes/pkg/kubelet/container"
 	"k8s.io/kubernetes/pkg/kubelet/events"
 	"k8s.io/kubernetes/pkg/kubelet/util/sliceutils"
+
+	"go.opentelemetry.io/otel/trace"
 )
 
 // StatsProvider is an interface for fetching stats used during image garbage
@@ -104,6 +106,8 @@ type realImageGCManager struct {
 
 	// sandbox image exempted from GC
 	sandboxImage string
+
+	tracer trace.Tracer
 }
 
 // imageCache caches latest result of ListImages.
@@ -153,7 +157,7 @@ type imageRecord struct {
 }
 
 // NewImageGCManager instantiates a new ImageGCManager object.
-func NewImageGCManager(runtime container.Runtime, statsProvider StatsProvider, recorder record.EventRecorder, nodeRef *v1.ObjectReference, policy ImageGCPolicy, sandboxImage string) (ImageGCManager, error) {
+func NewImageGCManager(runtime container.Runtime, statsProvider StatsProvider, recorder record.EventRecorder, nodeRef *v1.ObjectReference, policy ImageGCPolicy, sandboxImage string, tracer trace.Tracer) (ImageGCManager, error) {
 	// Validate policy.
 	if policy.HighThresholdPercent < 0 || policy.HighThresholdPercent > 100 {
 		return nil, fmt.Errorf("invalid HighThresholdPercent %d, must be in range [0-100]", policy.HighThresholdPercent)
@@ -173,19 +177,22 @@ func NewImageGCManager(runtime container.Runtime, statsProvider StatsProvider, r
 		nodeRef:       nodeRef,
 		initialized:   false,
 		sandboxImage:  sandboxImage,
+		tracer:      tracer,
 	}
 
 	return im, nil
 }
 
 func (im *realImageGCManager) Start() {
+	ctx, span := im.tracer.Start(context.TODO(), "pkg.kubelet.images.image_gc_manager/Start")
+	defer span.End()
 	go wait.Until(func() {
 		// Initial detection make detected time "unknown" in the past.
 		var ts time.Time
 		if im.initialized {
 			ts = time.Now()
 		}
-		_, err := im.detectImages(ts)
+		_, err := im.detectImages(ctx, ts)
 		if err != nil {
 			klog.InfoS("Failed to monitor images", "err", err)
 		} else {
@@ -195,7 +202,7 @@ func (im *realImageGCManager) Start() {
 
 	// Start a goroutine periodically updates image cache.
 	go wait.Until(func() {
-		images, err := im.runtime.ListImages()
+		images, err := im.runtime.ListImages(ctx)
 		if err != nil {
 			klog.InfoS("Failed to update image list", "err", err)
 		} else {
@@ -210,17 +217,16 @@ func (im *realImageGCManager) GetImageList() ([]container.Image, error) {
 	return im.imageCache.get(), nil
 }
 
-func (im *realImageGCManager) detectImages(detectTime time.Time) (sets.String, error) {
-	ctx := context.TODO()
+func (im *realImageGCManager) detectImages(ctx context.Context, detectTime time.Time) (sets.String, error) {
 	imagesInUse := sets.NewString()
 
 	// Always consider the container runtime pod sandbox image in use
-	imageRef, err := im.runtime.GetImageRef(container.ImageSpec{Image: im.sandboxImage})
+	imageRef, err := im.runtime.GetImageRef(ctx, container.ImageSpec{Image: im.sandboxImage})
 	if err == nil && imageRef != "" {
 		imagesInUse.Insert(imageRef)
 	}
 
-	images, err := im.runtime.ListImages()
+	images, err := im.runtime.ListImages(ctx)
 	if err != nil {
 		return imagesInUse, err
 	}
@@ -279,6 +285,8 @@ func (im *realImageGCManager) detectImages(detectTime time.Time) (sets.String, e
 }
 
 func (im *realImageGCManager) GarbageCollect() error {
+	ctx, span := im.tracer.Start(context.TODO(), "pkg.kubelet.images.image_gc_manager/GarbageCollect")
+	defer span.End()
 	// Get disk usage on disk holding images.
 	fsStats, err := im.statsProvider.ImageFsStats()
 	if err != nil {
@@ -310,7 +318,7 @@ func (im *realImageGCManager) GarbageCollect() error {
 	if usagePercent >= im.policy.HighThresholdPercent {
 		amountToFree := capacity*int64(100-im.policy.LowThresholdPercent)/100 - available
 		klog.InfoS("Disk usage on image filesystem is over the high threshold, trying to free bytes down to the low threshold", "usage", usagePercent, "highThreshold", im.policy.HighThresholdPercent, "amountToFree", amountToFree, "lowThreshold", im.policy.LowThresholdPercent)
-		freed, err := im.freeSpace(amountToFree, time.Now())
+		freed, err := im.freeSpace(ctx, amountToFree, time.Now())
 		if err != nil {
 			return err
 		}
@@ -326,8 +334,10 @@ func (im *realImageGCManager) GarbageCollect() error {
 }
 
 func (im *realImageGCManager) DeleteUnusedImages() error {
+	ctx, span := im.tracer.Start(context.TODO(), "pkg.kubelet.images.image_gc_manager/DeleteUnusedImages")
+	defer span.End()
 	klog.InfoS("Attempting to delete unused images")
-	_, err := im.freeSpace(math.MaxInt64, time.Now())
+	_, err := im.freeSpace(ctx, math.MaxInt64, time.Now())
 	return err
 }
 
@@ -337,8 +347,8 @@ func (im *realImageGCManager) DeleteUnusedImages() error {
 // bytes freed is always returned.
 // Note that error may be nil and the number of bytes free may be less
 // than bytesToFree.
-func (im *realImageGCManager) freeSpace(bytesToFree int64, freeTime time.Time) (int64, error) {
-	imagesInUse, err := im.detectImages(freeTime)
+func (im *realImageGCManager) freeSpace(ctx context.Context, bytesToFree int64, freeTime time.Time) (int64, error) {
+	imagesInUse, err := im.detectImages(ctx, freeTime)
 	if err != nil {
 		return 0, err
 	}
@@ -387,7 +397,7 @@ func (im *realImageGCManager) freeSpace(bytesToFree int64, freeTime time.Time) (
 
 		// Remove image. Continue despite errors.
 		klog.InfoS("Removing image to free bytes", "imageID", image.id, "size", image.size)
-		err := im.runtime.RemoveImage(container.ImageSpec{Image: image.id})
+		err := im.runtime.RemoveImage(ctx, container.ImageSpec{Image: image.id})
 		if err != nil {
 			deletionErrors = append(deletionErrors, err)
 			continue

@@ -234,7 +234,7 @@ type HostInterface interface {
 	GetVersionInfo() (*cadvisorapi.VersionInfo, error)
 	GetCachedMachineInfo() (*cadvisorapi.MachineInfo, error)
 	GetRunningPods() ([]*v1.Pod, error)
-	RunInContainer(name string, uid types.UID, container string, cmd []string) ([]byte, error)
+	RunInContainer(ctx context.Context, name string, uid types.UID, container string, cmd []string) ([]byte, error)
 	CheckpointContainer(podUID types.UID, podFullName, containerName string, options *runtimeapi.CheckpointContainerRequest) error
 	GetKubeletContainerLogs(ctx context.Context, podFullName, containerName string, logOptions *v1.PodLogOptions, stdout, stderr io.Writer) error
 	ServeLogs(w http.ResponseWriter, req *http.Request)
@@ -243,7 +243,7 @@ type HostInterface interface {
 	LatestLoopEntryTime() time.Time
 	GetExec(podFullName string, podUID types.UID, containerName string, cmd []string, streamOpts remotecommandserver.Options) (*url.URL, error)
 	GetAttach(podFullName string, podUID types.UID, containerName string, streamOpts remotecommandserver.Options) (*url.URL, error)
-	GetPortForward(podName, podNamespace string, podUID types.UID, portForwardOpts portforward.V4Options) (*url.URL, error)
+	GetPortForward(ctx context.Context, podName, podNamespace string, podUID types.UID, portForwardOpts portforward.V4Options) (*url.URL, error)
 }
 
 // NewServer initializes and configures a kubelet.Server object to handle HTTP requests.
@@ -854,8 +854,9 @@ func (s *Server) getRun(request *restful.Request, response *restful.Response) {
 	}
 
 	// For legacy reasons, run uses different query param than exec.
+	ctx := context.TODO()
 	params.cmd = strings.Split(request.QueryParameter("cmd"), " ")
-	data, err := s.host.RunInContainer(kubecontainer.GetPodFullName(pod), params.podUID, params.containerName, params.cmd)
+	data, err := s.host.RunInContainer(ctx, kubecontainer.GetPodFullName(pod), params.podUID, params.containerName, params.cmd)
 	if err != nil {
 		response.WriteError(http.StatusInternalServerError, err)
 		return
@@ -898,7 +899,8 @@ func (s *Server) getPortForward(request *restful.Request, response *restful.Resp
 		return
 	}
 
-	url, err := s.host.GetPortForward(pod.Name, pod.Namespace, pod.UID, *portForwardOptions)
+	ctx := context.TODO()
+	url, err := s.host.GetPortForward(ctx, pod.Name, pod.Namespace, pod.UID, *portForwardOptions)
 	if err != nil {
 		streaming.WriteError(err, response.ResponseWriter)
 		return

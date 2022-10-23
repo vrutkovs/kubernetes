@@ -17,6 +17,7 @@ limitations under the License.
 package lifecycle
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"net/http"
@@ -44,7 +45,7 @@ type handlerRunner struct {
 }
 
 type podStatusProvider interface {
-	GetPodStatus(uid types.UID, name, namespace string) (*kubecontainer.PodStatus, error)
+	GetPodStatus(ctx context.Context, uid types.UID, name, namespace string) (*kubecontainer.PodStatus, error)
 }
 
 // NewHandlerRunner returns a configured lifecycle handler for a container.
@@ -61,7 +62,8 @@ func (hr *handlerRunner) Run(containerID kubecontainer.ContainerID, pod *v1.Pod,
 	case handler.Exec != nil:
 		var msg string
 		// TODO(tallclair): Pass a proper timeout value.
-		output, err := hr.commandRunner.RunInContainer(containerID, handler.Exec.Command, 0)
+		ctx := context.TODO()
+		output, err := hr.commandRunner.RunInContainer(ctx, containerID, handler.Exec.Command, 0)
 		if err != nil {
 			msg = fmt.Sprintf("Exec lifecycle hook (%v) for Container %q in Pod %q failed - error: %v, message: %q", handler.Exec.Command, container.Name, format.Pod(pod), err, string(output))
 			klog.V(1).ErrorS(err, "Exec lifecycle hook for Container in Pod failed", "execCommand", handler.Exec.Command, "containerName", container.Name, "pod", klog.KObj(pod), "message", string(output))
@@ -106,9 +108,10 @@ func resolvePort(portReference intstr.IntOrString, container *v1.Container) (int
 }
 
 func (hr *handlerRunner) runHTTPHandler(pod *v1.Pod, container *v1.Container, handler *v1.LifecycleHandler) (string, error) {
+	ctx := context.TODO()
 	host := handler.HTTPGet.Host
 	if len(host) == 0 {
-		status, err := hr.containerManager.GetPodStatus(pod.UID, pod.Name, pod.Namespace)
+		status, err := hr.containerManager.GetPodStatus(ctx, pod.UID, pod.Name, pod.Namespace)
 		if err != nil {
 			klog.ErrorS(err, "Unable to get pod info, event handlers may be invalid.", "pod", klog.KObj(pod))
 			return "", err

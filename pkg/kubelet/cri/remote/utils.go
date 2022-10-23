@@ -33,9 +33,19 @@ func getContextWithTimeout(timeout time.Duration) (context.Context, context.Canc
 	return context.WithTimeout(context.Background(), timeout)
 }
 
+// getContextCopyWithTimeout returns a copy of the context with timeout.
+func getContextCopyWithTimeout(ctx context.Context, timeout time.Duration) (context.Context, context.CancelFunc) {
+	return context.WithTimeout(ctx, timeout)
+}
+
 // getContextWithCancel returns a context with cancel.
 func getContextWithCancel() (context.Context, context.CancelFunc) {
 	return context.WithCancel(context.Background())
+}
+
+// getContextCopyWithCancel returns a context with cancel.
+func getContextCopyWithCancel(ctx context.Context) (context.Context, context.CancelFunc) {
+	return context.WithCancel(ctx)
 }
 
 // verifySandboxStatus verified whether all required fields are set in PodSandboxStatus.

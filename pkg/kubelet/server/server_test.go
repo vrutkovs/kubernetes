@@ -247,12 +247,12 @@ func (fk *fakeKubelet) GetAttach(podFullName string, podUID types.UID, container
 	return url.Parse(resp.GetUrl())
 }
 
-func (fk *fakeKubelet) GetPortForward(podName, podNamespace string, podUID types.UID, portForwardOpts portforward.V4Options) (*url.URL, error) {
+func (fk *fakeKubelet) GetPortForward(ctx context.Context, podName, podNamespace string, podUID types.UID, portForwardOpts portforward.V4Options) (*url.URL, error) {
 	if fk.getPortForwardCheck != nil {
 		fk.getPortForwardCheck(podName, podNamespace, podUID, portForwardOpts)
 	}
 	// Always use testPodSandboxID
-	resp, err := fk.streamingRuntime.GetPortForward(&runtimeapi.PortForwardRequest{
+	resp, err := fk.streamingRuntime.GetPortForward(ctx, &runtimeapi.PortForwardRequest{
 		PodSandboxId: testPodSandboxID,
 		Port:         portForwardOpts.Ports,
 	})

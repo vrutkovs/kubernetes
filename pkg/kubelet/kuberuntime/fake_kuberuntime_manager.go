@@ -85,7 +85,7 @@ func (f *fakePodStateProvider) ShouldPodContentBeRemoved(uid types.UID) bool {
 
 func newFakeKubeRuntimeManager(runtimeService internalapi.RuntimeService, imageService internalapi.ImageManagerService, machineInfo *cadvisorapi.MachineInfo, osInterface kubecontainer.OSInterface, runtimeHelper kubecontainer.RuntimeHelper, keyring credentialprovider.DockerKeyring) (*kubeGenericRuntimeManager, error) {
 	recorder := &record.FakeRecorder{}
-	logManager, err := logs.NewContainerLogManager(runtimeService, osInterface, "1", 2)
+	logManager, err := logs.NewContainerLogManager(runtimeService, osInterface, "1", 2, nil)
 	if err != nil {
 		return nil, err
 	}
