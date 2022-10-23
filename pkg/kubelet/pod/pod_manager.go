@@ -30,6 +30,7 @@ import (
 	kubetypes "k8s.io/kubernetes/pkg/kubelet/types"
 
 	"go.opentelemetry.io/otel/trace"
+	"go.opentelemetry.io/otel/attribute"
 )
 
 // Manager stores and manages access to pods, maintaining the mappings
@@ -156,12 +157,18 @@ func (pm *basicManager) SetPods(newPods []*v1.Pod) {
 func (pm *basicManager) AddPod(ctx context.Context, pod *v1.Pod) {
 	ctx, span := pm.tracer.Start(ctx, "pkg.kubelet.pod.pod_manager/AddPod")
 	defer span.End()
+	span.SetAttributes(attribute.String("pod.uid", string(pod.UID)))
+	span.SetAttributes(attribute.String("pod.name", pod.Name))
+	span.SetAttributes(attribute.String("pod.namespace", pod.Namespace))
 	pm.UpdatePod(ctx, pod)
 }
 
 func (pm *basicManager) UpdatePod(ctx context.Context, pod *v1.Pod) {
-	ctx, span := pm.tracer.Start(ctx, "pkg.kubelet.pod.pod_manager/UpdatePods")
+	ctx, span := pm.tracer.Start(ctx, "pkg.kubelet.pod.pod_manager/UpdatePod")
 	defer span.End()
+	span.SetAttributes(attribute.String("pod.uid", string(pod.UID)))
+	span.SetAttributes(attribute.String("pod.name", pod.Name))
+	span.SetAttributes(attribute.String("pod.namespace", pod.Namespace))
 	pm.lock.Lock()
 	defer pm.lock.Unlock()
 	pm.updatePodsInternal(pod)
@@ -212,6 +219,9 @@ func (pm *basicManager) updatePodsInternal(pods ...*v1.Pod) {
 func (pm *basicManager) DeletePod(ctx context.Context, pod *v1.Pod) {
 	ctx, span := pm.tracer.Start(ctx, "pkg.kubelet.pod.pod_manager/DeletePod")
 	defer span.End()
+	span.SetAttributes(attribute.String("pod.uid", string(pod.UID)))
+	span.SetAttributes(attribute.String("pod.name", pod.Name))
+	span.SetAttributes(attribute.String("pod.namespace", pod.Namespace))
 	updateMetrics(pod, nil)
 	pm.lock.Lock()
 	defer pm.lock.Unlock()

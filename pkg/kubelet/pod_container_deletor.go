@@ -18,12 +18,14 @@ package kubelet
 
 import (
 	"context"
+	"fmt"
 	"sort"
 
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/klog/v2"
 	kubecontainer "k8s.io/kubernetes/pkg/kubelet/container"
 	"go.opentelemetry.io/otel/trace"
+	"go.opentelemetry.io/otel/attribute"
 )
 
 const (
@@ -106,6 +108,7 @@ func getContainersToDeleteInPod(filterContainerID string, podStatus *kubecontain
 // deleteContainersInPod issues container deletion requests for containers selected by getContainersToDeleteInPod.
 func (p *podContainerDeletor) deleteContainersInPod(ctx context.Context, filterContainerID string, podStatus *kubecontainer.PodStatus, removeAll bool) {
 	ctx, span := p.tracer.Start(ctx, "pkg.kubelet.pod_container_deletor/deleteContainersInPod")
+	span.SetAttributes(attribute.String("pod.status", fmt.Sprintf("%v", podStatus)))
 	defer span.End()
 	containersToKeep := p.containersToKeep
 	if removeAll {
