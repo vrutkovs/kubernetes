@@ -83,7 +83,7 @@ type Runtime interface {
 	// GetPods returns a list of containers grouped by pods. The boolean parameter
 	// specifies whether the runtime returns all containers including those already
 	// exited and dead containers (used for garbage collection).
-	GetPods(all bool) ([]*Pod, error)
+	GetPods(ctx context.Context, all bool) ([]*Pod, error)
 	// GarbageCollect removes dead containers using the specified container gc policy
 	// If allSourcesReady is not true, it means that kubelet doesn't have the
 	// complete list of pods from all available sources (e.g., apiserver, http,

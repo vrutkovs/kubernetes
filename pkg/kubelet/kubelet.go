@@ -593,7 +593,7 @@ func NewMainKubelet(kubeCfg *kubeletconfiginternal.KubeletConfiguration,
 
 	// podManager is also responsible for keeping secretManager and configMapManager contents up-to-date.
 	mirrorPodClient := kubepod.NewBasicMirrorClient(klet.kubeClient, string(nodeName), nodeLister)
-	klet.podManager = kubepod.NewBasicPodManager(mirrorPodClient, secretManager, configMapManager)
+	klet.podManager = kubepod.NewBasicPodManager(mirrorPodClient, secretManager, configMapManager, tracer)
 
 	klet.statusManager = status.NewManager(klet.kubeClient, klet.podManager, klet, tracer)
 
@@ -717,7 +717,7 @@ func NewMainKubelet(kubeCfg *kubeletconfiginternal.KubeletConfiguration,
 		return nil, err
 	}
 	klet.containerGC = containerGC
-	klet.containerDeletor = newPodContainerDeletor(klet.containerRuntime, integer.IntMax(containerGCPolicy.MaxPerPodContainer, minDeadContainerInPod))
+	klet.containerDeletor = newPodContainerDeletor(klet.containerRuntime, integer.IntMax(containerGCPolicy.MaxPerPodContainer, minDeadContainerInPod), tracer)
 
 	// setup imageManager
 	imageManager, err := images.NewImageGCManager(klet.containerRuntime, klet.StatsProvider, kubeDeps.Recorder, nodeRef, imageGCPolicy, crOptions.PodSandboxImage)
@@ -1986,7 +1986,11 @@ func (kl *Kubelet) getPodsToSync() []*v1.Pod {
 //
 // deletePod returns an error if not all sources are ready or the pod is not
 // found in the runtime cache.
-func (kl *Kubelet) deletePod(pod *v1.Pod) error {
+func (kl *Kubelet) deletePod(ctx context.Context, pod *v1.Pod) error {
+	ctx, span := kl.tracer.Start(ctx, "pkg.kubelet.kubelet/deletePod")
+	defer span.End()
+	span.SetAttributes(attribute.String("pod.name", pod.Name))
+	span.SetAttributes(attribute.String("pod.namespace", pod.Namespace))
 	if pod == nil {
 		return fmt.Errorf("deletePod does not allow nil pod")
 	}
@@ -1996,7 +2000,7 @@ func (kl *Kubelet) deletePod(pod *v1.Pod) error {
 		return fmt.Errorf("skipping delete because sources aren't ready yet")
 	}
 	klog.V(3).InfoS("Pod has been deleted and must be killed", "pod", klog.KObj(pod), "podUID", pod.UID)
-	kl.podWorkers.UpdatePod(UpdatePodOptions{
+	kl.podWorkers.UpdatePod(ctx, UpdatePodOptions{
 		Pod:        pod,
 		UpdateType: kubetypes.SyncPodKill,
 	})
@@ -2265,9 +2269,13 @@ func handleProbeSync(kl *Kubelet, update proberesults.Update, handler SyncHandle
 
 // dispatchWork starts the asynchronous sync of the pod in a pod worker.
 // If the pod has completed termination, dispatchWork will perform no action.
-func (kl *Kubelet) dispatchWork(pod *v1.Pod, syncType kubetypes.SyncPodType, mirrorPod *v1.Pod, start time.Time) {
+func (kl *Kubelet) dispatchWork(ctx context.Context, pod *v1.Pod, syncType kubetypes.SyncPodType, mirrorPod *v1.Pod, start time.Time) {
+	ctx, span := kl.tracer.Start(ctx, "pkg.kubelet.kubelet/dispatchWork")
+	defer span.End()
+	span.SetAttributes(attribute.String("pod.name", pod.Name))
+	span.SetAttributes(attribute.String("pod.namespace", pod.Namespace))
 	// Run the sync in an async worker.
-	kl.podWorkers.UpdatePod(UpdatePodOptions{
+	kl.podWorkers.UpdatePod(ctx, UpdatePodOptions{
 		Pod:        pod,
 		MirrorPod:  mirrorPod,
 		UpdateType: syncType,
@@ -2280,19 +2288,24 @@ func (kl *Kubelet) dispatchWork(pod *v1.Pod, syncType kubetypes.SyncPodType, mir
 }
 
 // TODO: handle mirror pods in a separate component (issue #17251)
-func (kl *Kubelet) handleMirrorPod(mirrorPod *v1.Pod, start time.Time) {
+func (kl *Kubelet) handleMirrorPod(ctx context.Context, mirrorPod *v1.Pod, start time.Time) {
+	ctx, span := kl.tracer.Start(ctx, "pkg.kubelet.kubelet/handleMirrorPod")
+	defer span.End()
+	span.SetAttributes(attribute.String("pod.name", mirrorPod.Name))
+	span.SetAttributes(attribute.String("pod.namespace", mirrorPod.Namespace))
 	// Mirror pod ADD/UPDATE/DELETE operations are considered an UPDATE to the
 	// corresponding static pod. Send update to the pod worker if the static
 	// pod exists.
 	if pod, ok := kl.podManager.GetPodByMirrorPod(mirrorPod); ok {
-		kl.dispatchWork(pod, kubetypes.SyncPodUpdate, mirrorPod, start)
+		kl.dispatchWork(ctx, pod, kubetypes.SyncPodUpdate, mirrorPod, start)
 	}
 }
 
 // HandlePodAdditions is the callback in SyncHandler for pods being added from
 // a config source.
 func (kl *Kubelet) HandlePodAdditions(pods []*v1.Pod) {
-	ctx := context.TODO()
+	ctx, span := kl.tracer.Start(context.TODO(), "pkg.kubelet.kubelet/HandlePodAdditions")
+	defer span.End()
 	start := kl.clock.Now()
 	sort.Sort(sliceutils.PodsByCreationTime(pods))
 	for _, pod := range pods {
@@ -2301,10 +2314,10 @@ func (kl *Kubelet) HandlePodAdditions(pods []*v1.Pod) {
 		// manager as the source of truth for the desired state. If a pod does
 		// not exist in the pod manager, it means that it has been deleted in
 		// the apiserver and no action (other than cleanup) is required.
-		kl.podManager.AddPod(pod)
+		kl.podManager.AddPod(ctx, pod)
 
 		if kubetypes.IsMirrorPod(pod) {
-			kl.handleMirrorPod(pod, start)
+			kl.handleMirrorPod(ctx, pod, start)
 			continue
 		}
 
@@ -2326,38 +2339,42 @@ func (kl *Kubelet) HandlePodAdditions(pods []*v1.Pod) {
 			}
 		}
 		mirrorPod, _ := kl.podManager.GetMirrorPodByPod(pod)
-		kl.dispatchWork(pod, kubetypes.SyncPodCreate, mirrorPod, start)
+		kl.dispatchWork(ctx, pod, kubetypes.SyncPodCreate, mirrorPod, start)
 	}
 }
 
 // HandlePodUpdates is the callback in the SyncHandler interface for pods
 // being updated from a config source.
 func (kl *Kubelet) HandlePodUpdates(pods []*v1.Pod) {
+	ctx, span := kl.tracer.Start(context.TODO(), "pkg.kubelet.kubelet/HandlePodUpdates")
+	defer span.End()
 	start := kl.clock.Now()
 	for _, pod := range pods {
-		kl.podManager.UpdatePod(pod)
+		kl.podManager.UpdatePod(ctx, pod)
 		if kubetypes.IsMirrorPod(pod) {
-			kl.handleMirrorPod(pod, start)
+			kl.handleMirrorPod(ctx, pod, start)
 			continue
 		}
 		mirrorPod, _ := kl.podManager.GetMirrorPodByPod(pod)
-		kl.dispatchWork(pod, kubetypes.SyncPodUpdate, mirrorPod, start)
+		kl.dispatchWork(ctx, pod, kubetypes.SyncPodUpdate, mirrorPod, start)
 	}
 }
 
 // HandlePodRemoves is the callback in the SyncHandler interface for pods
 // being removed from a config source.
 func (kl *Kubelet) HandlePodRemoves(pods []*v1.Pod) {
+	ctx, span := kl.tracer.Start(context.TODO(), "pkg.kubelet.kubelet/HandlePodRemoves")
+	defer span.End()
 	start := kl.clock.Now()
 	for _, pod := range pods {
-		kl.podManager.DeletePod(pod)
+		kl.podManager.DeletePod(ctx, pod)
 		if kubetypes.IsMirrorPod(pod) {
-			kl.handleMirrorPod(pod, start)
+			kl.handleMirrorPod(ctx, pod, start)
 			continue
 		}
 		// Deletion is allowed to fail because the periodic cleanup routine
 		// will trigger deletion again.
-		if err := kl.deletePod(pod); err != nil {
+		if err := kl.deletePod(ctx, pod); err != nil {
 			klog.V(2).InfoS("Failed to delete pod", "pod", klog.KObj(pod), "err", err)
 		}
 	}
@@ -2366,22 +2383,24 @@ func (kl *Kubelet) HandlePodRemoves(pods []*v1.Pod) {
 // HandlePodReconcile is the callback in the SyncHandler interface for pods
 // that should be reconciled.
 func (kl *Kubelet) HandlePodReconcile(pods []*v1.Pod) {
+	ctx, span := kl.tracer.Start(context.TODO(), "pkg.kubelet.kubelet/HandlePodReconcile")
+	defer span.End()
 	start := kl.clock.Now()
 	for _, pod := range pods {
 		// Update the pod in pod manager, status manager will do periodically reconcile according
 		// to the pod manager.
-		kl.podManager.UpdatePod(pod)
+		kl.podManager.UpdatePod(ctx, pod)
 
 		// Reconcile Pod "Ready" condition if necessary. Trigger sync pod for reconciliation.
 		if status.NeedToReconcilePodReadiness(pod) {
 			mirrorPod, _ := kl.podManager.GetMirrorPodByPod(pod)
-			kl.dispatchWork(pod, kubetypes.SyncPodSync, mirrorPod, start)
+			kl.dispatchWork(ctx, pod, kubetypes.SyncPodSync, mirrorPod, start)
 		}
 
 		// After an evicted pod is synced, all dead containers in the pod can be removed.
 		if eviction.PodIsEvicted(pod.Status) {
 			if podStatus, err := kl.podCache.Get(pod.UID); err == nil {
-				kl.containerDeletor.deleteContainersInPod("", podStatus, true)
+				kl.containerDeletor.deleteContainersInPod(ctx, "", podStatus, true)
 			}
 		}
 	}
@@ -2390,10 +2409,12 @@ func (kl *Kubelet) HandlePodReconcile(pods []*v1.Pod) {
 // HandlePodSyncs is the callback in the syncHandler interface for pods
 // that should be dispatched to pod workers for sync.
 func (kl *Kubelet) HandlePodSyncs(pods []*v1.Pod) {
+	ctx, span := kl.tracer.Start(context.TODO(), "pkg.kubelet.kubelet/HandlePodReconcile")
+	defer span.End()
 	start := kl.clock.Now()
 	for _, pod := range pods {
 		mirrorPod, _ := kl.podManager.GetMirrorPodByPod(pod)
-		kl.dispatchWork(pod, kubetypes.SyncPodSync, mirrorPod, start)
+		kl.dispatchWork(ctx, pod, kubetypes.SyncPodSync, mirrorPod, start)
 	}
 }
 
@@ -2485,10 +2506,12 @@ func (kl *Kubelet) ListenAndServePodResources() {
 
 // Delete the eligible dead container instances in a pod. Depending on the configuration, the latest dead containers may be kept around.
 func (kl *Kubelet) cleanUpContainersInPod(podID types.UID, exitedContainerID string) {
+	ctx, span := kl.tracer.Start(context.TODO(), "pkg.kubelet.kubelet/cleanUpContainersInPod")
+	defer span.End()
 	if podStatus, err := kl.podCache.Get(podID); err == nil {
 		// When an evicted or deleted pod has already synced, all containers can be removed.
 		removeAll := kl.podWorkers.ShouldPodContentBeRemoved(podID)
-		kl.containerDeletor.deleteContainersInPod(exitedContainerID, podStatus, removeAll)
+		kl.containerDeletor.deleteContainersInPod(ctx, exitedContainerID, podStatus, removeAll)
 	}
 }
 

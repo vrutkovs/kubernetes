@@ -17,6 +17,7 @@ limitations under the License.
 package images
 
 import (
+	"context"
 	goerrors "errors"
 	"fmt"
 	"math"
@@ -210,6 +211,7 @@ func (im *realImageGCManager) GetImageList() ([]container.Image, error) {
 }
 
 func (im *realImageGCManager) detectImages(detectTime time.Time) (sets.String, error) {
+	ctx := context.TODO()
 	imagesInUse := sets.NewString()
 
 	// Always consider the container runtime pod sandbox image in use
@@ -222,7 +224,7 @@ func (im *realImageGCManager) detectImages(detectTime time.Time) (sets.String, e
 	if err != nil {
 		return imagesInUse, err
 	}
-	pods, err := im.runtime.GetPods(true)
+	pods, err := im.runtime.GetPods(ctx, true)
 	if err != nil {
 		return imagesInUse, err
 	}

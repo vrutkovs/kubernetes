@@ -17,6 +17,7 @@ limitations under the License.
 package kubelet
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -165,7 +166,9 @@ func (kl *Kubelet) removeOrphanedPodVolumeDirs(uid types.UID) []error {
 
 // cleanupOrphanedPodDirs removes the volumes of pods that should not be
 // running and that have no containers running.  Note that we roll up logs here since it runs in the main loop.
-func (kl *Kubelet) cleanupOrphanedPodDirs(pods []*v1.Pod, runningPods []*kubecontainer.Pod) error {
+func (kl *Kubelet) cleanupOrphanedPodDirs(ctx context.Context, pods []*v1.Pod, runningPods []*kubecontainer.Pod) error {
+	ctx, span := kl.tracer.Start(ctx, "pkg.kubelet.kubelet_volumes/cleanupOrphanedPodDirs")
+	defer span.End()
 	allPods := sets.NewString()
 	for _, pod := range pods {
 		allPods.Insert(string(pod.UID))

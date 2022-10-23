@@ -1038,7 +1038,9 @@ func (kl *Kubelet) isAdmittedPodTerminal(ctx context.Context, pod *v1.Pod) bool 
 
 // removeOrphanedPodStatuses removes obsolete entries in podStatus where
 // the pod is no longer considered bound to this node.
-func (kl *Kubelet) removeOrphanedPodStatuses(pods []*v1.Pod, mirrorPods []*v1.Pod) {
+func (kl *Kubelet) removeOrphanedPodStatuses(ctx context.Context, pods []*v1.Pod, mirrorPods []*v1.Pod) {
+	ctx, span := kl.tracer.Start(ctx, "pkg.kubelet.pod_workers/UpdatePod")
+	defer span.End()
 	podUIDs := make(map[types.UID]bool)
 	for _, pod := range pods {
 		podUIDs[pod.UID] = true
@@ -1046,13 +1048,15 @@ func (kl *Kubelet) removeOrphanedPodStatuses(pods []*v1.Pod, mirrorPods []*v1.Po
 	for _, pod := range mirrorPods {
 		podUIDs[pod.UID] = true
 	}
-	kl.statusManager.RemoveOrphanedStatuses(podUIDs)
+	kl.statusManager.RemoveOrphanedStatuses(ctx, podUIDs)
 }
 
 // deleteOrphanedMirrorPods checks whether pod killer has done with orphaned mirror pod.
 // If pod killing is done, podManager.DeleteMirrorPod() is called to delete mirror pod
 // from the API server
-func (kl *Kubelet) deleteOrphanedMirrorPods() {
+func (kl *Kubelet) deleteOrphanedMirrorPods(ctx context.Context) {
+	ctx, span := kl.tracer.Start(ctx, "pkg.kubelet.kubelet_pods/deleteOrphanedMirrorPods")
+	defer span.End()
 	mirrorPods := kl.podManager.GetOrphanedMirrorPodNames()
 	for _, podFullname := range mirrorPods {
 		if !kl.podWorkers.IsPodForMirrorPodTerminatingByFullName(podFullname) {
@@ -1077,13 +1081,12 @@ func (kl *Kubelet) HandlePodCleanups() error {
 	// in the cgroup tree prior to inspecting the set of pods in our pod manager.
 	// this ensures our view of the cgroup tree does not mistakenly observe pods
 	// that are added after the fact...
+	ctx, span := kl.tracer.Start(context.TODO(), "pkg.kubelet.kubelet_pods/HandlePodCleanups")
+	defer span.End()
 	var (
 		cgroupPods map[types.UID]cm.CgroupName
 		err        error
 	)
-	ctx := context.TODO()
-	ctx, span := kl.tracer.Start(ctx, "pkg.kubelet.kubelet_pods/HandlePodCleanups")
-	defer span.End()
 
 	if kl.cgroupsPerQOS {
 		pcm := kl.containerManager.NewPodContainerManager()
@@ -1093,7 +1096,7 @@ func (kl *Kubelet) HandlePodCleanups() error {
 		}
 	}
 
-	allPods, mirrorPods := kl.podManager.GetPodsAndMirrorPods()
+	allPods, mirrorPods := kl.podManager.GetPodsAndMirrorPods(ctx)
 	// Pod phase progresses monotonically. Once a pod has reached a final state,
 	// it should never leave regardless of the restart policy. The statuses
 	// of such pods should not be changed, and there is no need to sync them.
@@ -1107,7 +1110,7 @@ func (kl *Kubelet) HandlePodCleanups() error {
 
 	// Stop the workers for terminated pods not in the config source
 	klog.V(3).InfoS("Clean up pod workers for terminated pods")
-	workingPods := kl.podWorkers.SyncKnownPods(allPods)
+	workingPods := kl.podWorkers.SyncKnownPods(ctx, allPods)
 
 	allPodsByUID := make(map[types.UID]*v1.Pod)
 	for _, pod := range allPods {
@@ -1136,7 +1139,7 @@ func (kl *Kubelet) HandlePodCleanups() error {
 
 	// Stop probing pods that are not running
 	klog.V(3).InfoS("Clean up probes for terminated pods")
-	kl.probeManager.CleanupPods(possiblyRunningPods)
+	kl.probeManager.CleanupPods(ctx, possiblyRunningPods)
 
 	// Terminate any pods that are observed in the runtime but not
 	// present in the list of known running pods from config.
@@ -1160,7 +1163,7 @@ func (kl *Kubelet) HandlePodCleanups() error {
 			if _, ok := allPodsByUID[runningPod.ID]; !ok {
 				klog.V(3).InfoS("Clean up orphaned pod containers", "podUID", runningPod.ID)
 				one := int64(1)
-				kl.podWorkers.UpdatePod(UpdatePodOptions{
+				kl.podWorkers.UpdatePod(ctx, UpdatePodOptions{
 					UpdateType: kubetypes.SyncPodKill,
 					RunningPod: runningPod,
 					KillPodOptions: &KillPodOptions{
@@ -1173,12 +1176,12 @@ func (kl *Kubelet) HandlePodCleanups() error {
 
 	// Remove orphaned pod statuses not in the total list of known config pods
 	klog.V(3).InfoS("Clean up orphaned pod statuses")
-	kl.removeOrphanedPodStatuses(allPods, mirrorPods)
+	kl.removeOrphanedPodStatuses(ctx, allPods, mirrorPods)
 	// Note that we just killed the unwanted pods. This may not have reflected
 	// in the cache. We need to bypass the cache to get the latest set of
 	// running pods to clean up the volumes.
 	// TODO: Evaluate the performance impact of bypassing the runtime cache.
-	runningRuntimePods, err = kl.containerRuntime.GetPods(false)
+	runningRuntimePods, err = kl.containerRuntime.GetPods(ctx, false)
 	if err != nil {
 		klog.ErrorS(err, "Error listing containers")
 		return err
@@ -1198,7 +1201,7 @@ func (kl *Kubelet) HandlePodCleanups() error {
 	// in the future (volumes, mount dirs, logs, and containers could all be
 	// better separated)
 	klog.V(3).InfoS("Clean up orphaned pod directories")
-	err = kl.cleanupOrphanedPodDirs(allPods, runningRuntimePods)
+	err = kl.cleanupOrphanedPodDirs(ctx, allPods, runningRuntimePods)
 	if err != nil {
 		// We want all cleanup tasks to be run even if one of them failed. So
 		// we just log an error here and continue other cleanup tasks.
@@ -1209,7 +1212,7 @@ func (kl *Kubelet) HandlePodCleanups() error {
 	// Remove any orphaned mirror pods (mirror pods are tracked by name via the
 	// pod worker)
 	klog.V(3).InfoS("Clean up orphaned mirror pods")
-	kl.deleteOrphanedMirrorPods()
+	kl.deleteOrphanedMirrorPods(ctx)
 
 	// Remove any cgroups in the hierarchy for pods that are definitely no longer
 	// running (not in the container runtime).
@@ -1240,7 +1243,7 @@ func (kl *Kubelet) HandlePodCleanups() error {
 		start := kl.clock.Now()
 		mirrorPod, _ := kl.podManager.GetMirrorPodByPod(pod)
 		klog.V(3).InfoS("Pod is restartable after termination due to UID reuse", "pod", klog.KObj(pod), "podUID", pod.UID)
-		kl.dispatchWork(pod, kubetypes.SyncPodCreate, mirrorPod, start)
+		kl.dispatchWork(ctx, pod, kubetypes.SyncPodCreate, mirrorPod, start)
 	}
 
 	return nil
@@ -1905,7 +1908,8 @@ func (kl *Kubelet) ServeLogs(w http.ResponseWriter, req *http.Request) {
 // findContainer finds and returns the container with the given pod ID, full name, and container name.
 // It returns nil if not found.
 func (kl *Kubelet) findContainer(podFullName string, podUID types.UID, containerName string) (*kubecontainer.Container, error) {
-	pods, err := kl.containerRuntime.GetPods(false)
+	ctx := context.TODO()
+	pods, err := kl.containerRuntime.GetPods(ctx, false)
 	if err != nil {
 		return nil, err
 	}
@@ -1969,7 +1973,8 @@ func (kl *Kubelet) GetAttach(podFullName string, podUID types.UID, containerName
 
 // GetPortForward gets the URL the port-forward will be served from, or nil if the Kubelet will serve it.
 func (kl *Kubelet) GetPortForward(podName, podNamespace string, podUID types.UID, portForwardOpts portforward.V4Options) (*url.URL, error) {
-	pods, err := kl.containerRuntime.GetPods(false)
+	ctx := context.TODO()
+	pods, err := kl.containerRuntime.GetPods(ctx, false)
 	if err != nil {
 		return nil, err
 	}

@@ -352,7 +352,9 @@ func (m *kubeGenericRuntimeManager) Status() (*kubecontainer.RuntimeStatus, erro
 // GetPods returns a list of containers grouped by pods. The boolean parameter
 // specifies whether the runtime returns all containers including those already
 // exited and dead containers (used for garbage collection).
-func (m *kubeGenericRuntimeManager) GetPods(all bool) ([]*kubecontainer.Pod, error) {
+func (m *kubeGenericRuntimeManager) GetPods(ctx context.Context, all bool) ([]*kubecontainer.Pod, error) {
+	ctx, span := m.tracer.Start(ctx, "pkg.kubelet.kuberuntime.kuberuntime_manager/GetPods")
+	defer span.End()
 	pods := make(map[kubetypes.UID]*kubecontainer.Pod)
 	sandboxes, err := m.getKubeletSandboxes(all)
 	if err != nil {

@@ -117,7 +117,7 @@ type Manager interface {
 
 	// RemoveOrphanedStatuses scans the status cache and removes any entries for pods not included in
 	// the provided podUIDs.
-	RemoveOrphanedStatuses(podUIDs map[types.UID]bool)
+	RemoveOrphanedStatuses(ctx context.Context, podUIDs map[types.UID]bool)
 }
 
 const syncPeriod = 10 * time.Second
@@ -601,7 +601,9 @@ func (m *manager) deletePodStatus(uid types.UID) {
 }
 
 // TODO(filipg): It'd be cleaner if we can do this without signal from user.
-func (m *manager) RemoveOrphanedStatuses(podUIDs map[types.UID]bool) {
+func (m *manager) RemoveOrphanedStatuses(ctx context.Context, podUIDs map[types.UID]bool) {
+	ctx, span := m.tracer.Start(ctx, "pkg.kubelet.status.status_manager/RemoveOrphanedStatuses")
+	defer span.End()
 	m.podStatusesLock.Lock()
 	defer m.podStatusesLock.Unlock()
 	for key := range m.podStatuses {

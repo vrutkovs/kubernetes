@@ -17,6 +17,7 @@ limitations under the License.
 package pleg
 
 import (
+	"context"
 	"fmt"
 	"sync/atomic"
 	"time"
@@ -189,6 +190,7 @@ func (g *GenericPLEG) updateRelistTime(timestamp time.Time) {
 // with the internal pods/containers, and generates events accordingly.
 func (g *GenericPLEG) relist() {
 	klog.V(5).InfoS("GenericPLEG: Relisting")
+	ctx := context.TODO()
 
 	if lastRelistTime := g.getRelistTime(); !lastRelistTime.IsZero() {
 		metrics.PLEGRelistInterval.Observe(metrics.SinceInSeconds(lastRelistTime))
@@ -200,7 +202,7 @@ func (g *GenericPLEG) relist() {
 	}()
 
 	// Get all the pods.
-	podList, err := g.runtime.GetPods(true)
+	podList, err := g.runtime.GetPods(ctx, true)
 	if err != nil {
 		klog.ErrorS(err, "GenericPLEG: Unable to retrieve pods")
 		return

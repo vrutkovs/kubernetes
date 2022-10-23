@@ -83,7 +83,7 @@ type Manager interface {
 
 	// CleanupPods handles cleaning up pods which should no longer be running.
 	// It takes a map of "desired pods" which should not be cleaned up.
-	CleanupPods(desiredPods map[types.UID]sets.Empty)
+	CleanupPods(ctx context.Context, desiredPods map[types.UID]sets.Empty)
 
 	// UpdatePodStatus modifies the given PodStatus with the appropriate Ready state for each
 	// container based on container running status, cached probe results and worker states.
@@ -256,7 +256,9 @@ func (m *manager) RemovePod(pod *v1.Pod) {
 	}
 }
 
-func (m *manager) CleanupPods(desiredPods map[types.UID]sets.Empty) {
+func (m *manager) CleanupPods(ctx context.Context, desiredPods map[types.UID]sets.Empty) {
+	ctx, span := m.tracer.Start(ctx, "pkg.kubelet.prober.prober_manager/CleanupPods")
+	defer span.End()
 	m.workerLock.RLock()
 	defer m.workerLock.RUnlock()
 

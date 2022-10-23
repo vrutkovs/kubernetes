@@ -144,13 +144,13 @@ type PodWorkers interface {
 	// UpdatePod() calls will be ignored for that pod until it has been forgotten
 	// due to significant time passing. A pod that is terminated will never be
 	// restarted.
-	UpdatePod(options UpdatePodOptions)
+	UpdatePod(ctx context.Context, options UpdatePodOptions)
 	// SyncKnownPods removes workers for pods that are not in the desiredPods set
 	// and have been terminated for a significant period of time. Once this method
 	// has been called once, the workers are assumed to be fully initialized and
 	// subsequent calls to ShouldPodContentBeRemoved on unknown pods will return
 	// true. It returns a map describing the state of each known pod worker.
-	SyncKnownPods(desiredPods []*v1.Pod) map[types.UID]PodWorkerState
+	SyncKnownPods(ctx context.Context, desiredPods []*v1.Pod) map[types.UID]PodWorkerState
 
 	// IsPodKnownTerminated returns true if the provided pod UID is known by the pod
 	// worker to be terminated. If the pod has been force deleted and the pod worker
@@ -564,11 +564,14 @@ func isPodStatusCacheTerminal(status *kubecontainer.PodStatus) bool {
 // UpdatePod carries a configuration change or termination state to a pod. A pod is either runnable,
 // terminating, or terminated, and will transition to terminating if deleted on the apiserver, it is
 // discovered to have a terminal phase (Succeeded or Failed), or if it is evicted by the kubelet.
-func (p *podWorkers) UpdatePod(options UpdatePodOptions) {
+func (p *podWorkers) UpdatePod(ctx context.Context, options UpdatePodOptions) {
 	// handle when the pod is an orphan (no config) and we only have runtime status by running only
 	// the terminating part of the lifecycle
-	ctx := context.TODO()
+	ctx, span := p.tracer.Start(ctx, "pkg.kubelet.pod_workers/UpdatePod")
+	defer span.End()
 	pod := options.Pod
+	span.SetAttributes(attribute.String("pod.name", pod.Name))
+	span.SetAttributes(attribute.String("pod.namespace", pod.Namespace))
 	var isRuntimePod bool
 	if options.RunningPod != nil {
 		if options.Pod == nil {
@@ -1230,7 +1233,9 @@ func (p *podWorkers) contextForWorker(uid types.UID) context.Context {
 // to UpdatePods for new pods. It returns a map of known workers that are not finished
 // with a value of SyncPodTerminated, SyncPodKill, or SyncPodSync depending on whether
 // the pod is terminated, terminating, or syncing.
-func (p *podWorkers) SyncKnownPods(desiredPods []*v1.Pod) map[types.UID]PodWorkerState {
+func (p *podWorkers) SyncKnownPods(ctx context.Context, desiredPods []*v1.Pod) map[types.UID]PodWorkerState {
+	ctx, span := p.tracer.Start(ctx, "pkg.kubelet.pod_workers/SyncKnownPods")
+	defer span.End()
 	workers := make(map[types.UID]PodWorkerState)
 	known := make(map[types.UID]struct{})
 	for _, pod := range desiredPods {
@@ -1295,6 +1300,7 @@ func (p *podWorkers) removeTerminatedWorker(uid types.UID) {
 // It is intended to be injected into other modules that need to kill a pod.
 func killPodNow(podWorkers PodWorkers, recorder record.EventRecorder) eviction.KillPodFunc {
 	return func(pod *v1.Pod, isEvicted bool, gracePeriodOverride *int64, statusFn func(*v1.PodStatus)) error {
+		ctx := context.TODO()
 		// determine the grace period to use when killing the pod
 		gracePeriod := int64(0)
 		if gracePeriodOverride != nil {
@@ -1314,7 +1320,7 @@ func killPodNow(podWorkers PodWorkers, recorder record.EventRecorder) eviction.K
 
 		// open a channel we block against until we get a result
 		ch := make(chan struct{}, 1)
-		podWorkers.UpdatePod(UpdatePodOptions{
+		podWorkers.UpdatePod(ctx, UpdatePodOptions{
 			Pod:        pod,
 			UpdateType: kubetypes.SyncPodKill,
 			KillPodOptions: &KillPodOptions{

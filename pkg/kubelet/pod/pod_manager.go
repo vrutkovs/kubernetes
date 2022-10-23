@@ -28,6 +28,8 @@ import (
 	"k8s.io/kubernetes/pkg/kubelet/metrics"
 	"k8s.io/kubernetes/pkg/kubelet/secret"
 	kubetypes "k8s.io/kubernetes/pkg/kubelet/types"
+
+	"go.opentelemetry.io/otel/trace"
 )
 
 // Manager stores and manages access to pods, maintaining the mappings
@@ -64,18 +66,18 @@ type Manager interface {
 	// whether it was known to the pod manager.
 	GetMirrorPodByPod(*v1.Pod) (*v1.Pod, bool)
 	// GetPodsAndMirrorPods returns the both regular and mirror pods.
-	GetPodsAndMirrorPods() ([]*v1.Pod, []*v1.Pod)
+	GetPodsAndMirrorPods(context.Context) ([]*v1.Pod, []*v1.Pod)
 	// SetPods replaces the internal pods with the new pods.
 	// It is currently only used for testing.
 	SetPods(pods []*v1.Pod)
 	// AddPod adds the given pod to the manager.
-	AddPod(pod *v1.Pod)
+	AddPod(ctx context.Context, pod *v1.Pod)
 	// UpdatePod updates the given pod in the manager.
-	UpdatePod(pod *v1.Pod)
+	UpdatePod(ctx context.Context, pod *v1.Pod)
 	// DeletePod deletes the given pod from the manager.  For mirror pods,
 	// this means deleting the mappings related to mirror pods.  For non-
 	// mirror pods, this means deleting from indexes for all non-mirror pods.
-	DeletePod(pod *v1.Pod)
+	DeletePod(ctx context.Context, pod *v1.Pod)
 	// GetOrphanedMirrorPodNames returns names of orphaned mirror pods
 	GetOrphanedMirrorPodNames() []string
 	// TranslatePodUID returns the actual UID of a pod. If the UID belongs to
@@ -122,15 +124,18 @@ type basicManager struct {
 
 	// A mirror pod client to create/delete mirror pods.
 	MirrorClient
+
+	tracer trace.Tracer
 }
 
 // NewBasicPodManager returns a functional Manager.
-func NewBasicPodManager(client MirrorClient, secretManager secret.Manager, configMapManager configmap.Manager) Manager {
+func NewBasicPodManager(client MirrorClient, secretManager secret.Manager, configMapManager configmap.Manager, tracer trace.Tracer) Manager {
 	pm := &basicManager{}
 	pm.secretManager = secretManager
 	pm.configMapManager = configMapManager
 	pm.MirrorClient = client
 	pm.SetPods(nil)
+	pm.tracer = tracer
 	return pm
 }
 
@@ -148,11 +153,15 @@ func (pm *basicManager) SetPods(newPods []*v1.Pod) {
 	pm.updatePodsInternal(newPods...)
 }
 
-func (pm *basicManager) AddPod(pod *v1.Pod) {
-	pm.UpdatePod(pod)
+func (pm *basicManager) AddPod(ctx context.Context, pod *v1.Pod) {
+	ctx, span := pm.tracer.Start(ctx, "pkg.kubelet.pod.pod_manager/AddPod")
+	defer span.End()
+	pm.UpdatePod(ctx, pod)
 }
 
-func (pm *basicManager) UpdatePod(pod *v1.Pod) {
+func (pm *basicManager) UpdatePod(ctx context.Context, pod *v1.Pod) {
+	ctx, span := pm.tracer.Start(ctx, "pkg.kubelet.pod.pod_manager/UpdatePods")
+	defer span.End()
 	pm.lock.Lock()
 	defer pm.lock.Unlock()
 	pm.updatePodsInternal(pod)
@@ -200,7 +209,9 @@ func (pm *basicManager) updatePodsInternal(pods ...*v1.Pod) {
 	}
 }
 
-func (pm *basicManager) DeletePod(pod *v1.Pod) {
+func (pm *basicManager) DeletePod(ctx context.Context, pod *v1.Pod) {
+	ctx, span := pm.tracer.Start(ctx, "pkg.kubelet.pod.pod_manager/DeletePod")
+	defer span.End()
 	updateMetrics(pod, nil)
 	pm.lock.Lock()
 	defer pm.lock.Unlock()
@@ -223,7 +234,9 @@ func (pm *basicManager) GetPods() []*v1.Pod {
 	return podsMapToPods(pm.podByUID)
 }
 
-func (pm *basicManager) GetPodsAndMirrorPods() ([]*v1.Pod, []*v1.Pod) {
+func (pm *basicManager) GetPodsAndMirrorPods(ctx context.Context) ([]*v1.Pod, []*v1.Pod) {
+	ctx, span := pm.tracer.Start(ctx, "pkg.kubelet.pod.pod_manager/GetPodsAndMirrorPods")
+	defer span.End()
 	pm.lock.RLock()
 	defer pm.lock.RUnlock()
 	pods := podsMapToPods(pm.podByUID)

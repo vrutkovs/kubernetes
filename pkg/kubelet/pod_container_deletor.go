@@ -17,11 +17,13 @@ limitations under the License.
 package kubelet
 
 import (
+	"context"
 	"sort"
 
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/klog/v2"
 	kubecontainer "k8s.io/kubernetes/pkg/kubelet/container"
+	"go.opentelemetry.io/otel/trace"
 )
 
 const (
@@ -35,6 +37,7 @@ type containerStatusbyCreatedList []*kubecontainer.Status
 type podContainerDeletor struct {
 	worker           chan<- kubecontainer.ContainerID
 	containersToKeep int
+	tracer           trace.Tracer
 }
 
 func (a containerStatusbyCreatedList) Len() int      { return len(a) }
@@ -43,7 +46,7 @@ func (a containerStatusbyCreatedList) Less(i, j int) bool {
 	return a[i].CreatedAt.After(a[j].CreatedAt)
 }
 
-func newPodContainerDeletor(runtime kubecontainer.Runtime, containersToKeep int) *podContainerDeletor {
+func newPodContainerDeletor(runtime kubecontainer.Runtime, containersToKeep int, tracer trace.Tracer) *podContainerDeletor {
 	buffer := make(chan kubecontainer.ContainerID, containerDeletorBufferLimit)
 	go wait.Until(func() {
 		for {
@@ -57,6 +60,7 @@ func newPodContainerDeletor(runtime kubecontainer.Runtime, containersToKeep int)
 	return &podContainerDeletor{
 		worker:           buffer,
 		containersToKeep: containersToKeep,
+		tracer:           tracer,
 	}
 }
 
@@ -99,7 +103,9 @@ func getContainersToDeleteInPod(filterContainerID string, podStatus *kubecontain
 }
 
 // deleteContainersInPod issues container deletion requests for containers selected by getContainersToDeleteInPod.
-func (p *podContainerDeletor) deleteContainersInPod(filterContainerID string, podStatus *kubecontainer.PodStatus, removeAll bool) {
+func (p *podContainerDeletor) deleteContainersInPod(ctx context.Context, filterContainerID string, podStatus *kubecontainer.PodStatus, removeAll bool) {
+	ctx, span := p.tracer.Start(ctx, "pkg.kubelet.pod_container_deletor/deleteContainersInPod")
+	defer span.End()
 	containersToKeep := p.containersToKeep
 	if removeAll {
 		containersToKeep = 0

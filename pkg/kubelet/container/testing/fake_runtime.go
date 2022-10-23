@@ -91,7 +91,7 @@ func (fv *FakeVersion) Compare(other string) (int, error) {
 }
 
 type podsGetter interface {
-	GetPods(bool) ([]*kubecontainer.Pod, error)
+	GetPods(context.Context, bool) ([]*kubecontainer.Pod, error)
 }
 
 type FakeRuntimeCache struct {
@@ -103,7 +103,8 @@ func NewFakeRuntimeCache(getter podsGetter) kubecontainer.RuntimeCache {
 }
 
 func (f *FakeRuntimeCache) GetPods() ([]*kubecontainer.Pod, error) {
-	return f.getter.GetPods(false)
+	ctx := context.TODO()
+	return f.getter.GetPods(ctx, false)
 }
 
 func (f *FakeRuntimeCache) ForceUpdateIfOlder(time.Time) error {
@@ -203,7 +204,7 @@ func (f *FakeRuntime) Status() (*kubecontainer.RuntimeStatus, error) {
 	return f.RuntimeStatus, f.StatusErr
 }
 
-func (f *FakeRuntime) GetPods(all bool) ([]*kubecontainer.Pod, error) {
+func (f *FakeRuntime) GetPods(ctx context.Context, all bool) ([]*kubecontainer.Pod, error) {
 	f.Lock()
 	defer f.Unlock()
 
