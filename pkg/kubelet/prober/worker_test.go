@@ -17,6 +17,7 @@ limitations under the License.
 package prober
 
 import (
+	"context"
 	"fmt"
 	"testing"
 	"time"
@@ -37,6 +38,7 @@ func init() {
 }
 
 func TestDoProbe(t *testing.T) {
+	ctx := context.TODO()
 	m := newTestManager()
 
 	for _, probeType := range [...]probeType{liveness, readiness, startup} {
@@ -132,7 +134,7 @@ func TestDoProbe(t *testing.T) {
 		for i, test := range tests {
 			w := newTestWorker(m, probeType, test.probe)
 			if test.podStatus != nil {
-				m.statusManager.SetPodStatus(w.pod, *test.podStatus)
+				m.statusManager.SetPodStatus(ctx, w.pod, *test.podStatus)
 			}
 			if test.setDeletionTimestamp {
 				now := metav1.Now()
@@ -157,13 +159,14 @@ func TestDoProbe(t *testing.T) {
 }
 
 func TestInitialDelay(t *testing.T) {
+	ctx := context.TODO()
 	m := newTestManager()
 
 	for _, probeType := range [...]probeType{liveness, readiness, startup} {
 		w := newTestWorker(m, probeType, v1.Probe{
 			InitialDelaySeconds: 10,
 		})
-		m.statusManager.SetPodStatus(w.pod, getTestRunningStatusWithStarted(probeType != startup))
+		m.statusManager.SetPodStatus(ctx, w.pod, getTestRunningStatusWithStarted(probeType != startup))
 
 		expectContinue(t, w, w.doProbe(), "during initial delay")
 		// Default value depends on probe, Success for liveness, Failure for readiness, Unknown for startup
@@ -180,7 +183,7 @@ func TestInitialDelay(t *testing.T) {
 		laterStatus := getTestRunningStatusWithStarted(probeType != startup)
 		laterStatus.ContainerStatuses[0].State.Running.StartedAt.Time =
 			time.Now().Add(-100 * time.Second)
-		m.statusManager.SetPodStatus(w.pod, laterStatus)
+		m.statusManager.SetPodStatus(ctx, w.pod, laterStatus)
 
 		// Second call should succeed (already waited).
 		expectContinue(t, w, w.doProbe(), "after initial delay")
@@ -189,9 +192,10 @@ func TestInitialDelay(t *testing.T) {
 }
 
 func TestFailureThreshold(t *testing.T) {
+	ctx := context.TODO()
 	m := newTestManager()
 	w := newTestWorker(m, readiness, v1.Probe{SuccessThreshold: 1, FailureThreshold: 3})
-	m.statusManager.SetPodStatus(w.pod, getTestRunningStatus())
+	m.statusManager.SetPodStatus(ctx, w.pod, getTestRunningStatus())
 
 	for i := 0; i < 2; i++ {
 		// First probe should succeed.
@@ -223,9 +227,10 @@ func TestFailureThreshold(t *testing.T) {
 }
 
 func TestSuccessThreshold(t *testing.T) {
+	ctx := context.TODO()
 	m := newTestManager()
 	w := newTestWorker(m, readiness, v1.Probe{SuccessThreshold: 3, FailureThreshold: 1})
-	m.statusManager.SetPodStatus(w.pod, getTestRunningStatus())
+	m.statusManager.SetPodStatus(ctx, w.pod, getTestRunningStatus())
 
 	// Start out failure.
 	w.resultsManager.Set(testContainerID, results.Failure, &v1.Pod{})
@@ -257,12 +262,13 @@ func TestSuccessThreshold(t *testing.T) {
 }
 
 func TestCleanUp(t *testing.T) {
+	ctx := context.TODO()
 	m := newTestManager()
 
 	for _, probeType := range [...]probeType{liveness, readiness, startup} {
 		key := probeKey{testPodUID, testContainerName, probeType}
 		w := newTestWorker(m, probeType, v1.Probe{})
-		m.statusManager.SetPodStatus(w.pod, getTestRunningStatusWithStarted(probeType != startup))
+		m.statusManager.SetPodStatus(ctx, w.pod, getTestRunningStatusWithStarted(probeType != startup))
 		go w.run()
 		m.workers[key] = w
 
@@ -322,12 +328,13 @@ func resultsManager(m *manager, probeType probeType) results.Manager {
 }
 
 func TestOnHoldOnLivenessOrStartupCheckFailure(t *testing.T) {
+	ctx := context.TODO()
 	m := newTestManager()
 
 	for _, probeType := range [...]probeType{liveness, startup} {
 		w := newTestWorker(m, probeType, v1.Probe{SuccessThreshold: 1, FailureThreshold: 1})
 		status := getTestRunningStatusWithStarted(probeType != startup)
-		m.statusManager.SetPodStatus(w.pod, status)
+		m.statusManager.SetPodStatus(ctx, w.pod, status)
 
 		// First probe should fail.
 		m.prober.exec = fakeExecProber{probe.Failure, nil}
@@ -349,7 +356,7 @@ func TestOnHoldOnLivenessOrStartupCheckFailure(t *testing.T) {
 
 		// Set a new container ID to lift the hold. The next probe will succeed.
 		status.ContainerStatuses[0].ContainerID = "test://newCont_ID"
-		m.statusManager.SetPodStatus(w.pod, status)
+		m.statusManager.SetPodStatus(ctx, w.pod, status)
 		msg = "hold lifted"
 		expectContinue(t, w, w.doProbe(), msg)
 		expectResult(t, w, results.Success, msg)
@@ -360,9 +367,10 @@ func TestOnHoldOnLivenessOrStartupCheckFailure(t *testing.T) {
 }
 
 func TestResultRunOnLivenessCheckFailure(t *testing.T) {
+	ctx := context.TODO()
 	m := newTestManager()
 	w := newTestWorker(m, liveness, v1.Probe{SuccessThreshold: 1, FailureThreshold: 3})
-	m.statusManager.SetPodStatus(w.pod, getTestRunningStatus())
+	m.statusManager.SetPodStatus(ctx, w.pod, getTestRunningStatus())
 
 	m.prober.exec = fakeExecProber{probe.Success, nil}
 	msg := "initial probe success"
@@ -401,9 +409,10 @@ func TestResultRunOnLivenessCheckFailure(t *testing.T) {
 }
 
 func TestResultRunOnStartupCheckFailure(t *testing.T) {
+	ctx := context.TODO()
 	m := newTestManager()
 	w := newTestWorker(m, startup, v1.Probe{SuccessThreshold: 1, FailureThreshold: 3})
-	m.statusManager.SetPodStatus(w.pod, getTestRunningStatusWithStarted(false))
+	m.statusManager.SetPodStatus(ctx, w.pod, getTestRunningStatusWithStarted(false))
 
 	// Below FailureThreshold leaves probe state unchanged
 	// which is failed for startup at first.
@@ -436,9 +445,10 @@ func TestResultRunOnStartupCheckFailure(t *testing.T) {
 }
 
 func TestLivenessProbeDisabledByStarted(t *testing.T) {
+	ctx := context.TODO()
 	m := newTestManager()
 	w := newTestWorker(m, liveness, v1.Probe{SuccessThreshold: 1, FailureThreshold: 1})
-	m.statusManager.SetPodStatus(w.pod, getTestRunningStatusWithStarted(false))
+	m.statusManager.SetPodStatus(ctx, w.pod, getTestRunningStatusWithStarted(false))
 	// livenessProbe fails, but is disabled
 	m.prober.exec = fakeExecProber{probe.Failure, nil}
 	msg := "Not started, probe failure, result success"
@@ -454,9 +464,10 @@ func TestLivenessProbeDisabledByStarted(t *testing.T) {
 }
 
 func TestStartupProbeDisabledByStarted(t *testing.T) {
+	ctx := context.TODO()
 	m := newTestManager()
 	w := newTestWorker(m, startup, v1.Probe{SuccessThreshold: 1, FailureThreshold: 2})
-	m.statusManager.SetPodStatus(w.pod, getTestRunningStatusWithStarted(false))
+	m.statusManager.SetPodStatus(ctx, w.pod, getTestRunningStatusWithStarted(false))
 	// startupProbe fails < FailureThreshold, stays unknown
 	m.prober.exec = fakeExecProber{probe.Failure, nil}
 	msg := "Not started, probe failure, result unknown"

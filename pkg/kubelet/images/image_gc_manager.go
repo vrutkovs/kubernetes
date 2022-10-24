@@ -17,6 +17,7 @@ limitations under the License.
 package images
 
 import (
+	"context"
 	goerrors "errors"
 	"fmt"
 	"math"
@@ -24,9 +25,10 @@ import (
 	"sync"
 	"time"
 
+	"k8s.io/component-base/tracing"
 	"k8s.io/klog/v2"
 
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/errors"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -277,6 +279,10 @@ func (im *realImageGCManager) detectImages(detectTime time.Time) (sets.String, e
 }
 
 func (im *realImageGCManager) GarbageCollect() error {
+	ctx := context.TODO()
+	_, span := tracing.Start(ctx, "pkg/kubelet/images/image_gc_manager.GarbageCollect")
+	defer span.End(time.Millisecond)
+
 	// Get disk usage on disk holding images.
 	fsStats, err := im.statsProvider.ImageFsStats()
 	if err != nil {

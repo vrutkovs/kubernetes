@@ -17,9 +17,11 @@ limitations under the License.
 package container
 
 import (
+	"context"
 	"fmt"
 	"time"
 
+	"k8s.io/component-base/tracing"
 	"k8s.io/klog/v2"
 )
 
@@ -78,6 +80,9 @@ func NewContainerGC(runtime Runtime, policy GCPolicy, sourcesReadyProvider Sourc
 }
 
 func (cgc *realContainerGC) GarbageCollect() error {
+	ctx := context.TODO()
+	_, span := tracing.Start(ctx, "pkg/kubelet/container/container_gc.GarbageCollect")
+	defer span.End(time.Millisecond)
 	return cgc.runtime.GarbageCollect(cgc.policy, cgc.sourcesReadyProvider.AllReady(), false)
 }
 

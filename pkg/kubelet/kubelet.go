@@ -35,9 +35,11 @@ import (
 
 	"github.com/opencontainers/selinux/go-selinux"
 	"k8s.io/client-go/informers"
+	"k8s.io/component-base/tracing"
 
 	cadvisorapi "github.com/google/cadvisor/info/v1"
 	libcontaineruserns "github.com/opencontainers/runc/libcontainer/userns"
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 	"k8s.io/mount-utils"
 	"k8s.io/utils/integer"
@@ -1530,6 +1532,14 @@ func (kl *Kubelet) Run(updates <-chan kubetypes.PodUpdate) {
 // the most accurate information possible about an error situation to aid debugging.
 // Callers should not write an event if this operation returns an error.
 func (kl *Kubelet) syncPod(ctx context.Context, updateType kubetypes.SyncPodType, pod, mirrorPod *v1.Pod, podStatus *kubecontainer.PodStatus) (isTerminal bool, err error) {
+	_, span := tracing.Start(ctx, "pkg/kubelet/kubelet.syncPod",
+		attribute.String("podUID", string(pod.UID)),
+		attribute.String("pod", klog.KObj(pod).String()),
+		attribute.String("updateType", updateType.String()),
+		attribute.Bool("isTerminal", isTerminal),
+	)
+	defer span.End(time.Millisecond)
+
 	klog.V(4).InfoS("syncPod enter", "pod", klog.KObj(pod), "podUID", pod.UID)
 	defer func() {
 		klog.V(4).InfoS("syncPod exit", "pod", klog.KObj(pod), "podUID", pod.UID, "isTerminal", isTerminal)
@@ -1571,7 +1581,7 @@ func (kl *Kubelet) syncPod(ctx context.Context, updateType kubetypes.SyncPodType
 
 	// If the pod is terminal, we don't need to continue to setup the pod
 	if apiPodStatus.Phase == v1.PodSucceeded || apiPodStatus.Phase == v1.PodFailed {
-		kl.statusManager.SetPodStatus(pod, apiPodStatus)
+		kl.statusManager.SetPodStatus(ctx, pod, apiPodStatus)
 		isTerminal = true
 		return isTerminal, nil
 	}
@@ -1609,7 +1619,7 @@ func (kl *Kubelet) syncPod(ctx context.Context, updateType kubetypes.SyncPodType
 		metrics.PodStartDuration.Observe(metrics.SinceInSeconds(firstSeenTime))
 	}
 
-	kl.statusManager.SetPodStatus(pod, apiPodStatus)
+	kl.statusManager.SetPodStatus(ctx, pod, apiPodStatus)
 
 	// Pods that are not runnable must be stopped - return a typed error to the pod worker
 	if !runnable.Admit {
@@ -1799,7 +1809,7 @@ func (kl *Kubelet) syncTerminatingPod(ctx context.Context, pod *v1.Pod, podStatu
 	if podStatusFn != nil {
 		podStatusFn(&apiPodStatus)
 	}
-	kl.statusManager.SetPodStatus(pod, apiPodStatus)
+	kl.statusManager.SetPodStatus(ctx, pod, apiPodStatus)
 
 	if gracePeriod != nil {
 		klog.V(4).InfoS("Pod terminating with grace period", "pod", klog.KObj(pod), "podUID", pod.UID, "gracePeriod", *gracePeriod)
@@ -1876,7 +1886,7 @@ func (kl *Kubelet) syncTerminatedPod(ctx context.Context, pod *v1.Pod, podStatus
 	// generate the final status of the pod
 	// TODO: should we simply fold this into TerminatePod? that would give a single pod update
 	apiPodStatus := kl.generateAPIPodStatus(pod, podStatus)
-	kl.statusManager.SetPodStatus(pod, apiPodStatus)
+	kl.statusManager.SetPodStatus(ctx, pod, apiPodStatus)
 
 	// volumes are unmounted after the pod worker reports ShouldPodRuntimeBeRemoved (which is satisfied
 	// before syncTerminatedPod is invoked)
@@ -1969,9 +1979,15 @@ func (kl *Kubelet) deletePod(pod *v1.Pod) error {
 
 // rejectPod records an event about the pod with the given reason and message,
 // and updates the pod to the failed phase in the status manage.
-func (kl *Kubelet) rejectPod(pod *v1.Pod, reason, message string) {
+func (kl *Kubelet) rejectPod(ctx context.Context, pod *v1.Pod, reason, message string) {
+	ctx, span := tracing.Start(ctx, "pkg/kubelet/kubelet.rejectPod",
+		attribute.String("podUID", string(pod.UID)),
+		attribute.String("pod", klog.KObj(pod).String()),
+		attribute.String("reason", reason),
+		attribute.String("message", message))
+	defer span.End(time.Millisecond)
 	kl.recorder.Eventf(pod, v1.EventTypeWarning, reason, message)
-	kl.statusManager.SetPodStatus(pod, v1.PodStatus{
+	kl.statusManager.SetPodStatus(ctx, pod, v1.PodStatus{
 		Phase:   v1.PodFailed,
 		Reason:  reason,
 		Message: "Pod was rejected: " + message})
@@ -2240,6 +2256,8 @@ func (kl *Kubelet) handleMirrorPod(mirrorPod *v1.Pod, start time.Time) {
 // HandlePodAdditions is the callback in SyncHandler for pods being added from
 // a config source.
 func (kl *Kubelet) HandlePodAdditions(pods []*v1.Pod) {
+	ctx, span := tracing.Start(context.TODO(), "pkg/kubelet/kubelet.HandlePodAdditions")
+	defer span.End(time.Millisecond)
 	start := kl.clock.Now()
 	sort.Sort(sliceutils.PodsByCreationTime(pods))
 	for _, pod := range pods {
@@ -2268,7 +2286,7 @@ func (kl *Kubelet) HandlePodAdditions(pods []*v1.Pod) {
 
 			// Check if we can admit the pod; if not, reject it.
 			if ok, reason, message := kl.canAdmitPod(activePods, pod); !ok {
-				kl.rejectPod(pod, reason, message)
+				kl.rejectPod(ctx, pod, reason, message)
 				continue
 			}
 		}

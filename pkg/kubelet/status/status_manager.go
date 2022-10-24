@@ -25,7 +25,9 @@ import (
 	"sync"
 	"time"
 
+	"go.opentelemetry.io/otel/attribute"
 	clientset "k8s.io/client-go/kubernetes"
+	"k8s.io/component-base/tracing"
 
 	v1 "k8s.io/api/core/v1"
 	apiequality "k8s.io/apimachinery/pkg/api/equality"
@@ -102,7 +104,7 @@ type Manager interface {
 	Start()
 
 	// SetPodStatus caches updates the cached status for the given pod, and triggers a status update.
-	SetPodStatus(pod *v1.Pod, status v1.PodStatus)
+	SetPodStatus(ctx context.Context, pod *v1.Pod, status v1.PodStatus)
 
 	// SetContainerReadiness updates the cached container status with the given readiness, and
 	// triggers a status update.
@@ -196,7 +198,13 @@ func (m *manager) GetPodStatus(uid types.UID) (v1.PodStatus, bool) {
 	return status.status, ok
 }
 
-func (m *manager) SetPodStatus(pod *v1.Pod, status v1.PodStatus) {
+func (m *manager) SetPodStatus(ctx context.Context, pod *v1.Pod, status v1.PodStatus) {
+	_, span := tracing.Start(ctx, "pkg/kubelet/status/status_manager.SetPodStatus",
+		attribute.String("UID", string(pod.UID)),
+		attribute.String("name", pod.Name),
+		attribute.String("namespace", pod.Namespace),
+		attribute.String("status", status.String()))
+	defer span.End(time.Millisecond)
 	m.podStatusesLock.Lock()
 	defer m.podStatusesLock.Unlock()
 

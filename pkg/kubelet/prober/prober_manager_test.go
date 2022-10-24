@@ -17,6 +17,7 @@ limitations under the License.
 package prober
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 	"testing"
@@ -324,6 +325,7 @@ func (m *manager) extractedReadinessHandling() {
 }
 
 func TestUpdateReadiness(t *testing.T) {
+	ctx := context.TODO()
 	testPod := getTestPod()
 	setTestProbe(testPod, readiness, v1.Probe{})
 	m := newTestManager()
@@ -342,7 +344,7 @@ func TestUpdateReadiness(t *testing.T) {
 	exec.set(probe.Success, nil)
 	m.prober.exec = &exec
 
-	m.statusManager.SetPodStatus(testPod, getTestRunningStatus())
+	m.statusManager.SetPodStatus(ctx, testPod, getTestRunningStatus())
 
 	m.AddPod(testPod)
 	probePaths := []probeKey{{testPodUID, testContainerName, readiness}}

@@ -23,10 +23,13 @@ import (
 	"time"
 
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/component-base/tracing"
 	"k8s.io/klog/v2"
 	kubecontainer "k8s.io/kubernetes/pkg/kubelet/container"
 	kubetypes "k8s.io/kubernetes/pkg/kubelet/types"
 	"k8s.io/kubernetes/pkg/kubelet/util/format"
+
+	"go.opentelemetry.io/otel/attribute"
 )
 
 const (
@@ -69,12 +72,16 @@ func (kl *Kubelet) RunOnce(updates <-chan kubetypes.PodUpdate) ([]RunPodResult, 
 
 // runOnce runs a given set of pods and returns their status.
 func (kl *Kubelet) runOnce(pods []*v1.Pod, retryDelay time.Duration) (results []RunPodResult, err error) {
+	ctx, span := tracing.Start(context.TODO(), "pkg/kubelet/runonce.runOnce",
+		attribute.String("retryDelay", retryDelay.String()),
+	)
+	defer span.End(time.Millisecond)
 	ch := make(chan RunPodResult)
 	admitted := []*v1.Pod{}
 	for _, pod := range pods {
 		// Check if we can admit the pod.
 		if ok, reason, message := kl.canAdmitPod(admitted, pod); !ok {
-			kl.rejectPod(pod, reason, message)
+			kl.rejectPod(ctx, pod, reason, message)
 			results = append(results, RunPodResult{pod, nil})
 			continue
 		}
@@ -115,6 +122,15 @@ func (kl *Kubelet) runPod(pod *v1.Pod, retryDelay time.Duration) error {
 	var isTerminal bool
 	delay := retryDelay
 	retry := 0
+
+	ctx := context.Background()
+	ctx, span := tracing.Start(ctx, "pkg/kubelet/runonce.runPod",
+		attribute.String("retryDelay", retryDelay.String()),
+		attribute.String("UID", string(pod.UID)),
+		attribute.String("name", pod.Name),
+		attribute.String("namespace", pod.Namespace))
+	defer span.End(time.Millisecond)
+
 	for !isTerminal {
 		status, err := kl.containerRuntime.GetPodStatus(pod.UID, pod.Name, pod.Namespace)
 		if err != nil {
@@ -132,7 +148,7 @@ func (kl *Kubelet) runPod(pod *v1.Pod, retryDelay time.Duration) error {
 			klog.ErrorS(err, "Failed creating a mirror pod", "pod", klog.KObj(pod))
 		}
 		mirrorPod, _ := kl.podManager.GetMirrorPodByPod(pod)
-		if isTerminal, err = kl.syncPod(context.Background(), kubetypes.SyncPodUpdate, pod, mirrorPod, status); err != nil {
+		if isTerminal, err = kl.syncPod(ctx, kubetypes.SyncPodUpdate, pod, mirrorPod, status); err != nil {
 			return fmt.Errorf("error syncing pod %q: %v", format.Pod(pod), err)
 		}
 		if retry >= runOnceMaxRetries {
