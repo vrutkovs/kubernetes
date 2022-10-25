@@ -706,7 +706,7 @@ func NewMainKubelet(kubeCfg *kubeletconfiginternal.KubeletConfiguration,
 	}
 
 	// setup containerGC
-	containerGC, err := kubecontainer.NewContainerGC(klet.containerRuntime, containerGCPolicy, klet.sourcesReady)
+	containerGC, err := kubecontainer.NewContainerGC(klet.containerRuntime, containerGCPolicy, klet.sourcesReady, klet.tracer)
 	if err != nil {
 		return nil, err
 	}
@@ -714,7 +714,7 @@ func NewMainKubelet(kubeCfg *kubeletconfiginternal.KubeletConfiguration,
 	klet.containerDeletor = newPodContainerDeletor(klet.containerRuntime, integer.IntMax(containerGCPolicy.MaxPerPodContainer, minDeadContainerInPod))
 
 	// setup imageManager
-	imageManager, err := images.NewImageGCManager(klet.containerRuntime, klet.StatsProvider, kubeDeps.Recorder, nodeRef, imageGCPolicy, crOptions.PodSandboxImage)
+	imageManager, err := images.NewImageGCManager(klet.containerRuntime, klet.StatsProvider, kubeDeps.Recorder, nodeRef, imageGCPolicy, crOptions.PodSandboxImage, klet.tracer)
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize image manager: %v", err)
 	}
@@ -1195,6 +1195,8 @@ type Kubelet struct {
 
 	// Manage user namespaces
 	usernsManager *usernsManager
+
+	tracer trace.Tracer
 }
 
 // ListPodStats is delegated to StatsProvider, which implements stats.Provider interface
@@ -2256,8 +2258,8 @@ func (kl *Kubelet) handleMirrorPod(mirrorPod *v1.Pod, start time.Time) {
 // HandlePodAdditions is the callback in SyncHandler for pods being added from
 // a config source.
 func (kl *Kubelet) HandlePodAdditions(pods []*v1.Pod) {
-	ctx, span := tracing.Start(context.TODO(), "pkg/kubelet/kubelet.HandlePodAdditions")
-	defer span.End(time.Millisecond)
+	ctx, span := kl.tracer.Start(context.TODO(), "pkg/kubelet/kubelet.HandlePodAdditions")
+	defer span.End()
 	start := kl.clock.Now()
 	sort.Sort(sliceutils.PodsByCreationTime(pods))
 	for _, pod := range pods {
@@ -2430,6 +2432,7 @@ func (kl *Kubelet) ResyncInterval() time.Duration {
 // ListenAndServe runs the kubelet HTTP server.
 func (kl *Kubelet) ListenAndServe(kubeCfg *kubeletconfiginternal.KubeletConfiguration, tlsOptions *server.TLSOptions,
 	auth server.AuthInterface, tp trace.TracerProvider) {
+	kl.tracer = tp.Tracer("")
 	server.ListenAndServeKubeletServer(kl, kl.resourceAnalyzer, kubeCfg, tlsOptions, auth, tp)
 }
 

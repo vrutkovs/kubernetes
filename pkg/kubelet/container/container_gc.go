@@ -21,7 +21,7 @@ import (
 	"fmt"
 	"time"
 
-	"k8s.io/component-base/tracing"
+	oteltrace "go.opentelemetry.io/otel/trace"
 	"k8s.io/klog/v2"
 )
 
@@ -64,10 +64,12 @@ type realContainerGC struct {
 
 	// sourcesReadyProvider provides the readiness of kubelet configuration sources.
 	sourcesReadyProvider SourcesReadyProvider
+
+	tracer oteltrace.Tracer
 }
 
 // NewContainerGC creates a new instance of GC with the specified policy.
-func NewContainerGC(runtime Runtime, policy GCPolicy, sourcesReadyProvider SourcesReadyProvider) (GC, error) {
+func NewContainerGC(runtime Runtime, policy GCPolicy, sourcesReadyProvider SourcesReadyProvider, tracer oteltrace.Tracer) (GC, error) {
 	if policy.MinAge < 0 {
 		return nil, fmt.Errorf("invalid minimum garbage collection age: %v", policy.MinAge)
 	}
@@ -76,13 +78,13 @@ func NewContainerGC(runtime Runtime, policy GCPolicy, sourcesReadyProvider Sourc
 		runtime:              runtime,
 		policy:               policy,
 		sourcesReadyProvider: sourcesReadyProvider,
+		tracer:               tracer,
 	}, nil
 }
 
 func (cgc *realContainerGC) GarbageCollect() error {
-	ctx := context.TODO()
-	_, span := tracing.Start(ctx, "pkg/kubelet/container/container_gc.GarbageCollect")
-	defer span.End(time.Millisecond)
+	_, span := cgc.tracer.Start(context.Background(), "pkg/kubelet/container/container_gc.GarbageCollect")
+	defer span.End()
 	return cgc.runtime.GarbageCollect(cgc.policy, cgc.sourcesReadyProvider.AllReady(), false)
 }
 

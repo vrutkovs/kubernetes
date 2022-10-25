@@ -25,6 +25,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	oteltrace "go.opentelemetry.io/otel/trace"
 	"k8s.io/client-go/tools/record"
 	statsapi "k8s.io/kubelet/pkg/apis/stats/v1alpha1"
 	"k8s.io/kubernetes/pkg/kubelet/container"
@@ -688,7 +689,8 @@ func TestValidateImageGCPolicy(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		if _, err := NewImageGCManager(nil, nil, nil, nil, tc.imageGCPolicy, ""); err != nil {
+		tracer := oteltrace.NewNoopTracerProvider().Tracer("")
+		if _, err := NewImageGCManager(nil, nil, nil, nil, tc.imageGCPolicy, "", tracer); err != nil {
 			if err.Error() != tc.expectErr {
 				t.Errorf("[%s:]Expected err:%v, but got:%v", tc.name, tc.expectErr, err.Error())
 			}

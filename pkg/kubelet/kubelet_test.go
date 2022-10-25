@@ -35,6 +35,7 @@ import (
 	core "k8s.io/client-go/testing"
 	"k8s.io/mount-utils"
 
+	oteltrace "go.opentelemetry.io/otel/trace"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -289,7 +290,8 @@ func newTestKubeletWithImageList(
 		HighThresholdPercent: 90,
 		LowThresholdPercent:  80,
 	}
-	imageGCManager, err := images.NewImageGCManager(fakeRuntime, kubelet.StatsProvider, fakeRecorder, fakeNodeRef, fakeImageGCPolicy, "")
+	tracer := oteltrace.NewNoopTracerProvider().Tracer("")
+	imageGCManager, err := images.NewImageGCManager(fakeRuntime, kubelet.StatsProvider, fakeRecorder, fakeNodeRef, fakeImageGCPolicy, "", tracer)
 	assert.NoError(t, err)
 	kubelet.imageManager = &fakeImageGCManager{
 		fakeImageService: fakeRuntime,
@@ -301,7 +303,7 @@ func newTestKubeletWithImageList(
 		MaxPerPodContainer: 1,
 		MaxContainers:      -1,
 	}
-	containerGC, err := kubecontainer.NewContainerGC(fakeRuntime, containerGCPolicy, kubelet.sourcesReady)
+	containerGC, err := kubecontainer.NewContainerGC(fakeRuntime, containerGCPolicy, kubelet.sourcesReady, tracer)
 	assert.NoError(t, err)
 	kubelet.containerGC = containerGC
 
