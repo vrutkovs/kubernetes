@@ -664,13 +664,10 @@ func portEqualForLB(x, y *v1.ServicePort) bool {
 		return false
 	}
 
-<<<<<<< HEAD
-=======
 	if !reflect.DeepEqual(x.AppProtocol, y.AppProtocol) {
 		return false
 	}
 
->>>>>>> v1.25.4
 	return true
 }
 
