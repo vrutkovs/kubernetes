@@ -6,8 +6,13 @@ go 1.19
 
 require (
 	github.com/gogo/protobuf v1.3.2
+<<<<<<< HEAD
 	github.com/stretchr/testify v1.7.0
 	k8s.io/apimachinery v0.25.0
+=======
+	github.com/stretchr/testify v1.8.0
+	k8s.io/apimachinery v0.0.0
+>>>>>>> v1.25.4
 )
 
 require (
