@@ -14,13 +14,13 @@ require (
 	github.com/gogo/protobuf v1.3.2
 	github.com/google/gnostic v0.5.7-v3refs
 	github.com/google/go-cmp v0.5.8
-	github.com/google/gofuzz v1.1.0
+	github.com/google/gofuzz v1.2.0
 	github.com/google/uuid v1.1.2
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822
-	github.com/openshift/library-go v0.0.0-20221116163016-046e935fe86f
+	github.com/openshift/library-go v0.0.0-20221205131816-1700fb06ea43
 	github.com/spf13/pflag v1.0.5
-	github.com/stretchr/testify v1.7.0
+	github.com/stretchr/testify v1.8.0
 	go.etcd.io/etcd/api/v3 v3.5.4
 	go.etcd.io/etcd/client/pkg/v3 v3.5.4
 	go.etcd.io/etcd/client/v3 v3.5.4
@@ -34,9 +34,9 @@ require (
 	go.uber.org/atomic v1.7.0
 	go.uber.org/zap v1.19.0
 	golang.org/x/crypto v0.0.0-20220331220935-ae2d96664a29
-	golang.org/x/net v0.0.0-20220722155237-a158d28d115b
+	golang.org/x/net v0.0.0-20220909164309-bea034e7d591
 	golang.org/x/sync v0.0.0-20220722155255-886fb9371eb4
-	golang.org/x/sys v0.0.0-20220722155257-8c9f86f7a55f
+	golang.org/x/sys v0.0.0-20220728004956-3c1f35247d10
 	golang.org/x/time v0.0.0-20220210224613-90d013bbcef8
 	google.golang.org/grpc v1.47.0
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
@@ -45,10 +45,10 @@ require (
 	k8s.io/apimachinery v0.25.0
 	k8s.io/client-go v0.25.0
 	k8s.io/component-base v0.25.0
-	k8s.io/klog/v2 v2.70.1
+	k8s.io/klog/v2 v2.80.1
 	k8s.io/kube-openapi v0.0.0-20220803162953-67bda5d908f1
-	k8s.io/utils v0.0.0-20220728103510-ee6ede2d64ed
-	sigs.k8s.io/apiserver-network-proxy/konnectivity-client v0.0.32
+	k8s.io/utils v0.0.0-20220823124924-e9cbc92d1a73
+	sigs.k8s.io/apiserver-network-proxy/konnectivity-client v0.0.33
 	sigs.k8s.io/json v0.0.0-20220713155537-f223a00ba0e2
 	sigs.k8s.io/structured-merge-diff/v4 v4.2.3
 	sigs.k8s.io/yaml v1.2.0
@@ -118,11 +118,15 @@ require (
 )
 
 replace (
+	github.com/google/gofuzz => github.com/google/gofuzz v1.1.0
 	github.com/imdario/mergo => github.com/imdario/mergo v0.3.6
 	github.com/matttproud/golang_protobuf_extensions => github.com/matttproud/golang_protobuf_extensions v1.0.1
 	github.com/onsi/ginkgo/v2 => github.com/openshift/onsi-ginkgo/v2 v2.0.0-20221005160638-5fa9cd70cd8c
 	golang.org/x/crypto => golang.org/x/crypto v0.0.0-20220315160706-3147a52a75dd
+	golang.org/x/lint => golang.org/x/lint v0.0.0-20190930215403-16217165b5de
+	golang.org/x/net => golang.org/x/net v0.0.0-20220722155237-a158d28d115b
 	golang.org/x/oauth2 => golang.org/x/oauth2 v0.0.0-20211104180415-d3ed0bb246c8
+	golang.org/x/sys => golang.org/x/sys v0.0.0-20220722155257-8c9f86f7a55f
 	k8s.io/api => ../api
 	k8s.io/apiextensions-apiserver => ../apiextensions-apiserver
 	k8s.io/apimachinery => ../apimachinery
@@ -137,6 +141,7 @@ replace (
 	k8s.io/controller-manager => ../controller-manager
 	k8s.io/cri-api => ../cri-api
 	k8s.io/csi-translation-lib => ../csi-translation-lib
+	k8s.io/klog/v2 => k8s.io/klog/v2 v2.70.1
 	k8s.io/kube-aggregator => ../kube-aggregator
 	k8s.io/kube-controller-manager => ../kube-controller-manager
 	k8s.io/kube-proxy => ../kube-proxy
@@ -148,4 +153,5 @@ replace (
 	k8s.io/mount-utils => ../mount-utils
 	k8s.io/pod-security-admission => ../pod-security-admission
 	k8s.io/sample-apiserver => ../sample-apiserver
+	k8s.io/utils => k8s.io/utils v0.0.0-20220728103510-ee6ede2d64ed
 )

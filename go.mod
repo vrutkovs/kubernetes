@@ -43,7 +43,7 @@ require (
 	github.com/google/cadvisor v0.45.0
 	github.com/google/gnostic v0.5.7-v3refs
 	github.com/google/go-cmp v0.5.8
-	github.com/google/gofuzz v1.1.0
+	github.com/google/gofuzz v1.2.0
 	github.com/google/uuid v1.1.2
 	github.com/heketi/heketi v10.3.0+incompatible
 	github.com/ishidawataru/sctp v0.0.0-20190723014705-7c296d48a2b5
@@ -58,9 +58,9 @@ require (
 	github.com/opencontainers/runc v1.1.3
 	github.com/opencontainers/selinux v1.10.0
 	github.com/openshift/api v0.0.0-20221116152553-4b67c2b2bb1e
-	github.com/openshift/apiserver-library-go v0.0.0-20220831203000-5dd0c565981c
-	github.com/openshift/client-go v0.0.0-20220831193253-4950ae70c8ea
-	github.com/openshift/library-go v0.0.0-20221116163016-046e935fe86f
+	github.com/openshift/apiserver-library-go v0.0.0-20221017210321-925452e8316c
+	github.com/openshift/client-go v0.0.0-20221019143426-16aed247da5c
+	github.com/openshift/library-go v0.0.0-20221205131816-1700fb06ea43
 	github.com/pkg/errors v0.9.1
 	github.com/pmezard/go-difflib v1.0.0
 	github.com/prometheus/client_golang v1.12.1
@@ -69,7 +69,7 @@ require (
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/spf13/cobra v1.4.0
 	github.com/spf13/pflag v1.0.5
-	github.com/stretchr/testify v1.7.0
+	github.com/stretchr/testify v1.8.0
 	github.com/vishvananda/netlink v1.1.0
 	github.com/vmware/govmomi v0.20.3
 	go.etcd.io/etcd/api/v3 v3.5.4
@@ -84,10 +84,10 @@ require (
 	go.opentelemetry.io/proto/otlp v0.7.0
 	go.uber.org/zap v1.19.0
 	golang.org/x/crypto v0.0.0-20220331220935-ae2d96664a29
-	golang.org/x/net v0.0.0-20220722155237-a158d28d115b
+	golang.org/x/net v0.0.0-20220909164309-bea034e7d591
 	golang.org/x/oauth2 v0.0.0-20220411215720-9780585627b5
 	golang.org/x/sync v0.0.0-20220722155255-886fb9371eb4
-	golang.org/x/sys v0.0.0-20220722155257-8c9f86f7a55f
+	golang.org/x/sys v0.0.0-20220728004956-3c1f35247d10
 	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211
 	golang.org/x/time v0.0.0-20220210224613-90d013bbcef8
 	golang.org/x/tools v0.1.12
@@ -116,7 +116,7 @@ require (
 	k8s.io/cri-api v0.0.0
 	k8s.io/csi-translation-lib v0.0.0
 	k8s.io/gengo v0.0.0-20211129171323-c02415ce4185
-	k8s.io/klog/v2 v2.70.1
+	k8s.io/klog/v2 v2.80.1
 	k8s.io/kube-aggregator v0.25.0
 	k8s.io/kube-controller-manager v0.0.0
 	k8s.io/kube-openapi v0.0.0-20220803162953-67bda5d908f1
@@ -130,7 +130,7 @@ require (
 	k8s.io/pod-security-admission v0.0.0
 	k8s.io/sample-apiserver v0.0.0
 	k8s.io/system-validators v1.7.0
-	k8s.io/utils v0.0.0-20220728103510-ee6ede2d64ed
+	k8s.io/utils v0.0.0-20220823124924-e9cbc92d1a73
 	sigs.k8s.io/structured-merge-diff/v4 v4.2.3
 	sigs.k8s.io/yaml v1.2.0
 )
@@ -233,7 +233,7 @@ require (
 	github.com/sirupsen/logrus v1.8.1 // indirect
 	github.com/soheilhy/cmux v0.1.5 // indirect
 	github.com/stoewer/go-strcase v1.2.0 // indirect
-	github.com/stretchr/objx v0.2.0 // indirect
+	github.com/stretchr/objx v0.4.0 // indirect
 	github.com/syndtr/gocapability v0.0.0-20200815063812-42c35b437635 // indirect
 	github.com/tmc/grpc-websocket-proxy v0.0.0-20201229170055-e5319fda7802 // indirect
 	github.com/urfave/negroni v1.0.0 // indirect
@@ -261,7 +261,7 @@ require (
 	google.golang.org/appengine v1.6.7 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/warnings.v0 v0.1.1 // indirect
-	sigs.k8s.io/apiserver-network-proxy/konnectivity-client v0.0.32 // indirect
+	sigs.k8s.io/apiserver-network-proxy/konnectivity-client v0.0.33 // indirect
 	sigs.k8s.io/json v0.0.0-20220713155537-f223a00ba0e2 // indirect
 	sigs.k8s.io/kustomize/api v0.12.1 // indirect
 	sigs.k8s.io/kustomize/kustomize/v4 v4.5.7 // indirect
@@ -494,10 +494,10 @@ replace (
 	github.com/opencontainers/runtime-spec => github.com/opencontainers/runtime-spec v1.0.3-0.20210326190908-1c3f411f0417
 	github.com/opencontainers/selinux => github.com/opencontainers/selinux v1.10.0
 	github.com/openshift/api => github.com/openshift/api v0.0.0-20221116152553-4b67c2b2bb1e
-	github.com/openshift/apiserver-library-go => github.com/openshift/apiserver-library-go v0.0.0-20220831203000-5dd0c565981c
-	github.com/openshift/build-machinery-go => github.com/openshift/build-machinery-go v0.0.0-20220720161851-9b4f0386f6b0
-	github.com/openshift/client-go => github.com/openshift/client-go v0.0.0-20220831193253-4950ae70c8ea
-	github.com/openshift/library-go => github.com/openshift/library-go v0.0.0-20221116163016-046e935fe86f
+	github.com/openshift/apiserver-library-go => github.com/openshift/apiserver-library-go v0.0.0-20221017210321-925452e8316c
+	github.com/openshift/build-machinery-go => github.com/openshift/build-machinery-go v0.0.0-20220913142420-e25cf57ea46d
+	github.com/openshift/client-go => github.com/openshift/client-go v0.0.0-20221019143426-16aed247da5c
+	github.com/openshift/library-go => github.com/openshift/library-go v0.0.0-20221205131816-1700fb06ea43
 	github.com/opentracing/opentracing-go => github.com/opentracing/opentracing-go v1.1.0
 	github.com/peterbourgon/diskv => github.com/peterbourgon/diskv v2.0.1+incompatible
 	github.com/pkg/errors => github.com/pkg/errors v0.9.1
@@ -527,8 +527,8 @@ replace (
 	github.com/spf13/cobra => github.com/spf13/cobra v1.4.0
 	github.com/spf13/pflag => github.com/spf13/pflag v1.0.5
 	github.com/stoewer/go-strcase => github.com/stoewer/go-strcase v1.2.0
-	github.com/stretchr/objx => github.com/stretchr/objx v0.2.0
-	github.com/stretchr/testify => github.com/stretchr/testify v1.7.0
+	github.com/stretchr/objx => github.com/stretchr/objx v0.4.0
+	github.com/stretchr/testify => github.com/stretchr/testify v1.8.0
 	github.com/syndtr/gocapability => github.com/syndtr/gocapability v0.0.0-20200815063812-42c35b437635
 	github.com/tmc/grpc-websocket-proxy => github.com/tmc/grpc-websocket-proxy v0.0.0-20201229170055-e5319fda7802
 	github.com/urfave/cli => github.com/urfave/cli v1.22.2
@@ -565,14 +565,14 @@ replace (
 	go.opentelemetry.io/proto/otlp => go.opentelemetry.io/proto/otlp v0.7.0
 	go.starlark.net => go.starlark.net v0.0.0-20200306205701-8dd3e2ee1dd5
 	go.uber.org/atomic => go.uber.org/atomic v1.7.0
-	go.uber.org/goleak => go.uber.org/goleak v1.1.10
+	go.uber.org/goleak => go.uber.org/goleak v1.2.0
 	go.uber.org/multierr => go.uber.org/multierr v1.6.0
 	go.uber.org/zap => go.uber.org/zap v1.19.0
 	golang.org/x/arch => golang.org/x/arch v0.0.0-20180920145803-b19384d3c130
 	golang.org/x/crypto => golang.org/x/crypto v0.0.0-20220315160706-3147a52a75dd
 	golang.org/x/exp => golang.org/x/exp v0.0.0-20210220032938-85be41e4509f
 	golang.org/x/image => golang.org/x/image v0.0.0-20190802002840-cff245a6509b
-	golang.org/x/lint => golang.org/x/lint v0.0.0-20210508222113-6edffad5e616
+	golang.org/x/lint => golang.org/x/lint v0.0.0-20190930215403-16217165b5de
 	golang.org/x/mobile => golang.org/x/mobile v0.0.0-20201217150744-e6ae53a27f4f
 	golang.org/x/mod => golang.org/x/mod v0.6.0-dev.0.20220419223038-86c51ed26bb4
 	golang.org/x/net => golang.org/x/net v0.0.0-20220722155237-a158d28d115b
@@ -645,7 +645,7 @@ replace (
 	modernc.org/strutil => modernc.org/strutil v1.0.0
 	modernc.org/xc => modernc.org/xc v1.0.0
 	rsc.io/pdf => rsc.io/pdf v0.1.1
-	sigs.k8s.io/apiserver-network-proxy/konnectivity-client => sigs.k8s.io/apiserver-network-proxy/konnectivity-client v0.0.32
+	sigs.k8s.io/apiserver-network-proxy/konnectivity-client => sigs.k8s.io/apiserver-network-proxy/konnectivity-client v0.0.33
 	sigs.k8s.io/controller-tools => sigs.k8s.io/controller-tools v0.2.8
 	sigs.k8s.io/json => sigs.k8s.io/json v0.0.0-20220713155537-f223a00ba0e2
 	sigs.k8s.io/kube-storage-version-migrator => sigs.k8s.io/kube-storage-version-migrator v0.0.4
