@@ -22,8 +22,10 @@ import (
 	"os"
 	"path/filepath"
 	"time"
+	"context"
 
 	cadvisorapi "github.com/google/cadvisor/info/v1"
+	"go.opentelemetry.io/otel/trace"
 	crierror "k8s.io/cri-api/pkg/errors"
 	"k8s.io/klog/v2"
 
@@ -72,6 +74,8 @@ const (
 	versionCacheTTL = 60 * time.Second
 	// How frequently to report identical errors
 	identicalErrorDelay = 1 * time.Minute
+	// OpenTelemetry instrumentation scope name
+	instrumentationScope = "k8s.io/kubernetes/pkg/kubelet/kuberuntime"
 )
 
 var (
@@ -195,9 +199,11 @@ func NewKubeGenericRuntimeManager(
 	memorySwapBehavior string,
 	getNodeAllocatable func() v1.ResourceList,
 	memoryThrottlingFactor float64,
+	tracerProvider trace.TracerProvider,
 ) (KubeGenericRuntime, error) {
 	runtimeService = newInstrumentedRuntimeService(runtimeService)
 	imageService = newInstrumentedImageManagerService(imageService)
+	tracer := tracerProvider.Tracer(instrumentationScope)
 	kubeRuntimeManager := &kubeGenericRuntimeManager{
 		recorder:               recorder,
 		cpuCFSQuota:            cpuCFSQuota,
@@ -272,7 +278,7 @@ func NewKubeGenericRuntimeManager(
 		imagePullQPS,
 		imagePullBurst)
 	kubeRuntimeManager.runner = lifecycle.NewHandlerRunner(httpClient, kubeRuntimeManager, kubeRuntimeManager)
-	kubeRuntimeManager.containerGC = newContainerGC(runtimeService, podStateProvider, kubeRuntimeManager)
+	kubeRuntimeManager.containerGC = newContainerGC(runtimeService, podStateProvider, kubeRuntimeManager, tracer)
 	kubeRuntimeManager.podStateProvider = podStateProvider
 
 	kubeRuntimeManager.versionCache = cache.NewObjectCache(
@@ -1039,7 +1045,8 @@ func (m *kubeGenericRuntimeManager) GetPodStatus(uid kubetypes.UID, name, namesp
 
 // GarbageCollect removes dead containers using the specified container gc policy.
 func (m *kubeGenericRuntimeManager) GarbageCollect(gcPolicy kubecontainer.GCPolicy, allSourcesReady bool, evictNonDeletedPods bool) error {
-	return m.containerGC.GarbageCollect(gcPolicy, allSourcesReady, evictNonDeletedPods)
+	ctx := context.TODO()
+	return m.containerGC.GarbageCollect(ctx, gcPolicy, allSourcesReady, evictNonDeletedPods)
 }
 
 // UpdatePodCIDR is just a passthrough method to update the runtimeConfig of the shim

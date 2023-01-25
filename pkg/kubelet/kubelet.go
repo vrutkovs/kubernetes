@@ -38,6 +38,7 @@ import (
 
 	cadvisorapi "github.com/google/cadvisor/info/v1"
 	libcontaineruserns "github.com/opencontainers/runc/libcontainer/userns"
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 	"k8s.io/mount-utils"
 	"k8s.io/utils/integer"
@@ -175,6 +176,9 @@ const (
 
 	// nodeLeaseRenewIntervalFraction is the fraction of lease duration to renew the lease
 	nodeLeaseRenewIntervalFraction = 0.25
+
+	// instrumentationScope is the name of OpenTelemetry instrumentation scope
+	instrumentationScope = "k8s.io/kubernetes/pkg/kubelet"
 )
 
 var (
@@ -489,6 +493,8 @@ func NewMainKubelet(kubeCfg *kubeletconfiginternal.KubeletConfiguration,
 	}
 	httpClient := &http.Client{}
 
+	tracer := kubeDeps.TracerProvider.Tracer(instrumentationScope)
+
 	klet := &Kubelet{
 		hostname:                                hostname,
 		hostnameOverridden:                      hostnameOverridden,
@@ -541,6 +547,7 @@ func NewMainKubelet(kubeCfg *kubeletconfiginternal.KubeletConfiguration,
 		keepTerminatedPodVolumes:                keepTerminatedPodVolumes,
 		nodeStatusMaxImages:                     nodeStatusMaxImages,
 		lastContainerStartedTime:                newTimeCache(),
+		tracer:                                  tracer,
 	}
 
 	if klet.cloud != nil {
@@ -660,6 +667,7 @@ func NewMainKubelet(kubeCfg *kubeletconfiginternal.KubeletConfiguration,
 		kubeCfg.MemorySwap.SwapBehavior,
 		kubeDeps.ContainerManager.GetNodeAllocatableAbsolute,
 		*kubeCfg.MemoryThrottlingFactor,
+		kubeDeps.TracerProvider,
 	)
 	if err != nil {
 		return nil, err
@@ -715,7 +723,7 @@ func NewMainKubelet(kubeCfg *kubeletconfiginternal.KubeletConfiguration,
 	klet.containerDeletor = newPodContainerDeletor(klet.containerRuntime, integer.IntMax(containerGCPolicy.MaxPerPodContainer, minDeadContainerInPod))
 
 	// setup imageManager
-	imageManager, err := images.NewImageGCManager(klet.containerRuntime, klet.StatsProvider, kubeDeps.Recorder, nodeRef, imageGCPolicy, crOptions.PodSandboxImage)
+	imageManager, err := images.NewImageGCManager(klet.containerRuntime, klet.StatsProvider, kubeDeps.Recorder, nodeRef, imageGCPolicy, crOptions.PodSandboxImage, kubeDeps.TracerProvider)
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize image manager: %v", err)
 	}
@@ -1199,6 +1207,9 @@ type Kubelet struct {
 
 	// Manage user namespaces
 	usernsManager *usernsManager
+
+	// OpenTelemetry Tracer
+	tracer trace.Tracer
 }
 
 // ListPodStats is delegated to StatsProvider, which implements stats.Provider interface
@@ -1542,10 +1553,20 @@ func (kl *Kubelet) Run(updates <-chan kubetypes.PodUpdate) {
 // This operation writes all events that are dispatched in order to provide
 // the most accurate information possible about an error situation to aid debugging.
 // Callers should not write an event if this operation returns an error.
-func (kl *Kubelet) syncPod(ctx context.Context, updateType kubetypes.SyncPodType, pod, mirrorPod *v1.Pod, podStatus *kubecontainer.PodStatus) (isTerminal bool, err error) {
+func (kl *Kubelet) syncPod(_ context.Context, updateType kubetypes.SyncPodType, pod, mirrorPod *v1.Pod, podStatus *kubecontainer.PodStatus) (isTerminal bool, err error) {
+	// TODO(#113606): connect this with the incoming context parameter, which comes from the pod worker.
+	// Currently, using that context causes test failures.
+	_, otelSpan := kl.tracer.Start(context.TODO(), "syncPod", trace.WithAttributes(
+		attribute.String("update_type", updateType.String()),
+		attribute.String("k8s.pod.uid", string(pod.UID)),
+		attribute.String("k8s.pod", klog.KObj(pod).String()),
+		attribute.String("k8s.pod.name", pod.Name),
+		attribute.String("k8s.namespace.name", pod.Namespace),
+	))
 	klog.V(4).InfoS("syncPod enter", "pod", klog.KObj(pod), "podUID", pod.UID)
 	defer func() {
 		klog.V(4).InfoS("syncPod exit", "pod", klog.KObj(pod), "podUID", pod.UID, "isTerminal", isTerminal)
+		otelSpan.End()
 	}()
 
 	// Latency measurements for the main workflow are relative to the
@@ -1784,7 +1805,16 @@ func (kl *Kubelet) syncPod(ctx context.Context, updateType kubetypes.SyncPodType
 // syncTerminatingPod is expected to terminate all running containers in a pod. Once this method
 // returns without error, the pod's local state can be safely cleaned up. If runningPod is passed,
 // we perform no status updates.
-func (kl *Kubelet) syncTerminatingPod(ctx context.Context, pod *v1.Pod, podStatus *kubecontainer.PodStatus, runningPod *kubecontainer.Pod, gracePeriod *int64, podStatusFn func(*v1.PodStatus)) error {
+func (kl *Kubelet) syncTerminatingPod(_ context.Context, pod *v1.Pod, podStatus *kubecontainer.PodStatus, runningPod *kubecontainer.Pod, gracePeriod *int64, podStatusFn func(*v1.PodStatus)) error {
+	// TODO(#113606): connect this with the incoming context parameter, which comes from the pod worker.
+	// Currently, using that context causes test failures.
+	_, otelSpan := kl.tracer.Start(context.Background(), "syncTerminatingPod", trace.WithAttributes(
+		attribute.String("k8s.pod.uid", string(pod.UID)),
+		attribute.String("k8s.pod", klog.KObj(pod).String()),
+		attribute.String("k8s.pod.name", pod.Name),
+		attribute.String("k8s.namespace.name", pod.Namespace),
+	))
+	defer otelSpan.End()
 	klog.V(4).InfoS("syncTerminatingPod enter", "pod", klog.KObj(pod), "podUID", pod.UID)
 	defer klog.V(4).InfoS("syncTerminatingPod exit", "pod", klog.KObj(pod), "podUID", pod.UID)
 
@@ -1883,6 +1913,13 @@ func (kl *Kubelet) syncTerminatingPod(ctx context.Context, pod *v1.Pod, podStatu
 // gates pod deletion). When this method exits the pod is expected to be ready for cleanup.
 // TODO: make this method take a context and exit early
 func (kl *Kubelet) syncTerminatedPod(ctx context.Context, pod *v1.Pod, podStatus *kubecontainer.PodStatus) error {
+	_, otelSpan := kl.tracer.Start(context.Background(), "syncTerminatedPod", trace.WithAttributes(
+		attribute.String("k8s.pod.uid", string(pod.UID)),
+		attribute.String("k8s.pod", klog.KObj(pod).String()),
+		attribute.String("k8s.pod.name", pod.Name),
+		attribute.String("k8s.namespace.name", pod.Namespace),
+	))
+	defer otelSpan.End()
 	klog.V(4).InfoS("syncTerminatedPod enter", "pod", klog.KObj(pod), "podUID", pod.UID)
 	defer klog.V(4).InfoS("syncTerminatedPod exit", "pod", klog.KObj(pod), "podUID", pod.UID)
 
