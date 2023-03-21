@@ -1307,3 +1307,36 @@ func verifyVolumeFoundInReconstruction(t *testing.T, podToCheck volumetypes.Uniq
 		t.Fatalf("ASW IsVolumeReconstructed result invalid. expected <true> Actual <false>")
 	}
 }
+
+func BenchmarkGetAllMountedVolumes(t *testing.B) {
+	asw := &actualStateOfWorld{
+		attachedVolumes: map[v1.UniqueVolumeName]attachedVolume{},
+	}
+	// Kubelet pod limits is 120 pods per node
+	for i := 0; i < 120;  i++ {
+		podName := volumetypes.UniquePodName(fmt.Sprintf("pod-%d", i))
+		// Each pod will have 10 volumes on average
+		for j:= 0; j < 10; j++ {
+			volumeName := fmt.Sprintf("volume-%d", i*10 + j)
+			av := attachedVolume{
+				volumeName: v1.UniqueVolumeName(volumeName),
+				mountedPods: map[volumetypes.UniquePodName]mountedPod {
+					podName: {
+						// TODO: randomize this?
+						volumeMountStateForPod: operationexecutor.VolumeMounted,
+						volumeSpec: &volume.Spec{
+							Volume: &v1.Volume {
+								Name: volumeName,
+							},
+						},
+					},
+				},
+			}
+			asw.attachedVolumes[av.volumeName] = av
+		}
+	}
+	t.ResetTimer()
+	for i := 0; i< t.N; i++ {
+		asw.GetAllMountedVolumes()
+	}
+}
