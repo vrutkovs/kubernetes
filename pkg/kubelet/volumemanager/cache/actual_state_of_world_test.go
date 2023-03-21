@@ -35,6 +35,7 @@ import (
 	"k8s.io/kubernetes/pkg/volume/util"
 	"k8s.io/kubernetes/pkg/volume/util/operationexecutor"
 	volumetypes "k8s.io/kubernetes/pkg/volume/util/types"
+	"github.com/dghubble/trie"
 )
 
 var emptyVolumeName = v1.UniqueVolumeName("")
@@ -1311,6 +1312,8 @@ func verifyVolumeFoundInReconstruction(t *testing.T, podToCheck volumetypes.Uniq
 func BenchmarkGetAllMountedVolumes(t *testing.B) {
 	asw := &actualStateOfWorld{
 		attachedVolumes: map[v1.UniqueVolumeName]attachedVolume{},
+		podsTree: trie.NewPathTrie(),
+		volumeTree: trie.NewPathTrie(),
 	}
 	// Kubelet pod limits is 120 pods per node
 	for i := 0; i < 120;  i++ {
@@ -1318,21 +1321,27 @@ func BenchmarkGetAllMountedVolumes(t *testing.B) {
 		// Each pod will have 10 volumes on average
 		for j:= 0; j < 10; j++ {
 			volumeName := fmt.Sprintf("volume-%d", i*10 + j)
-			av := attachedVolume{
-				volumeName: v1.UniqueVolumeName(volumeName),
-				mountedPods: map[volumetypes.UniquePodName]mountedPod {
-					podName: {
-						// TODO: randomize this?
-						volumeMountStateForPod: operationexecutor.VolumeMounted,
-						volumeSpec: &volume.Spec{
-							Volume: &v1.Volume {
-								Name: volumeName,
-							},
-						},
+			podObj := mountedPod{
+				// TODO: randomize this?
+				volumeMountStateForPod: operationexecutor.VolumeMounted,
+				volumeSpec: &volume.Spec{
+					Volume: &v1.Volume {
+						Name: volumeName,
 					},
 				},
 			}
+			av := attachedVolume{
+				volumeName: v1.UniqueVolumeName(volumeName),
+				mountedPods: map[volumetypes.UniquePodName]mountedPod {
+					podName: podObj,
+				},
+			}
 			asw.attachedVolumes[av.volumeName] = av
+			asw.volumeTree.Put(volumeName, av)
+			key := fmt.Sprintf("%s/%s",
+				string(volumeName),
+				string(podName))
+			asw.podsTree.Put(key, podObj)
 		}
 	}
 	t.ResetTimer()
