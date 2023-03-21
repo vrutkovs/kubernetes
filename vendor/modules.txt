@@ -179,6 +179,9 @@ github.com/davecgh/go-spew/spew
 # github.com/daviddengcn/go-colortext v1.0.0
 ## explicit; go 1.14
 github.com/daviddengcn/go-colortext
+# github.com/dghubble/trie v0.0.0-20230228185955-dca8fa4fd7f8
+## explicit; go 1.19
+github.com/dghubble/trie
 # github.com/docker/distribution v2.8.1+incompatible
 ## explicit
 github.com/docker/distribution/digestset
