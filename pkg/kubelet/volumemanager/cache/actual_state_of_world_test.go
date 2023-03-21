@@ -1316,10 +1316,10 @@ func BenchmarkGetAllMountedVolumes(t *testing.B) {
 		volumeTree: trie.NewPathTrie(),
 	}
 	// Kubelet pod limits is 120 pods per node
-	for i := 0; i < 120;  i++ {
+	for i := 0; i < 500;  i++ {
 		podName := volumetypes.UniquePodName(fmt.Sprintf("pod-%d", i))
 		// Each pod will have 10 volumes on average
-		for j:= 0; j < 10; j++ {
+		for j:= 0; j < 20; j++ {
 			volumeName := fmt.Sprintf("volume-%d", i*10 + j)
 			podObj := mountedPod{
 				// TODO: randomize this?

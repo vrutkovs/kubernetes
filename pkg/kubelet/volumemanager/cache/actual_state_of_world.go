@@ -1004,6 +1004,9 @@ func (asw *actualStateOfWorld) GetAllMountedVolumes() []MountedVolume {
 			// Get volumeObj
 			index := strings.LastIndex(path, "/")
 			volumeInterface := asw.volumeTree.Get(path[:index])
+			if volumeInterface == nil {
+				return nil
+			}
 			volumeObj := volumeInterface.(attachedVolume)
 			mountedVolume = append(
 				mountedVolume,
