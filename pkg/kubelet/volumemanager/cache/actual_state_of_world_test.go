@@ -1337,11 +1337,11 @@ func BenchmarkGetAllMountedVolumes(t *testing.B) {
 				},
 			}
 			asw.attachedVolumes[av.volumeName] = av
-			asw.volumeTree.Put(volumeName, av)
+			asw.volumeTree.Put(volumeName, &av)
 			key := fmt.Sprintf("%s/%s",
 				string(volumeName),
 				string(podName))
-			asw.podsTree.Put(key, podObj)
+			asw.podsTree.Put(key, &podObj)
 		}
 	}
 	t.ResetTimer()
