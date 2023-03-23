@@ -449,7 +449,7 @@ func (asw *actualStateOfWorld) CheckAndMarkVolumeAsUncertainViaReconstruction(op
 	key := fmt.Sprintf("%s/%s",
 		string(volumeName),
 		string(podName))
-	asw.podsTree.Put(key, &podObj)
+	asw.podsTree.Put(key, podObj)
 
 	podMap, ok := asw.foundDuringReconstruction[opts.VolumeName]
 	if !ok {
@@ -711,7 +711,7 @@ func (asw *actualStateOfWorld) AddPodToVolume(markVolumeOpts operationexecutor.M
 	key := fmt.Sprintf("%s/%s",
 		string(volumeName),
 		string(podName))
-	asw.podsTree.Put(key, &podObj)
+	asw.podsTree.Put(key, podObj)
 	if utilfeature.DefaultFeatureGate.Enabled(features.SELinuxMountReadWriteOncePod) {
 		// Store the mount context also in the AttachedVolume to have a global volume context
 		// for a quick comparison in PodExistsInVolume.
@@ -757,7 +757,7 @@ func (asw *actualStateOfWorld) MarkRemountRequired(
 				key := fmt.Sprintf("%s/%s",
 					string(volumeName),
 					string(podName))
-				asw.podsTree.Put(key, &podObj)
+				asw.podsTree.Put(key, podObj)
 			}
 		}
 	}
@@ -786,7 +786,7 @@ func (asw *actualStateOfWorld) SetDeviceMountState(
 		}
 	}
 	asw.attachedVolumes[volumeName] = volumeObj
-	asw.volumeTree.Put(string(volumeName), &volumeObj)
+	asw.volumeTree.Put(string(volumeName), volumeObj)
 	return nil
 }
 
@@ -800,7 +800,7 @@ func (asw *actualStateOfWorld) InitializeClaimSize(logger klog.Logger, volumeNam
 	if ok && volumeObj.persistentVolumeSize == nil {
 		volumeObj.persistentVolumeSize = claimSize
 		asw.attachedVolumes[volumeName] = volumeObj
-		asw.volumeTree.Put(string(volumeName), &volumeObj)
+		asw.volumeTree.Put(string(volumeName), volumeObj)
 	}
 }
 
@@ -999,7 +999,7 @@ func (asw *actualStateOfWorld) GetAllMountedVolumes() []MountedVolume {
 	mountedVolume := make([]MountedVolume, 0 /* len */, len(asw.attachedVolumes) /* cap */)
 
 	asw.podsTree.Walk(func(path string, value interface{}) error {
-		podObj := value.(*mountedPod)
+		podObj := value.(mountedPod)
 		if podObj.volumeMountStateForPod == operationexecutor.VolumeMounted {
 			// Get volumeObj
 			index := strings.LastIndex(path, "/")
@@ -1007,10 +1007,10 @@ func (asw *actualStateOfWorld) GetAllMountedVolumes() []MountedVolume {
 			if volumeInterface == nil {
 				return nil
 			}
-			volumeObj := volumeInterface.(*attachedVolume)
+			volumeObj := volumeInterface.(attachedVolume)
 			mountedVolume = append(
 				mountedVolume,
-				getMountedVolume(podObj, volumeObj))
+				getMountedVolume(&podObj, &volumeObj))
 		}
 		return nil
 	})
@@ -1111,7 +1111,7 @@ func (asw *actualStateOfWorld) SyncReconstructedVolume(volumeName v1.UniqueVolum
 				key := fmt.Sprintf("%s/%s",
 					string(volumeName),
 					string(podName))
-				asw.podsTree.Put(key, &podObj)
+				asw.podsTree.Put(key, podObj)
 			}
 		}
 	}
