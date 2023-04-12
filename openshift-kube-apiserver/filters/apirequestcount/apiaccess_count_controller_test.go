@@ -824,6 +824,140 @@ func TestPersistRequestCountForAllResources(t *testing.T) {
 	})
 
 }
+
+type logRequestFn func(*controller)
+
+func apiRequestBenchmark(b *testing.B, currentHour int, existing []runtime.Object, requests []logRequestFn, expected []*apiv1.APIRequestCount) {
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	for n := 0; n < b.N; n++ {
+		c := NewController(
+			fake.NewSimpleClientset(existing...).ApiserverV1().APIRequestCounts(),
+			"node10",
+		)
+		c.updatePeriod = time.Millisecond
+
+		for _, logRequest := range requests {
+			logRequest(c)
+		}
+		c.persistRequestCountForAllResources(ctx, currentHour)
+
+		arcs, err := c.client.List(ctx, metav1.ListOptions{})
+		if err != nil {
+			b.Fatal(err)
+		}
+		if len(arcs.Items) != len(expected) {
+			b.Errorf("expected %d APIRequestCounts, got %d.", len(expected), len(arcs.Items))
+		}
+
+		for _, expectedARC := range expected {
+			actual, err := c.client.Get(ctx, expectedARC.Name, metav1.GetOptions{})
+			if err != nil {
+				b.Error(err)
+			}
+			if !equality.Semantic.DeepEqual(expectedARC, actual) {
+				b.Error(cmp.Diff(expectedARC, actual))
+			}
+		}
+	}
+}
+
+func BenchmarkApiRequestCountNoop(b *testing.B) {
+	var (
+		currentHour int
+		existing    []runtime.Object
+		requests    []logRequestFn
+		expected    []*apiv1.APIRequestCount
+	)
+	apiRequestBenchmark(b, currentHour, existing, requests, expected)
+}
+
+func BenchmarkApiRequestCountEmptyStatus(b *testing.B) {
+	var (
+		currentHour int
+		requests    []logRequestFn
+	)
+	existing := []runtime.Object{
+		apiRequestCount("test.v1.group"),
+	}
+	expected := []*apiv1.APIRequestCount{
+		apiRequestCount("test.v1.group", withStatus(
+			withRequestLastHour(withPerNodeAPIRequestLog("node10")),
+			withRequestLast24hN("0,2-23", withPerNodeAPIRequestLog("node10")),
+		)),
+	}
+
+	apiRequestBenchmark(b, currentHour, existing, requests, expected)
+}
+
+func BenchmarkApiRequestCountIgnoreOnRestart(b *testing.B) {
+	var (
+		currentHour int
+	)
+	existing := []runtime.Object{
+		// current hour is 0, this api has not been requested since hour 20
+		apiRequestCount("test.v1.group",
+			withStatus(
+				withRequestLastHour(
+					withPerNodeAPIRequestLog("node10",
+						withPerUserAPIRequestCount("user10", "agent10", withRequestCount("get", 100)),
+					),
+				),
+				withRequestLast24hN("*", withPerNodeAPIRequestLog("node10")),
+				withRequestLast24h(20, withPerNodeAPIRequestLog("node10",
+					withPerUserAPIRequestCount("user10", "agent10", withRequestCount("get", 100)),
+				)),
+				setRequestCountTotals,
+			),
+		),
+		// this api will have some current requests
+		apiRequestCount("test.v2.group"),
+	}
+	requests := []logRequestFn{
+		withRequestN("test.v2.group", 0, "user10", "agent10", "get", 53),
+		withRequestN("test.v3.group", 0, "user10", "agent10", "get", 57),
+	}
+	expected := []*apiv1.APIRequestCount{
+		apiRequestCount("test.v1.group",
+			withStatus(
+				withRequestLastHour(withPerNodeAPIRequestLog("node10")),
+				withRequestLast24hN("0,2-23", withPerNodeAPIRequestLog("node10")),
+				withRequestLast24h(20, withPerNodeAPIRequestLog("node10",
+					withPerUserAPIRequestCount("user10", "agent10", withRequestCount("get", 100)),
+				)),
+				setRequestCountTotals,
+			),
+		),
+		apiRequestCount("test.v2.group",
+			withStatus(
+				withRequestLastHour(withPerNodeAPIRequestLog("node10",
+					withPerUserAPIRequestCount("user10", "agent10", withRequestCount("get", 53)),
+				)),
+				withRequestLast24hN("0,2-23", withPerNodeAPIRequestLog("node10")),
+				withRequestLast24h(0, withPerNodeAPIRequestLog("node10",
+					withPerUserAPIRequestCount("user10", "agent10", withRequestCount("get", 53)),
+				)),
+				setRequestCountTotals,
+			),
+		),
+		apiRequestCount("test.v3.group",
+			withStatus(
+				withRequestLastHour(withPerNodeAPIRequestLog("node10",
+					withPerUserAPIRequestCount("user10", "agent10", withRequestCount("get", 57)),
+				)),
+				withRequestLast24hN("0,2-23", withPerNodeAPIRequestLog("node10")),
+				withRequestLast24h(0, withPerNodeAPIRequestLog("node10",
+					withPerUserAPIRequestCount("user10", "agent10", withRequestCount("get", 57)),
+				)),
+				setRequestCountTotals,
+			),
+		),
+	}
+
+	apiRequestBenchmark(b, currentHour, existing, requests, expected)
+}
+
 func withRequestN(resource string, hour int, user, agent, verb string, n int) func(*controller) {
 	f := withRequest(resource, hour, user, agent, verb)
 	return func(c *controller) {
