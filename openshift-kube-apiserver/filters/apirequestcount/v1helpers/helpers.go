@@ -30,12 +30,11 @@ func ApplyStatus(ctx context.Context, client apiv1client.APIRequestCountInterfac
 		} else if err != nil {
 			return err
 		}
-		oldStatus := existingOrDefaultAPIRequestCount.Status
-		newStatus := oldStatus.DeepCopy()
+		newStatus := existingOrDefaultAPIRequestCount.Status.DeepCopy()
 		for _, update := range updateFuncs {
 			update(int(existingOrDefaultAPIRequestCount.Spec.NumberOfUsersToReport), newStatus)
 		}
-		if equality.Semantic.DeepEqual(&oldStatus, newStatus) {
+		if equality.Semantic.DeepEqual(&existingOrDefaultAPIRequestCount.Status, newStatus) {
 			updatedStatus = newStatus
 			return nil
 		}
