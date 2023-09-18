@@ -857,26 +857,6 @@ func (az *Cloud) updateNodeCaches(prevNode, newNode *v1.Node) {
 		case hasExcludeBalancerLabel:
 			az.excludeLoadBalancerNodes.Insert(newNode.ObjectMeta.Name)
 
-<<<<<<< HEAD
-		case !isNodeReady(newNode) && !isNodeMaster(newNode) && getCloudTaint(newNode.Spec.Taints) == nil:
-			// If not in ready state and not a newly created node, add to excludeLoadBalancerNodes cache.
-			// New nodes (tainted with "node.cloudprovider.kubernetes.io/uninitialized") should not be
-			// excluded from load balancers regardless of their state, so as to reduce the number of
-			// VMSS API calls and not provoke VMScaleSetActiveModelsCountLimitReached.
-			// (https://github.com/kubernetes-sigs/cloud-provider-azure/issues/851)
-			az.excludeLoadBalancerNodes.Insert(newNode.ObjectMeta.Name)
-
-||||||| fa3d7990104
-		case !isNodeReady(newNode) && getCloudTaint(newNode.Spec.Taints) == nil:
-			// If not in ready state and not a newly created node, add to excludeLoadBalancerNodes cache.
-			// New nodes (tainted with "node.cloudprovider.kubernetes.io/uninitialized") should not be
-			// excluded from load balancers regardless of their state, so as to reduce the number of
-			// VMSS API calls and not provoke VMScaleSetActiveModelsCountLimitReached.
-			// (https://github.com/kubernetes-sigs/cloud-provider-azure/issues/851)
-			az.excludeLoadBalancerNodes.Insert(newNode.ObjectMeta.Name)
-
-=======
->>>>>>> v1.27.6
 		default:
 			// Nodes not falling into the three cases above are valid backends and
 			// should not appear in excludeLoadBalancerNodes cache.
@@ -1006,54 +986,3 @@ func (az *Cloud) ShouldNodeExcludedFromLoadBalancer(nodeName string) (bool, erro
 
 	return az.excludeLoadBalancerNodes.Has(nodeName), nil
 }
-<<<<<<< HEAD
-
-func isNodeReady(node *v1.Node) bool {
-	for _, cond := range node.Status.Conditions {
-		if cond.Type == v1.NodeReady && cond.Status == v1.ConditionTrue {
-			return true
-		}
-	}
-	return false
-}
-
-func isNodeMaster(node *v1.Node) bool {
-	labels := node.GetLabels()
-	for l := range labels {
-		if l == "node-role.kubernetes.io/master" || l == "node-role.kubernetes.io/control-plane" {
-			return true
-		}
-	}
-
-	return false
-}
-
-func getCloudTaint(taints []v1.Taint) *v1.Taint {
-	for _, taint := range taints {
-		if taint.Key == cloudproviderapi.TaintExternalCloudProvider {
-			return &taint
-		}
-	}
-	return nil
-}
-||||||| fa3d7990104
-
-func isNodeReady(node *v1.Node) bool {
-	for _, cond := range node.Status.Conditions {
-		if cond.Type == v1.NodeReady && cond.Status == v1.ConditionTrue {
-			return true
-		}
-	}
-	return false
-}
-
-func getCloudTaint(taints []v1.Taint) *v1.Taint {
-	for _, taint := range taints {
-		if taint.Key == cloudproviderapi.TaintExternalCloudProvider {
-			return &taint
-		}
-	}
-	return nil
-}
-=======
->>>>>>> v1.27.6
