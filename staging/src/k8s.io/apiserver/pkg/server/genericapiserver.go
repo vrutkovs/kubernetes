@@ -1069,12 +1069,15 @@ func (s *GenericAPIServer) Eventf(eventType, reason, messageFmt string, args ...
 			Name:      fmt.Sprintf("%v.%x", ref.Name, t.UnixNano()),
 			Namespace: ref.Namespace,
 		},
-		InvolvedObject: ref,
-		Reason:         reason,
-		Message:        fmt.Sprintf(messageFmt, args...),
-		Type:           eventType,
-		Source:         corev1.EventSource{Component: "apiserver", Host: host},
-		EventTime:      t,
+		InvolvedObject:      ref,
+		Reason:              reason,
+		Message:             fmt.Sprintf(messageFmt, args...),
+		Type:                eventType,
+		Source:              corev1.EventSource{Component: "apiserver", Host: host},
+		EventTime:           t,
+		ReportingController: "apiserver",
+		ReportingInstance:   host,
+		Action:              "shutdown",
 	}
 
 	klog.V(2).Infof("Event(%#v): type: '%v' reason: '%v' %v", e.InvolvedObject, e.Type, e.Reason, e.Message)
