@@ -43,6 +43,7 @@ import (
 	"google.golang.org/grpc/internal"
 	"google.golang.org/grpc/internal/binarylog"
 	"google.golang.org/grpc/internal/channelz"
+	"google.golang.org/grpc/internal/grpcrand"
 	"google.golang.org/grpc/internal/grpcsync"
 	"google.golang.org/grpc/internal/grpcutil"
 	"google.golang.org/grpc/internal/transport"
@@ -115,6 +116,12 @@ type serviceInfo struct {
 	mdata       interface{}
 }
 
+type serverWorkerData struct {
+	st     transport.ServerTransport
+	wg     *sync.WaitGroup
+	stream *transport.Stream
+}
+
 // Server is a gRPC server to serve RPC requests.
 type Server struct {
 	opts serverOptions
@@ -139,7 +146,7 @@ type Server struct {
 	channelzID *channelz.Identifier
 	czData     *channelzData
 
-	serverWorkerChannel chan func()
+	serverWorkerChannels []chan *serverWorkerData
 }
 
 type serverOptions struct {
@@ -171,7 +178,6 @@ type serverOptions struct {
 }
 
 var defaultServerOptions = serverOptions{
-	maxConcurrentStreams:  math.MaxUint32,
 	maxReceiveMessageSize: defaultServerMaxReceiveMessageSize,
 	maxSendMessageSize:    defaultServerMaxSendMessageSize,
 	connectionTimeout:     120 * time.Second,
@@ -382,9 +388,6 @@ func MaxSendMsgSize(m int) ServerOption {
 // MaxConcurrentStreams returns a ServerOption that will apply a limit on the number
 // of concurrent streams to each ServerTransport.
 func MaxConcurrentStreams(n uint32) ServerOption {
-	if n == 0 {
-		n = math.MaxUint32
-	}
 	return newFuncServerOption(func(o *serverOptions) {
 		o.maxConcurrentStreams = n
 	})
@@ -558,33 +561,40 @@ func NumStreamWorkers(numServerWorkers uint32) ServerOption {
 const serverWorkerResetThreshold = 1 << 16
 
 // serverWorkers blocks on a *transport.Stream channel forever and waits for
-// data to be fed by serveStreams. This allows multiple requests to be
+// data to be fed by serveStreams. This allows different requests to be
 // processed by the same goroutine, removing the need for expensive stack
 // re-allocations (see the runtime.morestack problem [1]).
 //
 // [1] https://github.com/golang/go/issues/18138
-func (s *Server) serverWorker() {
-	for completed := 0; completed < serverWorkerResetThreshold; completed++ {
-		f, ok := <-s.serverWorkerChannel
+func (s *Server) serverWorker(ch chan *serverWorkerData) {
+	// To make sure all server workers don't reset at the same time, choose a
+	// random number of iterations before resetting.
+	threshold := serverWorkerResetThreshold + grpcrand.Intn(serverWorkerResetThreshold)
+	for completed := 0; completed < threshold; completed++ {
+		data, ok := <-ch
 		if !ok {
 			return
 		}
-		f()
+		s.handleStream(data.st, data.stream, s.traceInfo(data.st, data.stream))
+		data.wg.Done()
 	}
-	go s.serverWorker()
+	go s.serverWorker(ch)
 }
 
-// initServerWorkers creates worker goroutines and a channel to process incoming
+// initServerWorkers creates worker goroutines and channels to process incoming
 // connections to reduce the time spent overall on runtime.morestack.
 func (s *Server) initServerWorkers() {
-	s.serverWorkerChannel = make(chan func())
+	s.serverWorkerChannels = make([]chan *serverWorkerData, s.opts.numServerWorkers)
 	for i := uint32(0); i < s.opts.numServerWorkers; i++ {
-		go s.serverWorker()
+		s.serverWorkerChannels[i] = make(chan *serverWorkerData)
+		go s.serverWorker(s.serverWorkerChannels[i])
 	}
 }
 
 func (s *Server) stopServerWorkers() {
-	close(s.serverWorkerChannel)
+	for i := uint32(0); i < s.opts.numServerWorkers; i++ {
+		close(s.serverWorkerChannels[i])
+	}
 }
 
 // NewServer creates a gRPC server which has no service registered and has not
@@ -888,7 +898,7 @@ func (s *Server) drainServerTransports(addr string) {
 	s.mu.Lock()
 	conns := s.conns[addr]
 	for st := range conns {
-		st.Drain("")
+		st.Drain()
 	}
 	s.mu.Unlock()
 }
@@ -936,26 +946,26 @@ func (s *Server) serveStreams(st transport.ServerTransport) {
 	defer st.Close(errors.New("finished serving streams for the server transport"))
 	var wg sync.WaitGroup
 
-	streamQuota := newHandlerQuota(s.opts.maxConcurrentStreams)
+	var roundRobinCounter uint32
 	st.HandleStreams(func(stream *transport.Stream) {
 		wg.Add(1)
-
-		streamQuota.acquire()
-		f := func() {
-			defer streamQuota.release()
-			defer wg.Done()
-			s.handleStream(st, stream, s.traceInfo(st, stream))
-		}
-
 		if s.opts.numServerWorkers > 0 {
+			data := &serverWorkerData{st: st, wg: &wg, stream: stream}
 			select {
-			case s.serverWorkerChannel <- f:
-				return
+			case s.serverWorkerChannels[atomic.AddUint32(&roundRobinCounter, 1)%s.opts.numServerWorkers] <- data:
 			default:
 				// If all stream workers are busy, fallback to the default code path.
+				go func() {
+					s.handleStream(st, stream, s.traceInfo(st, stream))
+					wg.Done()
+				}()
 			}
+		} else {
+			go func() {
+				defer wg.Done()
+				s.handleStream(st, stream, s.traceInfo(st, stream))
+			}()
 		}
-		go f()
 	}, func(ctx context.Context, method string) context.Context {
 		if !EnableTracing {
 			return ctx
@@ -1044,7 +1054,7 @@ func (s *Server) addConn(addr string, st transport.ServerTransport) bool {
 	if s.drain {
 		// Transport added after we drained our existing conns: drain it
 		// immediately.
-		st.Drain("")
+		st.Drain()
 	}
 
 	if s.conns[addr] == nil {
@@ -1854,7 +1864,7 @@ func (s *Server) GracefulStop() {
 	if !s.drain {
 		for _, conns := range s.conns {
 			for st := range conns {
-				st.Drain("graceful_stop")
+				st.Drain()
 			}
 		}
 		s.drain = true
@@ -2049,33 +2059,4 @@ func validateSendCompressor(name, clientCompressors string) error {
 		}
 	}
 	return fmt.Errorf("client does not support compressor %q", name)
-}
-
-// atomicSemaphore implements a blocking, counting semaphore. acquire should be
-// called synchronously; release may be called asynchronously.
-type atomicSemaphore struct {
-	n    int64
-	wait chan struct{}
-}
-
-func (q *atomicSemaphore) acquire() {
-	if atomic.AddInt64(&q.n, -1) < 0 {
-		// We ran out of quota.  Block until a release happens.
-		<-q.wait
-	}
-}
-
-func (q *atomicSemaphore) release() {
-	// N.B. the "<= 0" check below should allow for this to work with multiple
-	// concurrent calls to acquire, but also note that with synchronous calls to
-	// acquire, as our system does, n will never be less than -1.  There are
-	// fairness issues (queuing) to consider if this was to be generalized.
-	if atomic.AddInt64(&q.n, 1) <= 0 {
-		// An acquire was waiting on us.  Unblock it.
-		q.wait <- struct{}{}
-	}
-}
-
-func newHandlerQuota(n uint32) *atomicSemaphore {
-	return &atomicSemaphore{n: int64(n), wait: make(chan struct{}, 1)}
 }
