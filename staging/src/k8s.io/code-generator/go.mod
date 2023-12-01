@@ -33,11 +33,11 @@ require (
 	github.com/onsi/ginkgo/v2 v2.9.1 // indirect
 	github.com/onsi/gomega v1.27.4 // indirect
 	github.com/rogpeppe/go-internal v1.11.0 // indirect
-	golang.org/x/mod v0.9.0 // indirect
+	golang.org/x/mod v0.12.0 // indirect
 	golang.org/x/net v0.17.0 // indirect
 	golang.org/x/sys v0.13.0 // indirect
 	golang.org/x/tools v0.7.0 // indirect
-	google.golang.org/protobuf v1.28.1 // indirect
+	google.golang.org/protobuf v1.30.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.2.3 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
@@ -46,4 +46,4 @@ require (
 replace (
 	github.com/onsi/ginkgo/v2 => github.com/openshift/onsi-ginkgo/v2 v2.6.1-0.20230317131656-c62d9de5a460
 	k8s.io/code-generator => ../code-generator
-)
+	)

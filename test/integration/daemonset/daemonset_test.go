@@ -1226,8 +1226,8 @@ func TestDaemonSetRollingUpdateWithTolerations(t *testing.T) {
 	informers.Start(ctx.Done())
 	go dc.Run(ctx, 2)
 
-	zero := intstr.FromInt(0)
-	maxSurge := intstr.FromInt(1)
+	zero := intstr.IntOrString{Type: intstr.Int, IntVal: 0}
+	maxSurge := intstr.IntOrString{Type: intstr.Int, IntVal: 1}
 	ds := newDaemonSet("foo", ns.Name)
 	ds.Spec.UpdateStrategy = apps.DaemonSetUpdateStrategy{
 		Type: apps.RollingUpdateDaemonSetStrategyType,
