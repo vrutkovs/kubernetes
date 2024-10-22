@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
@@ -240,6 +241,20 @@ func (a *auditResponseWriter) processCode(code int) {
 			processAuditEvent(a.ctx, a.sink, a.event, a.omitStages)
 		}
 	})
+}
+
+func (a *auditResponseWriter) Header() http.Header {
+	for name, value := range a.ResponseWriter.Header() {
+		switch {
+		case name == "Content-Type":
+			a.event.Annotations["openshift.io/response-header-content-type"] = strings.Join(value, ",")
+		case name == "Content-Encoding":
+			a.event.Annotations["openshift.io/response-header-content-encoding"] = strings.Join(value, ",")
+		case name == "Content-Length":
+			a.event.Annotations["openshift.io/response-header-content-length"] = strings.Join(value, ",")
+		}
+	}
+	return a.ResponseWriter.Header()
 }
 
 func (a *auditResponseWriter) Write(bs []byte) (int, error) {
