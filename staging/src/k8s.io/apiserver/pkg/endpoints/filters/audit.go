@@ -19,6 +19,7 @@ package filters
 import (
 	"bufio"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net"
@@ -254,12 +255,22 @@ func (a *auditResponseWriter) Header() http.Header {
 			a.event.Annotations["openshift.io/response-header-content-length"] = strings.Join(value, ",")
 		}
 	}
+	headers, err := json.Marshal(a.ResponseWriter.Header())
+	if err == nil {
+		if a.event.Annotations == nil {
+			a.event.Annotations = make(map[string]string)
+		}
+		a.event.Annotations["openshift.io/response-headers"] = string(headers)
+	}
 	return a.ResponseWriter.Header()
 }
 
 func (a *auditResponseWriter) Write(bs []byte) (int, error) {
 	// the Go library calls WriteHeader internally if no code was written yet. But this will go unnoticed for us
 	a.processCode(http.StatusOK)
+	if a.event.Annotations == nil {
+		a.event.Annotations = make(map[string]string)
+	}
 	if _, ok := a.event.Annotations["openshift.io/response-header-content-length"]; !ok {
 		a.event.Annotations["openshift.io/response-header-content-length"] = fmt.Sprintf("%d", len(bs))
 	}
